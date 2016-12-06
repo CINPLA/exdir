@@ -195,6 +195,11 @@ class Dataset(Object):
         data = np.load(self.data_filename)
         return data[args]
         
+    def __setitem__(self, args, value):
+        data = np.load(self.data_filename)
+        data[args] = value
+        np.save(self.data_filename, data)
+        
     @property
     def data(self):
         return self[:]
@@ -208,8 +213,10 @@ if __name__ == "__main__":
     f.attrs["temperature"] = 99.0
     print(f.attrs["temperature"])
     
-    a = np.array([1, 2, 3])
+    a = np.array([1, 2, 3, 4, 5])
     dset = f.require_dataset("mydata", a)
+    
+    dset[1:3] = 8.0
     
     print(f["mydata"][()])
     
