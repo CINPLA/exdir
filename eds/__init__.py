@@ -110,7 +110,7 @@ class Group(Object):
                 raise TypeError("An object with name '" + name + "' already "
                                 "exists, but it is not a Group.")
         else: 
-            return create_group(name)
+            return self.create_group(name)
             
     def require_dataset(self, name, data=None):
         if name in self:
@@ -122,7 +122,7 @@ class Group(Object):
                 raise TypeError("An object with name '" + name + "' already "
                                 "exists, but it is not a Group.")
         else: 
-            return create_dataset(name, data=data)
+            return self.create_dataset(name, data=data)
         
     def __contains__(self, name):
         folder = os.path.join(self.folder, name)
