@@ -83,7 +83,7 @@ class Group(Object):
     def __init__(self, parent, name, mode=None):
         super(Group, self).__init__(parent=parent, name=name, mode=mode)
         
-    def create_dataset(self, name, data):
+    def create_dataset(self, name, data=None):
         if name in self:
             raise IOError("An object with name '" + name + "' already exists.")
             
@@ -91,7 +91,8 @@ class Group(Object):
         _create_object_folder(dataset_folder, "dataset")
         # TODO check dimensions, npy or npz
         dataset = Dataset(parent=self, name=name)
-        dataset.set_data(data)
+        if data is not None:
+            dataset.set_data(data)
         return dataset
         
     def create_group(self, name):
@@ -111,7 +112,7 @@ class Group(Object):
         else: 
             return create_group(name)
             
-    def require_dataset(self, name, data):
+    def require_dataset(self, name, data=None):
         if name in self:
             current_object = self[name]
             if isinstance(current_object, Dataset):
@@ -121,7 +122,7 @@ class Group(Object):
                 raise TypeError("An object with name '" + name + "' already "
                                 "exists, but it is not a Group.")
         else: 
-            return create_group(name)
+            return create_dataset(name, data=data)
         
     def __contains__(self, name):
         folder = os.path.join(self.folder, name)
@@ -214,7 +215,7 @@ if __name__ == "__main__":
     print(f.attrs["temperature"])
     
     a = np.array([1, 2, 3, 4, 5])
-    dset = f.require_dataset("mydata", a)
+    dset = f.require_dataset("mydata", data=a)
     
     dset[1:3] = 8.0
     
