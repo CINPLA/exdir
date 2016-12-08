@@ -28,8 +28,10 @@ import glob
 python_version = sys.version_info.major
 if python_version == 2:
     from future.builtins import str
-    
-    
+
+
+import eds
+
 class EdsIO(BaseIO):
     """
     Class for reading/writting of eds fromat
@@ -53,23 +55,27 @@ class EdsIO(BaseIO):
     # this info is for GUI stuff also
     mode = 'dir'
 
-    def __init__(self, filename):
+    def __init__(self, folder):
         """
         Arguments:
-            filename : the filename
+            folder : the folder
         """
         BaseIO.__init__(self)
-        self._absolute_filename = filename
-        self._path, relative_filename = os.path.split(filename)
-        self._base_filename, extension = os.path.splitext(relative_filename)
+        self._absolute_folder = folder
+        self._path, relative_folder = os.path.split(folder)
+        self._base_folder, extension = os.path.splitext(relative_folder)
         
-        print ("base=", self._base_filename, extension)
+        print ("base=", self._base_folder, extension)
         
         if extension != ".eds":
-            raise ValueError("file extension must be '.eds'")
+            raise ValueError("folder extension must be '.eds'")
+            
+        self._eds_folder = eds.File(folder=folder, mode="a")
             
     
-    
+    def write_spiketrain(self):
+        pass
+        
     
             
     def read_analogsignal(self):
