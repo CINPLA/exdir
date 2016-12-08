@@ -7,6 +7,7 @@ import shutil
 from enum import Enum
 
 
+
 META_FILENAME = "meta.yml"
 ATTRIBUTES_FILENAME = "attributes.yml"
 RAW_FOLDER_NAME = "__raw__"
