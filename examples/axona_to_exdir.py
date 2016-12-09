@@ -390,16 +390,49 @@ class AxonaFile:
         return analog_signals
 
 
+def set_general_attrs():
+    params = {}
+    params["session_id"] = ""
+    params["institution"] = ""
+    params["experimenter"] = ""
+    params["lab"] = ""
+    params["related_publications"] = ""
+    params["notes"] = ""
+    params["experiment_description"] = ""
+    params["data_collection"] = ""
+    params["stimulus"] = ""
+    params["pharmacology"] = ""
+    params["surgery"] = ""
+    params["virus"] = ""
+    params["slices"] = ""
+    params["protocol"] = ""
+    
+    return params
+
+
+def set_subject_attrs():
+    params = {}
+    params["subject_id"] = ""
+    params["description"] = ""
+    params["species"] = ""
+    params["genotype"] = ""
+    params["sex"] = ""
+    params["age"] = ""
+    params["weight"] = ""
+
+    return params
+
 if __name__ == "__main__":
-    path = "/home/svenni/Dropbox/studies/cinpla/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
+    path = "/home/milad/Dropbox/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
     i = AxonaFile(path)
     i.read_analogsignal()
     o = exdir.File("/tmp/test.exdir", "w")
-
-    general = o.create_group("general")
-    general.attrs[()] = {"bla": "lol"}
     
     # TODO add general parameters
+    general = o.create_group("general")
+    general.attrs = set_general_attrs()
+    subject = general.create_group("subject")
+    subject.attrs = set_subject_attrs()
     
     processing = o.create_group("processing")
     
@@ -424,7 +457,3 @@ if __name__ == "__main__":
     # TODO for each shank, create Event*
     
     # TODO create tracking
-
-import quantities as pq
-a = 4.0 * pq.s / pq.m
-a.dimensionality.string

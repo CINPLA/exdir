@@ -111,7 +111,9 @@ class AttributeManager:
             result = value
         
         meta_data[name] = result
+        self._set_data(meta_data)
         
+    def _set_data(self, meta_data):
         with open(self.filename, "w") as meta_file:
             yaml.dump(meta_data,
                       meta_file,
@@ -139,6 +141,11 @@ class Object(object):
     @property   
     def attrs(self):
         return AttributeManager(self, AttributeManager.Mode.attributes)
+        
+    @attrs.setter
+    def attrs(self, value):
+        manager = self.attrs
+        manager._set_data(value)
     
     @property
     def meta(self):
