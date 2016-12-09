@@ -84,7 +84,6 @@ class AttributeManager:
                 meta_data = yaml.load(meta_file)
         
         meta_data[name] = value
-        print(value)
         self._set_data(meta_data)
         
     def _set_data(self, meta_data):

@@ -253,7 +253,7 @@ class AxonaFile:
 
         with open(pos_filename, "rb") as f:
             params = parse_header_and_leave_cursor(f)
-            print(params)
+            # print(params)
 
             sample_rate_split = params["sample_rate"].split(" ")
             assert(sample_rate_split[1] == "hz")
@@ -290,18 +290,18 @@ class AxonaFile:
             for i in range(2 * self._tracked_spots_count):
                 coords[np.where(data["coords"][:, i] == 1023)] = np.nan * pq.m
 
-            irr_signals = []
-            for i in range(self._tracked_spots_count):
-                irr_signal = IrregularlySampledSignal(name="tracking_xy" + str(i),
-                                                      signal=coords[:, i*2:i*2+1+1],  # + 1 for y + 1 for Python
-                                                      times=times,
-                                                      units="m",
-                                                      time_units="s",
-                                                      **params)
-                irr_signals.append(irr_signal)
-                
-                # TODO add this signal to a channel index?
-            return irr_signals
+            # irr_signals = []
+            # for i in range(self._tracked_spots_count):
+            #     irr_signal = IrregularlySampledSignal(name="tracking_xy" + str(i),
+            #                                           signal=coords[:, i*2:i*2+1+1],  # + 1 for y + 1 for Python
+            #                                           times=times,
+            #                                           units="m",
+            #                                           time_units="s",
+            #                                           **params)
+            #     irr_signals.append(irr_signal)
+            #     
+            #     # TODO add this signal to a channel index?
+            return times, coords
 
 
     def read_analogsignal(self,
@@ -442,3 +442,18 @@ if __name__ == "__main__":
     # TODO for each shank, create Event*
     
     # TODO create tracking
+    tracking = processing.create_group("tracking")
+    position = tracking.create_group("Position")
+    
+    times, coords = i.read_tracking()
+    
+    timestamps = position.create_dataset("timestamps", times)
+    timestamps.attrs["unit"] = "s"
+    tracked_spots = int(coords.shape[1]/2) #2 coordinates per spot
+    leds = []
+    for n in range(tracked_spots):
+        led_pos = position.create_dataset("led_"+str(n))
+        leds.append(led_pos)
+    
+    
+    
