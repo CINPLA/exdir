@@ -18,10 +18,18 @@ FILE_TYPENAME = "File"
 def _assert_valid_name(name):
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
+        
     valid_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+    
     for char in name:
         if char not in valid_characters:
-            raise NameError("Name contains invalid character '" + char + "'")
+            raise NameError("Name contains invalid character '" + char + "'.")
+            
+    invalid_names = [META_FILENAME,
+                     ATTRIBUTES_FILENAME,
+                     RAW_FOLDER_NAME]
+    if name in invalid_names:
+        raise NameError("Name cannot be '" + name + "'.")
 
 
 def _create_object_folder(folder, typename):
