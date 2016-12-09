@@ -7,7 +7,6 @@ import quantities as pq
 import os
 import glob
 import numpy as np
-sys.path.append(os.getcwd() + "/..")
 import exdir
 
 
@@ -123,7 +122,8 @@ class AxonaFile:
                 
                 channel_index = {"group_id": group_id,
                                  "channel_names": np.array(channel_names, dtype="S"),
-                                 "channel_ids": np.array(channel_ids)}
+                                 "channel_ids": np.array(channel_ids),
+                                 "analogsignals": []}
                 self._channel_indexes.append(channel_index)
                 self._channel_group_to_channel_index[group_id] = channel_index
                 
@@ -290,17 +290,6 @@ class AxonaFile:
             for i in range(2 * self._tracked_spots_count):
                 coords[np.where(data["coords"][:, i] == 1023)] = np.nan * pq.m
 
-            # irr_signals = []
-            # for i in range(self._tracked_spots_count):
-            #     irr_signal = IrregularlySampledSignal(name="tracking_xy" + str(i),
-            #                                           signal=coords[:, i*2:i*2+1+1],  # + 1 for y + 1 for Python
-            #                                           times=times,
-            #                                           units="m",
-            #                                           time_units="s",
-            #                                           **params)
-            #     irr_signals.append(irr_signal)
-            #     
-            #     # TODO add this signal to a channel index?
             return times, coords
 
 
@@ -316,7 +305,6 @@ class AxonaFile:
         # TODO read for specific channel
 
         # TODO check that .egf file exists
-
         
         analog_signals = []
         eeg_basename = os.path.join(self._path, self._base_filename)
@@ -375,14 +363,16 @@ class AxonaFile:
                                                  bytes_per_sample)
                                                  
                     # TODO read start time
-                    analog_signal = AnalogSignal(signal,
-                                                 units="uV",  # TODO get correct unit
-                                                 sampling_rate=sample_rate,
-                                                 **params)
+                    # analog_signal = AnalogSignal(signal,
+                                                #  units="uV",  # TODO get correct unit
+                                                #  sampling_rate=sample_rate,
+                                                #  **params)
+                                                
+                    analog_signal = {"signal": signal, "sample_rate": sample_rate, "units": "uV"}
                     
                     # TODO what if read_analogsignal is called twice? The channel_index list should be cleared at some point                             
                     channel_index = self._channel_to_channel_index[eeg_original_channel_id]
-                    channel_index.analogsignals.append(analog_signal)
+                    channel_index["analogsignals"].append(analog_signal)
                     
                 analog_signals.append(analog_signal)
                 
@@ -423,36 +413,48 @@ def set_subject_attrs():
 
 if __name__ == "__main__":
     path = "/home/milad/Dropbox/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
-    i = AxonaFile(path)
-    o = exdir.File("/tmp/test.exdir", "w")
+    axona_folder = AxonaFile(path)
+    axona_folder.read_analogsignal()
+    exdir_output = exdir.File("/tmp/test.exdir", "w")
     
     # TODO add general parameters
-    general = o.create_group("general")
+    general = exdir_output.create_group("general")
     general.attrs = set_general_attrs()
     subject = general.create_group("subject")
     subject.attrs = set_subject_attrs()
     
-    
-    processing = o.create_group("processing")
-    
-    # TODO create shanks
+    processing = exdir_output.create_group("processing")
     
     # TODO for each shank, create LFP
     
+    for channel_index in axona_folder._channel_indexes:
+        shank = processing.create_group("shank_{}".format(channel_index["group_id"]))
+        if len(channel_index["analogsignals"]) > 0:
+            lfp = shank.create_group("LFP")
+            
+            for index, analog_signal in enumerate(channel_index["analogsignals"]):
+                lfp_timeseries = lfp.require_group("LFP_timeseries_{}".format(index))
+                lfp_timeseries.attrs["num_samples"] = 1  # TODO
+                lfp_timeseries.attrs["starting_time"] = {
+                    "value": 0.0,  # TODO
+                    "unit": "s"
+                }
+                lfp_timeseries.attrs["sample_rate"] = analog_signal["sample_rate"]
+                lfp_timeseries.attrs["electrode_idx"] = channel_index["channel_ids"]
+                data = lfp_timeseries.create_dataset("data", data=analog_signal["signal"])   
+        
     # TODO for each shank, create Event*
     
     # TODO create tracking
     tracking = processing.create_group("tracking")
     position = tracking.create_group("Position")
     
-    times, coords = i.read_tracking()
-    
+    times, coords = axona_folder.read_tracking()
     timestamps = position.create_dataset("timestamps", times)
-    timestamps.attrs["unit"] = "s"
-    tracked_spots = int(coords.shape[1]/2) #2 coordinates per spot
+    tracked_spots = int(coords.shape[1]/2)  # 2 coordinates per spot
     leds = []
     for n in range(tracked_spots):
-        led_pos = position.create_dataset("led_"+str(n))
+        led_pos = position.create_dataset("led_"+str(n), coords[:, n*2:n*2+1+1])
         leds.append(led_pos)
     
     
