@@ -243,7 +243,7 @@ class Group(Object):
     
     def __setitem__(self, name, value):
         if name not in self:
-            create_dataset(name, value)
+            self.create_dataset(name, value)
         else:
             current_item = self.__getitem__(name)
             if isinstance(current_item, Dataset):

@@ -123,7 +123,8 @@ class AxonaFile:
                 channel_index = {"group_id": group_id,
                                  "channel_names": np.array(channel_names, dtype="S"),
                                  "channel_ids": np.array(channel_ids),
-                                 "analogsignals": []}
+                                 "analogsignals": [],
+                                 "spiketrains": []}
                 self._channel_indexes.append(channel_index)
                 self._channel_group_to_channel_index[group_id] = channel_index
                 
@@ -184,9 +185,7 @@ class AxonaFile:
         pass
 
     def read_spiketrain(self):
-        # TODO add parameter to allow user to read raw data or not?
-        assert(SpikeTrain in self.readable_objects)
-        
+        # TODO add parameter to allow user to read raw data or not?        
         spike_trains = []
         
         channel_group_files = glob.glob(os.path.join(self._path, self._base_filename) + ".[0-9]*")
@@ -229,15 +228,18 @@ class AxonaFile:
                                             bytes_per_sample)
 
             # TODO get proper t_stop
-            spike_train = SpikeTrain(times, 
-                                     t_stop=times[-1],
-                                     waveforms=waveforms, 
-                                     **params)
-            spike_trains.append(spike_train)
+            spike_train = {
+                "times": times,
+                "waveforms": waveforms,
+                "num_spikes": num_spikes,
+                "num_chans": num_chans,
+                "samples_per_spike": samples_per_spike
+            }
+            # spike_trains.append(spike_train)
             channel_index = self._channel_group_to_channel_index[channel_group_index]
-            unit = Unit()
-            unit.spiketrains.append(spike_train)
-            channel_index.units.append(unit)
+            # unit = Unit()
+            # unit.spiketrains.append(spike_train)
+            channel_index["spiketrains"].append(spike_train)
 
         return spike_trains
 
@@ -423,8 +425,15 @@ def set_subject_attrs():
     return params
 
 if __name__ == "__main__":
-    path = "/home/milad/Dropbox/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
+    import getpass
+    username = getpass.getuser()
+    if username == "milad":
+        path = "/home/milad/Dropbox/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
+        raise NameError("ERROR: Not accepted user.")
+    elif username == "svenni":
+        path = "/home/svenni/Dropbox/studies/cinpla/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
     i = AxonaFile(path)
+    i.read_spiketrain()
     i.read_analogsignal()
     o = exdir.File("/tmp/test.exdir", "w")
     
@@ -452,7 +461,19 @@ if __name__ == "__main__":
                 }
                 lfp_timeseries.attrs["sample_rate"] = analog_signal["sample_rate"]
                 lfp_timeseries.attrs["electrode_idx"] = channel_index["channel_ids"]
-                data = lfp_timeseries.create_dataset("data", data=analog_signal["signal"])   
+                data = lfp_timeseries.create_dataset("data", data=analog_signal["signal"])
+                
+        if len(channel_index["spiketrains"]) > 0:
+            event_waveform = shank.create_group("EventWaveform")
+            
+            for index, spiketrain in enumerate(channel_index["spiketrains"]):
+                waveform_timeseries = event_waveform.create_group("waveform_timeseries_{}".format(index))
+                waveform_timeseries.attrs["num_samples"] = spiketrain["num_spikes"]
+                waveform_timeseries.attrs["sample_length"] = spiketrain["samples_per_spike"]
+                waveform_timeseries.attrs["electrode_idx"] = channel_index["channel_ids"]
+                waveform_timeseries.create_dataset("waveforms", data=spiketrain["waveforms"])
+                waveform_timeseries.create_dataset("timestamps", data=spiketrain["times"])
+            
         
     # TODO for each shank, create Event*
     
