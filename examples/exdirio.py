@@ -30,13 +30,13 @@ if python_version == 2:
     from future.builtins import str
 
 
-import expdir
+import exdir
 
-class EdsIO(BaseIO):
+class ExdirIO(BaseIO):
     """
-    Class for reading/writting of eds fromat
+    Class for reading/writting of exdir fromat
     """
-    
+
     is_readable = False
     is_writable = True
 
@@ -47,9 +47,9 @@ class EdsIO(BaseIO):
     has_header = False
     is_streameable = False
 
-    name = 'eds'
+    name = 'exdir'
     description = 'This IO reads experimental data from an eds folder'
-    
+
     # mode can be 'file' or 'dir' or 'fake' or 'database'
     # the main case is 'file' but some reader are base on a directory or a database
     # this info is for GUI stuff also
@@ -64,47 +64,37 @@ class EdsIO(BaseIO):
         self._absolute_folder = folder
         self._path, relative_folder = os.path.split(folder)
         self._base_folder, extension = os.path.splitext(relative_folder)
-        
+
         print ("base=", self._base_folder, extension)
-        
-        if extension != ".eds":
-            raise ValueError("folder extension must be '.eds'")
-            
-        self._eds_folder = eds.File(folder=folder, mode="a")
-            
-    
-    def write_spiketrain(self):
-        pass
-        
-    
-            
+
+        if extension != ".exdir":
+            raise ValueError("folder extension must be '.exdir'")
+
+        self._exdir_folder = exdir.File(folder=folder, mode="a")
+
+
     def read_analogsignal(self):
         # TODO implement read analog signal
         pass
-        
+
     def read_spiketrain(self):
         # TODO implement read spike train
         pass
-        
+
     def read_epoch(self):
         # TODO read epoch data
-        pass    
-        
+        pass
+
     def read_block(self):
         # TODO read block
         pass
-            
-        
-        
-        
-        
+
+
+
+
+
 
 if __name__ == "__main__":
     import sys
-    testfile = "/tmp/test.eds"
-    io = EdsIO(testfile)
-    
-
-    
-    
-    
+    testfile = "/tmp/test.exdir"
+    io = ExdirIO(testfile)

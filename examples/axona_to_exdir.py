@@ -97,15 +97,15 @@ class AxonaFile:
         self._duration = float(params["duration"]) * pq.s  # TODO convert from samples to seconds
         self._tracked_spots_count = int(params["tracked_spots"])
         self._params = params
-        
+
         # TODO this file reading can be removed, perhaps?
         channel_group_files = glob.glob(os.path.join(self._path, self._base_filename) + ".[0-9]*")
-        
-        self._channel_to_channel_index = {}  
+
+        self._channel_to_channel_index = {}
         self._channel_group_to_channel_index = {}
         self._channel_count = 0
         self._channel_group_count = 0
-        self._channel_indexes = []            
+        self._channel_indexes = []
         for channel_group_file in channel_group_files:
             # increment before, because channel_groups start at 1
             self._channel_group_count += 1
@@ -119,7 +119,7 @@ class AxonaFile:
                     channel_id = self._channel_count + i
                     channel_ids.append(channel_id)
                     channel_names.append("channel_{}_group_{}_internal_{}".format(channel_id, group_id, i))
-                
+
                 channel_index = {"group_id": group_id,
                                  "channel_names": np.array(channel_names, dtype="S"),
                                  "channel_ids": np.array(channel_ids),
@@ -127,17 +127,17 @@ class AxonaFile:
                                  "spiketrains": []}
                 self._channel_indexes.append(channel_index)
                 self._channel_group_to_channel_index[group_id] = channel_index
-                
+
                 for i in range(num_chans):
                     channel_id = self._channel_count + i
                     self._channel_to_channel_index[channel_id] = channel_index
-                    
+
                 # increment after, because channels start at 0
                 self._channel_count += num_chans
-        
+
         # TODO add channels only for files that exist
         self._channel_ids = np.arange(self._channel_count)
-        
+
         # TODO read the set file and store necessary values as attributes on this object
 
     def _channel_gain(self, channel_group_index, channel_index):
@@ -158,11 +158,11 @@ class AxonaFile:
         blk = Block()
         if cascade:
             seg = Segment(file_origin=self._absolute_filename)
-            
+
             blk.channel_indexes = self._channel_indexes
-            
+
             blk.segments += [seg]
-        
+
             seg.analogsignals = self.read_analogsignal(lazy=lazy, cascade=cascade)
             seg.irregularlysampledsignals = self.read_tracking()
             seg.spiketrains = self.read_spiketrain()
@@ -172,9 +172,9 @@ class AxonaFile:
             seg.duration = self._duration
 
             # TODO May need to "populate_RecordingChannel"
-            
+
             # spiketrain = self.read_spiketrain()
-            
+
             # seg.spiketrains.append()
 
         blk.create_many_to_one_relationship()
@@ -185,9 +185,9 @@ class AxonaFile:
         pass
 
     def read_spiketrain(self):
-        # TODO add parameter to allow user to read raw data or not?        
+        # TODO add parameter to allow user to read raw data or not?
         spike_trains = []
-        
+
         channel_group_files = glob.glob(os.path.join(self._path, self._base_filename) + ".[0-9]*")
         for raw_filename in sorted(channel_group_files):
             with open(raw_filename, "rb") as f:
@@ -303,11 +303,11 @@ class AxonaFile:
         Arguments:
             channel_index: must be integer array
         """
-        
+
         # TODO read for specific channel
 
         # TODO check that .egf file exists
-        
+
         analog_signals = []
         eeg_basename = os.path.join(self._path, self._base_filename)
         eeg_files = glob.glob(eeg_basename + ".eeg")
@@ -324,14 +324,14 @@ class AxonaFile:
             with open(eeg_filename, "rb") as f:
                 params = parse_header_and_leave_cursor(f)
                 params["raw_filename"] = eeg_filename
-                
+
                 if file_type == "eeg":
                     sample_count = int(params["num_EEG_samples"])
                 elif file_type == "egf":
                     sample_count = int(params["num_EGF_samples"])
                 else:
                     raise IOError("Unknown file type. Should be .eeg or .efg.")
-                    
+
                 sample_rate_split = params["sample_rate"].split(" ")
                 bytes_per_sample = params["bytes_per_sample"]
                 assert(sample_rate_split[1].lower() == "hz")
@@ -349,35 +349,35 @@ class AxonaFile:
                     sample_dtype = (('<i' + str(bytes_per_sample), 1), params["num_chans"])
                     data = np.fromfile(f, dtype=sample_dtype, count=sample_count)
                     assert_end_of_data(f)
-                    
+
                     eeg_final_channel_id = self._params["EEG_ch_" + str(suffix)]
                     eeg_mode = self._params["mode_ch_" + str(eeg_final_channel_id)]
                     ref_id = self._params["b_in_ch_" + str(eeg_final_channel_id)]
                     eeg_original_channel_id = self._params["ref_" + str(ref_id)]
-                    
+
                     params["channel_id"] = eeg_original_channel_id
-                    
+
                     gain = self._params["gain_ch_{}".format(eeg_final_channel_id)]
-                    
+
                     signal = scale_analog_signal(data,
-                                                 gain, 
-                                                 self._adc_fullscale, 
+                                                 gain,
+                                                 self._adc_fullscale,
                                                  bytes_per_sample)
-                                                 
+
                     # TODO read start time
                     # analog_signal = AnalogSignal(signal,
                                                 #  units="uV",  # TODO get correct unit
                                                 #  sampling_rate=sample_rate,
                                                 #  **params)
-                                                
+
                     analog_signal = {"signal": signal, "sample_rate": sample_rate, "units": "uV"}
-                    
-                    # TODO what if read_analogsignal is called twice? The channel_index list should be cleared at some point                             
+
+                    # TODO what if read_analogsignal is called twice? The channel_index list should be cleared at some point
                     channel_index = self._channel_to_channel_index[eeg_original_channel_id]
                     channel_index["analogsignals"].append(analog_signal)
-                    
+
                 analog_signals.append(analog_signal)
-                
+
         return analog_signals
 
 
@@ -397,7 +397,7 @@ def set_general_attrs():
     params["virus"] = ""
     params["slices"] = ""
     params["protocol"] = ""
-    
+
     return params
 
 
@@ -425,22 +425,22 @@ if __name__ == "__main__":
     axona_folder.read_spiketrain()
     axona_folder.read_analogsignal()
     exdir_output = exdir.File("/tmp/test.exdir", "w")
-    
+
     # TODO add general parameters
     general = exdir_output.create_group("general")
     general.attrs = set_general_attrs()
     subject = general.create_group("subject")
     subject.attrs = set_subject_attrs()
-    
+
     processing = exdir_output.create_group("processing")
-    
+
     # TODO for each shank, create LFP
-    
+
     for channel_index in axona_folder._channel_indexes:
         shank = processing.create_group("shank_{}".format(channel_index["group_id"]))
         if len(channel_index["analogsignals"]) > 0:
             lfp = shank.create_group("LFP")
-            
+
             for index, analog_signal in enumerate(channel_index["analogsignals"]):
                 lfp_timeseries = lfp.require_group("LFP_timeseries_{}".format(index))
                 lfp_timeseries.attrs["num_samples"] = 1  # TODO
@@ -451,10 +451,10 @@ if __name__ == "__main__":
                 lfp_timeseries.attrs["sample_rate"] = analog_signal["sample_rate"]
                 lfp_timeseries.attrs["electrode_idx"] = channel_index["channel_ids"]
                 data = lfp_timeseries.create_dataset("data", data=analog_signal["signal"])
-                
+
         if len(channel_index["spiketrains"]) > 0:
             event_waveform = shank.create_group("EventWaveform")
-            
+
             for index, spiketrain in enumerate(channel_index["spiketrains"]):
                 waveform_timeseries = event_waveform.create_group("waveform_timeseries_{}".format(index))
                 waveform_timeseries.attrs["num_samples"] = spiketrain["num_spikes"]
@@ -462,20 +462,16 @@ if __name__ == "__main__":
                 waveform_timeseries.attrs["electrode_idx"] = channel_index["channel_ids"]
                 waveform_timeseries.create_dataset("waveforms", data=spiketrain["waveforms"])
                 waveform_timeseries.create_dataset("timestamps", data=spiketrain["times"])
-            
-        
+
+
     # TODO for each shank, create Event*
-    
+
     # TODO create tracking
     tracking = processing.create_group("tracking")
     position = tracking.create_group("Position")
-    
+
     times, coords = axona_folder.read_tracking()
     timestamps = position.create_dataset("timestamps", times)
     tracked_spots = int(coords.shape[1]/2)  # 2 coordinates per spot
     for n in range(tracked_spots):
         position.create_dataset("led_"+str(n), coords[:, n*2:n*2+1+1])
-
-    
-    
-    
