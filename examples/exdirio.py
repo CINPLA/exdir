@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This is the implementation of the NEO IO for the eds format.
+This is the implementation of the NEO IO for the exdir format.
 Depends on: scipy
             h5py >= 2.5.0
             numpy
@@ -30,7 +30,7 @@ if python_version == 2:
     from future.builtins import str
 
 
-import eds
+import expdir
 
 class EdsIO(BaseIO):
     """

@@ -255,7 +255,7 @@ class AxonaFile:
 
         with open(pos_filename, "rb") as f:
             params = parse_header_and_leave_cursor(f)
-            print(params)
+            # print(params)
 
             sample_rate_split = params["sample_rate"].split(" ")
             assert(sample_rate_split[1] == "hz")
@@ -292,18 +292,7 @@ class AxonaFile:
             for i in range(2 * self._tracked_spots_count):
                 coords[np.where(data["coords"][:, i] == 1023)] = np.nan * pq.m
 
-            irr_signals = []
-            for i in range(self._tracked_spots_count):
-                irr_signal = IrregularlySampledSignal(name="tracking_xy" + str(i),
-                                                      signal=coords[:, i*2:i*2+1+1],  # + 1 for y + 1 for Python
-                                                      times=times,
-                                                      units="m",
-                                                      time_units="s",
-                                                      **params)
-                irr_signals.append(irr_signal)
-                
-                # TODO add this signal to a channel index?
-            return irr_signals
+            return times, coords
 
 
     def read_analogsignal(self,
@@ -432,22 +421,22 @@ if __name__ == "__main__":
         raise NameError("ERROR: Not accepted user.")
     elif username == "svenni":
         path = "/home/svenni/Dropbox/studies/cinpla/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
-    i = AxonaFile(path)
-    i.read_spiketrain()
-    i.read_analogsignal()
-    o = exdir.File("/tmp/test.exdir", "w")
+    axona_folder = AxonaFile(path)
+    axona_folder.read_spiketrain()
+    axona_folder.read_analogsignal()
+    exdir_output = exdir.File("/tmp/test.exdir", "w")
     
     # TODO add general parameters
-    general = o.create_group("general")
+    general = exdir_output.create_group("general")
     general.attrs = set_general_attrs()
     subject = general.create_group("subject")
     subject.attrs = set_subject_attrs()
     
-    processing = o.create_group("processing")
+    processing = exdir_output.create_group("processing")
     
     # TODO for each shank, create LFP
     
-    for channel_index in i._channel_indexes:
+    for channel_index in axona_folder._channel_indexes:
         shank = processing.create_group("shank_{}".format(channel_index["group_id"]))
         if len(channel_index["analogsignals"]) > 0:
             lfp = shank.create_group("LFP")
@@ -478,3 +467,15 @@ if __name__ == "__main__":
     # TODO for each shank, create Event*
     
     # TODO create tracking
+    tracking = processing.create_group("tracking")
+    position = tracking.create_group("Position")
+    
+    times, coords = axona_folder.read_tracking()
+    timestamps = position.create_dataset("timestamps", times)
+    tracked_spots = int(coords.shape[1]/2)  # 2 coordinates per spot
+    for n in range(tracked_spots):
+        position.create_dataset("led_"+str(n), coords[:, n*2:n*2+1+1])
+
+    
+    
+    

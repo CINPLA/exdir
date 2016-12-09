@@ -101,7 +101,7 @@ class AttributeManager:
         if isinstance(value, pq.Quantity):
             result = {
                 "value": value.magnitude.tolist(),
-                "unit": value.dimensionality.string
+                "unit": value.dimensionality.simplified.string
             }
             if isinstance(value, pq.UncertainQuantity):
                 result["uncertainty"] = value.uncertainty
@@ -301,7 +301,15 @@ class Dataset(Object):
         self.data_filename = os.path.join(self.folder, "data.npy")
     
     def set_data(self, data):
-        np.save(self.data_filename, data)
+        if isinstance(data, pq.Quantity):
+            result = data.magnitude
+            self.attrs["unit"] = data.dimensionality.simplified.string
+            if isinstance(data, pq.UncertainQuantity):
+                self.attrs["uncertainty"] = data.uncertainty
+        else:
+            result = data
+        np.save(self.data_filename, result)
+        
         
     def __getitem__(self, args):        
         data = np.load(self.data_filename)
