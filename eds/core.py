@@ -7,6 +7,7 @@ import shutil
 from enum import Enum
 
 
+
 META_FILENAME = "meta.yml"
 ATTRIBUTES_FILENAME = "attributes.yml"
 RAW_FOLDER_NAME = "__raw__"
@@ -222,7 +223,10 @@ class File(Group):
                 raise IOError("Folder " + folder + " does not exist.")
         elif mode == "w":
             if already_exists:
-                shutil.rmtree(folder)
+                # shutil.rmtree(folder)
+                # TODO Need to check entire tree containes eds folders
+                # TODO Require force truncate
+                raise NotImplementedError("Cannot truncate file")
             should_create_folder = True
         elif mode == "w-" or mode == "x":
             if already_exists:
@@ -255,7 +259,7 @@ class Dataset(Object):
     def __setitem__(self, args, value):
         data = np.load(self.data_filename)
         data[args] = value
-        np.save(self.data_filename, data)
+        self.set_data(data)
         
     @property
     def data(self):
