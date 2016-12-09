@@ -101,7 +101,7 @@ class AttributeManager:
         if isinstance(value, pq.Quantity):
             result = {
                 "value": value.magnitude.tolist(),
-                "unit": value.dimensionality.simplified.string
+                "unit": value.dimensionality.string
             }
             if isinstance(value, pq.UncertainQuantity):
                 result["uncertainty"] = value.uncertainty
@@ -303,7 +303,7 @@ class Dataset(Object):
     def set_data(self, data):
         if isinstance(data, pq.Quantity):
             result = data.magnitude
-            self.attrs["unit"] = data.dimensionality.simplified.string
+            self.attrs["unit"] = data.dimensionality.string
             if isinstance(data, pq.UncertainQuantity):
                 self.attrs["uncertainty"] = data.uncertainty
         else:
