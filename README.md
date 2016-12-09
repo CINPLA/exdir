@@ -4,22 +4,22 @@ They are not ready for production use.
 
 # Experimental Directory Structure #
 
-The Experimental Directory Structure (EDS) is a proposed, open file format standard for
+The Experimental Directory Structure (exdir) is a proposed, open file format standard for
 experimental pipelines.
-eds is currently a prototype published to invite researchers to give feedback on
+exdir is currently a prototype published to invite researchers to give feedback on
 the standard.
 
-EDS is an hierarchical format based on open standards.
+exdir is an hierarchical format based on open standards.
 It is inspired by already existing formats, such as HDF5 and NumPy,
 and attempts to solve some of the problems assosciated with these while
 retaining their benefits.
-The development of EDS owes a great deal to the efforts of others to standardize
+The development of exdir owes a great deal to the efforts of others to standardize
 data formats in science in general and neuroscience in particular, among them 
 the Klusta Kwik Team and Neuroscience Without Borders.
 
 ## Quick introduction ##
 
-EDS is not a file format in itself, but rather a standardized folder structure.
+exdir is not a file format in itself, but rather a standardized folder structure.
 The structure is equivalent to the internal structure of HDF5,
 to simplify a transition from either format.
 However, data is not stored in a single file, but rather multiple files within
@@ -30,7 +30,7 @@ format.
 Here is an example structure:
 
 ```
-example.eds (File, folder)
+example.exdir (File, folder)
 │   meta.yml (-, file)
 │
 ├── dataset1 (Dataset, folder)
@@ -61,7 +61,7 @@ example.eds (File, folder)
             └── ...
 ```
 
-The above structure shows the name of the object, the type of the object in EDS and
+The above structure shows the name of the object, the type of the object in exdir and
 the type of the object on the file system as follows:
 
 ```
@@ -72,15 +72,15 @@ A dash (-) indicates that the object doesn't have a separate internal
 representation in the format, but is used indirectly.
 It is however explicitly stored in the file system.
 
-The above structure shows that the `example.eds` file is simply a folder in
-the file system, but when read by an EDS parser, it appears as a `File`.
+The above structure shows that the `example.exdir` file is simply a folder in
+the file system, but when read by an exdir parser, it appears as a `File`.
 The `File` is the root object of any structure.
 The metadata of the `File` stored in a file named meta.yml.
 
 Below the file, multiple objects may appear, among them `Dataset`s and `Group`s.
 Both `Dataset`s and `Group`s are stored as folders in the file system.
 Both have their metadata stored in files named meta.yml.
-These are not visible as files within the EDS format, but appear simply as
+These are not visible as files within the exdir format, but appear simply as
 the metadata for the `Dataset`s and `Group`s.
 
 The data within a dataset is stored in a file named data.npy (1D or 2D) or
@@ -93,7 +93,7 @@ converted to the NumPy format.
 
 ## Goals and benefits ##
 
-By reusing the structure of HDF5, EDS should be familiar to researchers that
+By reusing the structure of HDF5, exdir should be familiar to researchers that
 have experience with this format.
 However, by not storing the data in a single file,
 the data is much less prone to corruption.
@@ -112,13 +112,13 @@ HDF5view that allows simple data exploration similar to this.
 
 ## Principles ##
 
-- EDS should be based on existing open standards where suitable to avoid
+- exdir should be based on existing open standards where suitable to avoid
   solving problems that have already been solved, such as storing binary
   data. 
 
 ## Background ##
 
-The EDS was designed due to a need at the Centre for Integrative
+The exdir was designed due to a need at the Centre for Integrative
 Neuroplasticity (CINPLA) at the University of Oslo for a format that would
 fit the experimental pipeline.
 While researching the different options, we found that the neuroscience
