@@ -7,7 +7,6 @@ import quantities as pq
 import os
 import glob
 import numpy as np
-sys.path.append(os.getcwd() + "/..")
 import exdir
 
 
@@ -123,7 +122,8 @@ class AxonaFile:
                 
                 channel_index = {"group_id": group_id,
                                  "channel_names": np.array(channel_names, dtype="S"),
-                                 "channel_ids": np.array(channel_ids)}
+                                 "channel_ids": np.array(channel_ids),
+                                 "analogsignals": []}
                 self._channel_indexes.append(channel_index)
                 self._channel_group_to_channel_index[group_id] = channel_index
                 
@@ -316,7 +316,6 @@ class AxonaFile:
         # TODO read for specific channel
 
         # TODO check that .egf file exists
-
         
         analog_signals = []
         eeg_basename = os.path.join(self._path, self._base_filename)
@@ -375,14 +374,16 @@ class AxonaFile:
                                                  bytes_per_sample)
                                                  
                     # TODO read start time
-                    analog_signal = AnalogSignal(signal,
-                                                 units="uV",  # TODO get correct unit
-                                                 sampling_rate=sample_rate,
-                                                 **params)
+                    # analog_signal = AnalogSignal(signal,
+                                                #  units="uV",  # TODO get correct unit
+                                                #  sampling_rate=sample_rate,
+                                                #  **params)
+                                                
+                    analog_signal = {"signal": signal, "sample_rate": sample_rate, "units": "uV"}
                     
                     # TODO what if read_analogsignal is called twice? The channel_index list should be cleared at some point                             
                     channel_index = self._channel_to_channel_index[eeg_original_channel_id]
-                    channel_index.analogsignals.append(analog_signal)
+                    channel_index["analogsignals"].append(analog_signal)
                     
                 analog_signals.append(analog_signal)
                 
@@ -392,18 +393,38 @@ class AxonaFile:
 if __name__ == "__main__":
     path = "/home/svenni/Dropbox/studies/cinpla/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
     i = AxonaFile(path)
+    i.read_analogsignal()
     o = exdir.File("/tmp/test.exdir", "w")
 
     general = o.create_group("general")
+    general.attrs[()] = {"bla": "lol"}
     
     # TODO add general parameters
     
     processing = o.create_group("processing")
     
-    # TODO create shanks
-    
     # TODO for each shank, create LFP
     
+    for channel_index in i._channel_indexes:
+        shank = processing.create_group("shank_{}".format(channel_index["group_id"]))
+        if len(channel_index["analogsignals"]) > 0:
+            lfp = shank.create_group("LFP")
+            
+            for index, analog_signal in enumerate(channel_index["analogsignals"]):
+                lfp_timeseries = lfp.require_group("LFP_timeseries_{}".format(index))
+                lfp_timeseries.attrs["num_samples"] = 1  # TODO
+                lfp_timeseries.attrs["starting_time"] = {
+                    "value": 0.0,  # TODO
+                    "unit": "s"
+                }
+                lfp_timeseries.attrs["sample_rate"] = analog_signal["sample_rate"]
+                lfp_timeseries.attrs["electrode_idx"] = channel_index["channel_ids"]
+                data = lfp_timeseries.create_dataset("data", data=analog_signal["signal"])   
+        
     # TODO for each shank, create Event*
     
     # TODO create tracking
+
+import quantities as pq
+a = 4.0 * pq.s / pq.m
+a.dimensionality.string

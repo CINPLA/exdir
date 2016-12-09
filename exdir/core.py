@@ -4,22 +4,30 @@ import os
 import yaml
 import numpy as np
 import shutil
+import quantities as pq
 from enum import Enum
 
+# metadata
+EXDIR_METANAME = "exdir"
+TYPE_METANAME = "type"
+VERSION_METANAME = "version"
 
+# filenames
 META_FILENAME = "meta.yml"
 ATTRIBUTES_FILENAME = "attributes.yml"
 RAW_FOLDER_NAME = "__raw__"
-DATASET_TYPENAME = "Dataset"
-GROUP_TYPENAME = "Group"
-FILE_TYPENAME = "File"
+
+# typenames
+DATASET_TYPENAME = "dataset"
+GROUP_TYPENAME = "group"
+FILE_TYPENAME = "file"
 
 
 def _assert_valid_name(name):
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
         
-    valid_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+    valid_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_ "
     
     for char in name:
         if char not in valid_characters:
@@ -38,7 +46,12 @@ def _create_object_folder(folder, typename):
     os.mkdir(folder)
     meta_filename = _metafile_from_folder(folder)
     with open(meta_filename, "w") as meta_file:
-        yaml.dump({"type": typename, "exdir_version": 1},
+        metadata = {
+            EXDIR_METANAME: {
+                TYPE_METANAME: typename, 
+                VERSION_METANAME: 1}
+        }
+        yaml.dump(metadata,
                   meta_file,
                   default_flow_style=False,
                   allow_unicode=True)
@@ -54,11 +67,13 @@ def _is_valid_object_folder(folder):
         return False
     with open(meta_filename, "r") as meta_file:
         meta_data = yaml.load(meta_file)
-        if "type" not in meta_data:
+        if EXDIR_METANAME not in meta_data:
+            return False
+        if TYPE_METANAME not in meta_data[EXDIR_METANAME]:
             return False
         valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
-        if meta_data["type"] not in valid_types:
-            return False
+        if meta_data[EXDIR_METANAME][TYPE_METANAME] not in valid_types:
+            return False 
     return True
 
 
@@ -76,14 +91,26 @@ class AttributeManager:
             meta_data = yaml.load(meta_file)
         return meta_data[name]
         
-    def __setitem__(self, name, value):        
+    def __setitem__(self, name, value):      
         meta_data = {}
         # TODO consider failing or warning on missing yaml
         if os.path.exists(self.filename):
             with open(self.filename, "r") as meta_file:
                 meta_data = yaml.load(meta_file)
         
-        meta_data[name] = value
+        if isinstance(value, pq.Quantity):
+            result = {
+                "value": value.magnitude.tolist(),
+                "unit": value.dimensionality.string
+            }
+            if isinstance(value, pq.UncertainQuantity):
+                result["uncertainty"] = value.uncertainty
+        elif isinstance(value, np.ndarray):
+            result = value.tolist()
+        else:
+            result = value
+        
+        meta_data[name] = result
         
         with open(self.filename, "w") as meta_file:
             yaml.dump(meta_data,
@@ -199,12 +226,12 @@ class Group(Object):
         meta_filename = os.path.join(self.folder, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
-        if meta_data["type"] == DATASET_TYPENAME:
+        if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
             return Dataset(self, name)
-        elif meta_data["type"] == GROUP_TYPENAME:
+        elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
             return Group(self, name)
         else:
-            print("Data type", meta_data["type"])
+            print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
     
     def __setitem__(self, name, value):
@@ -230,7 +257,7 @@ class File(Group):
         if already_exists:
             if not _is_valid_object_folder(folder):
                 raise FileExistsError("Path '" + folder + "' already exists, but is not a valid exdir object.")
-            if self.meta["type"] != "File":
+            if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
                 raise FileExistsError("Path '" + folder + "' already exists, but is not a valid exdir file.")
             
         should_create_folder = False
