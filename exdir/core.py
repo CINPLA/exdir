@@ -15,6 +15,15 @@ GROUP_TYPENAME = "Group"
 FILE_TYPENAME = "File"
 
 
+def _assert_valid_name(name):
+    if len(name) < 1:
+        raise NameError("Name cannot be empty.")
+    valid_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_"
+    for char in name:
+        if char not in valid_characters:
+            raise NameError("Name contains invalid character '" + char + "'")
+
+
 def _create_object_folder(folder, typename):
     if os.path.exists(folder):
         raise IOError("The folder '" + folder + "' already exists")
@@ -121,6 +130,7 @@ class Group(Object):
         super(Group, self).__init__(parent=parent, name=name, mode=mode)
         
     def create_dataset(self, name, data=None):
+        _assert_valid_name(name)
         if name in self:
             raise IOError("An object with name '" + name + "' already exists.")
             
@@ -133,6 +143,7 @@ class Group(Object):
         return dataset
         
     def create_group(self, name):
+        _assert_valid_name(name)
         group_folder = os.path.join(self.folder, name)
         _create_object_folder(group_folder, GROUP_TYPENAME)
         group = Group(parent=self, name=name)
@@ -169,6 +180,7 @@ class Group(Object):
             return False
         
     def __getitem__(self, name):
+        # TODO support relative paths
         folder = os.path.join(self.folder, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
