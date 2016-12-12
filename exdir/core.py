@@ -129,14 +129,18 @@ class AttributeManager:
 
 
 class Object(object):
-    def __init__(self, parent, name, mode=None):
-        if mode is None:
-            if parent is None:
-                raise AttributeError("Both 'mode' and 'parent' cannot be None.")
-            mode = parent.mode
-        self.parent = parent
-        self.name = name
+    def __init__(self, root_folder, parent_path, object_name, mode=None):
+        # TODO: use mode
+        self.root_folder = root_folder
+        self.object_name = object_name
+        self.parent_path = parent_path
+        if parent_path == "":
+            self.relative_path = self.object_name
+        else:
+            self.relative_path = self.parent_path + "/" + self.object_name
+        self.name = "/" + self.relative_path
         self.mode = mode
+        print(self.root_folder)
 
     @property   
     def attrs(self):
@@ -153,23 +157,23 @@ class Object(object):
         
     @property
     def folder(self):
-        if self.parent is not None:
-            return os.path.join(self.parent.folder, self.name)
-        else:
-            return self.root_folder
+        print("folder", self.root_folder, self.relative_path)
+        return os.path.join(self.root_folder, self.relative_path.replace("/", os.sep))
         
     @property
     def attributes_filename(self):
+        print("attr:", self.folder)
         return os.path.join(self.folder, ATTRIBUTES_FILENAME)
     
     @property
     def meta_filename(self):
+        print("meta: ", self.root_folder, self.folder)
         return _metafile_from_folder(self.folder)
 
 
 class Group(Object):
-    def __init__(self, parent, name, mode=None):
-        super(Group, self).__init__(parent=parent, name=name, mode=mode)
+    def __init__(self, root_folder, parent_path, object_name, mode=None):
+        super(Group, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
         
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
@@ -179,7 +183,7 @@ class Group(Object):
         dataset_folder = os.path.join(self.folder, name)
         _create_object_folder(dataset_folder, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
-        dataset = Dataset(parent=self, name=name)
+        dataset = Dataset(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
         if data is not None:
             dataset.set_data(data)
         return dataset
@@ -188,7 +192,7 @@ class Group(Object):
         _assert_valid_name(name)
         group_folder = os.path.join(self.folder, name)
         _create_object_folder(group_folder, GROUP_TYPENAME)
-        group = Group(parent=self, name=name)
+        group = Group(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
         return group
         
     def require_group(self, name):
@@ -215,6 +219,8 @@ class Group(Object):
             return self.create_dataset(name, data=data)
         
     def __contains__(self, name):
+        if len(name) < 1:
+            return False
         folder = os.path.join(self.folder, name)
         if _is_valid_object_folder(folder):
             return True
@@ -234,9 +240,9 @@ class Group(Object):
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
-            return Dataset(self, name)
+            return Dataset(root_folder=self.root_folder, parent_path= self.relative_path, object_name=name)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
-            return Group(self, name)
+            return Group(root_folder=self.root_folder, parent_path= self.relative_path, object_name=name)
         else:
             print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
@@ -265,8 +271,7 @@ class File(Group):
     def __init__(self, folder, mode=None):
         if mode is None:
             mode = "a"
-        super(File, self).__init__(parent=None, name="__root__", mode=mode)
-        self.root_folder = folder
+        super(File, self).__init__(root_folder=folder, parent_path="", object_name="", mode=mode)
         
         already_exists = os.path.exists(folder)
         if already_exists:
@@ -304,8 +309,8 @@ class File(Group):
                           
 
 class Dataset(Object):
-    def __init__(self, parent, name, mode=None):
-        super(Dataset, self).__init__(parent=parent, name=name, mode=mode)
+    def __init__(self, root_folder, parent_path, object_name, mode=None):
+        super(Dataset, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
         self.data_filename = os.path.join(self.folder, "data.npy")
     
     def set_data(self, data):

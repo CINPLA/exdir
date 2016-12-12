@@ -132,7 +132,10 @@ class ExdirIO(BaseIO):
         """
         Read tracking data_end
         """
-        pos_group = self._processing[path]["Position"]
+        if(len(path)==0):
+            pos_group = self._processing["Position"]
+        else:
+            pos_group = self._processing[path]["Position"]
         irr_signals = []
         for key in pos_group:
             spot_group = pos_group[key]
