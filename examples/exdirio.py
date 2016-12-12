@@ -205,16 +205,3 @@ if __name__ == "__main__":
     hdf5io = NeoHdf5IO(testfile)
     hdf5io.write(block)
     
-    
-    # eio = neo.io.ExdirIO(filename)
-    # # eio.read_tracking("/processing/tracking/Position/tracked_spot_*")
-    # # eio.read_spiketrains("/processing/shank_*")
-    # spiketrains = [
-    #     "/processing/shank_*",
-    #     "/processing/tetrode_*"
-    # ]
-    # tracking= [
-    #     "/processing/Pos..."
-    # ]
-    # eio.read_block(lazy=True, cascade=True, tracking=tracking, spiketrains=spiketrains)
-    
