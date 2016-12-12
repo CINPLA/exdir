@@ -420,7 +420,6 @@ if __name__ == "__main__":
         path = "/home/milad/Dropbox/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
     elif username == "svenni":
         path = "/home/svenni/Dropbox/studies/cinpla/cinpla-shared/project/axonaio/2016-03-02-083928-1596/raw/02031602.set"
-        raise NameError("ERROR: Not accepted user.")
     axona_folder = AxonaFile(path)
     axona_folder.read_spiketrain()
     axona_folder.read_analogsignal()
