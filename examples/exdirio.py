@@ -18,7 +18,7 @@ from __future__ import with_statement
 import sys
 from neo.io.baseio import BaseIO
 from neo.core import (Segment, SpikeTrain, Unit, Epoch, AnalogSignal,
-                      Block, IrregularlySampledSignal)
+                      ChannelIndex, Block, IrregularlySampledSignal)
 import neo.io.tools
 import numpy as np
 import quantities as pq
@@ -40,7 +40,7 @@ class ExdirIO(BaseIO):
     is_readable = True
     is_writable = False
 
-    supported_objects = [Block, Segment, AnalogSignal, SpikeTrain]
+    supported_objects = [Block, Segment, AnalogSignal, ChannelIndex, SpikeTrain]
     readable_objects = [Block, SpikeTrain]
     writeable_objects = []
 
@@ -84,45 +84,83 @@ class ExdirIO(BaseIO):
 
             for name in self._processing:
                 if(name=="Position"):
-                    seg.irregularlysampledsignals+=self.read_tracking(path="")
+                    seg.irregularlysampledsignals+= self.read_tracking(path="")
+                if(name == "LFP"):
+                    seg.analogsignals+= self.read_analogsignal(path="")
+                if(name == "EventWaveform"):
+                    seg.spiketrains+= self.read_spiketrain(path="")
+                    
                 for key in self._processing[name]:
                     if(key == "Position"):
-                        seg.irregularlysampledsignals+=self.read_tracking(path=name)
-                        
-                    else:
-                        pass
+                        seg.irregularlysampledsignals+= self.read_tracking(path=name)
+                    if(key == "LFP"):
+                        seg.analogsignals+= self.read_analogsignal(path=name)
+                    if(key == "EventWaveform"):
+                        seg.spiketrains+= self.read_spiketrain(path=name)
                         
             
             #blk.channel_indexes = self._channel_indexes
 
             blk.segments += [seg]
 
-            #seg.analogsignals = self.read_analogsignal(lazy=lazy, cascade=cascade)
-            # seg.irregularlysampledsignals = self.read_tracking(tracking_path="processing/tracking")
-            #seg.spiketrains = self.read_spiketrain()
-
-            # TODO Call all other read functions
-
+            # TODO add duration
             #seg.duration = self._duration
 
             # TODO May need to "populate_RecordingChannel"
 
-            # spiketrain = self.read_spiketrain()
-
-            # seg.spiketrains.append()
 
         #blk.create_many_to_one_relationship()
         return blk
     
 
-    def read_analogsignal(self):
-        # TODO implement read analog signal
-        pass
+    def read_analogsignal(self, path):
+        if(len(path)==0):
+            lfp_group = self._processing["LFP"]
+        else:
+            lfp_group = self._processing[path]["LFP"]
+            
+        analogsignals = []
+        
+        for key in lfp_group:
+            timeserie = lfp_group[key]
+            signal = timeserie["data"]
+            analogsignal = AnalogSignal(signal.data,
+                                         units=signal.attrs["unit"], 
+                                         sampling_rate=pq.Quantity(timeserie.attrs["sample_rate"]["value"], timeserie.attrs["sample_rate"]["unit"]))
+            
+            analogsignals.append(analogsignal)
+            
+            # TODO: what about channel index
+            # TODO: read attrs?
+            
+            
+        return analogsignals
 
-    def read_spiketrain(self):
+    def read_spiketrain(self, path):
         # TODO implement read spike train
-        pass
+        if(len(path)==0):
+            event_waveform_group = self._processing["EventWaveform"]
+        else:
+            event_waveform_group = self._processing[path]["EventWaveform"]
+            
+        spike_trains = []
+        
+        for key in event_waveform_group:
+            timeserie = event_waveform_group[key]
+            timestamps = timeserie["timestamps"]
+            waveforms = timeserie["waveforms"]
 
+            spike_train = SpikeTrain(pq.Quantity(timestamps.data,timestamps.attrs["unit"]),
+                                     t_stop=pq.Quantity(timestamps.data[-1],timestamps.attrs["unit"]),
+                                     waveforms=pq.Quantity(waveforms.data, waveforms.attrs["unit"]))
+            
+            spike_trains.append(spike_train)
+            # TODO: read attrs?
+            
+        
+        return spike_trains
+        
+        
     def read_epoch(self):
         # TODO read epoch data
         pass

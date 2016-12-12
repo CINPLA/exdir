@@ -146,40 +146,6 @@ class AxonaFile:
         param_name = "gain_ch_{}".format(global_channel_index)
         return float(self._params[param_name])
 
-    def read_block(self,
-                   lazy=False,
-                   cascade=True):
-        """
-        Arguments:
-            Channel_index: can be int, iterable or None to select one, many or all channel(s)
-
-        """
-
-        blk = Block()
-        if cascade:
-            seg = Segment(file_origin=self._absolute_filename)
-
-            blk.channel_indexes = self._channel_indexes
-
-            blk.segments += [seg]
-
-            seg.analogsignals = self.read_analogsignal(lazy=lazy, cascade=cascade)
-            seg.irregularlysampledsignals = self.read_tracking()
-            seg.spiketrains = self.read_spiketrain()
-
-            # TODO Call all other read functions
-
-            seg.duration = self._duration
-
-            # TODO May need to "populate_RecordingChannel"
-
-            # spiketrain = self.read_spiketrain()
-
-            # seg.spiketrains.append()
-
-        blk.create_many_to_one_relationship()
-        return blk
-
     def read_epoch():
         # TODO read epoch data
         pass

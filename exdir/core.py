@@ -258,7 +258,7 @@ class Group(Object):
                 
         
     def __iter__(self):
-        for name in os.listdir(self.folder):
+        for name in sorted(os.listdir(self.folder)):
             if name in self:
                 yield name
                 
