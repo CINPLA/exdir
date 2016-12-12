@@ -140,7 +140,7 @@ class Object(object):
             self.relative_path = self.parent_path + "/" + self.object_name
         self.name = "/" + self.relative_path
         self.mode = mode
-        print(self.root_folder)
+
 
     @property   
     def attrs(self):
@@ -157,17 +157,14 @@ class Object(object):
         
     @property
     def folder(self):
-        print("folder", self.root_folder, self.relative_path)
         return os.path.join(self.root_folder, self.relative_path.replace("/", os.sep))
         
     @property
     def attributes_filename(self):
-        print("attr:", self.folder)
         return os.path.join(self.folder, ATTRIBUTES_FILENAME)
     
     @property
     def meta_filename(self):
-        print("meta: ", self.root_folder, self.folder)
         return _metafile_from_folder(self.folder)
 
 
