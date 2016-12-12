@@ -216,7 +216,7 @@ class Group(Object):
         
     def __contains__(self, name):
         folder = os.path.join(self.folder, name)
-        if os.path.exists(folder):
+        if _is_valid_object_folder(folder):
             return True
         else:
             return False
@@ -251,6 +251,14 @@ class Group(Object):
             else:
                 print("Data type")
                 raise NotImplementedError("Only dataset writing implemented")
+                
+                
+        
+    def __iter__(self):
+        for name in os.listdir(self.folder):
+            if name in self:
+                yield name
+                
 
 
 class File(Group):

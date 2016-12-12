@@ -471,7 +471,8 @@ if __name__ == "__main__":
     position = tracking.create_group("Position")
 
     times, coords = axona_folder.read_tracking()
-    timestamps = position.create_dataset("timestamps", times)
-    tracked_spots = int(coords.shape[1]/2)  # 2 coordinates per spot
-    for n in range(tracked_spots):
-        position.create_dataset("led_"+str(n), coords[:, n*2:n*2+1+1])
+    tracked_spot_count = int(coords.shape[1]/2)  # 2 coordinates per spot
+    for n in range(tracked_spot_count):
+        tracked_spot = position.create_group("tracked_spot_"+str(n))
+        timestamps = tracked_spot.create_dataset("timestamps", times)
+        tracked_spot.create_dataset("data", coords[:, n*2:n*2+1+1])

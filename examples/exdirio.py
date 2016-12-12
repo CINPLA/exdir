@@ -18,7 +18,7 @@ from __future__ import with_statement
 import sys
 from neo.io.baseio import BaseIO
 from neo.core import (Segment, SpikeTrain, Unit, Epoch, AnalogSignal,
-                      ChannelIndex, Block, IrregularlySampledSignal)
+                      Block, IrregularlySampledSignal)
 import neo.io.tools
 import numpy as np
 import quantities as pq
@@ -37,11 +37,11 @@ class ExdirIO(BaseIO):
     Class for reading/writting of exdir fromat
     """
 
-    is_readable = False
-    is_writable = True
+    is_readable = True
+    is_writable = False
 
-    supported_objects = [Block, Segment, AnalogSignal, ChannelIndex, SpikeTrain]
-    readable_objects = []
+    supported_objects = [Block, Segment, AnalogSignal, SpikeTrain]
+    readable_objects = [Block, SpikeTrain]
     writeable_objects = []
 
     has_header = False
@@ -55,23 +55,65 @@ class ExdirIO(BaseIO):
     # this info is for GUI stuff also
     mode = 'dir'
 
-    def __init__(self, folder):
+    def __init__(self, folder_path):
         """
         Arguments:
-            folder : the folder
+            folder_path : the folder path
         """
         BaseIO.__init__(self)
-        self._absolute_folder = folder
-        self._path, relative_folder = os.path.split(folder)
-        self._base_folder, extension = os.path.splitext(relative_folder)
-
-        print ("base=", self._base_folder, extension)
+        self._absolute_folder_path = folder_path
+        self._path, relative_folder_path = os.path.split(folder_path)
+        self._base_folder, extension = os.path.splitext(relative_folder_path)
 
         if extension != ".exdir":
             raise ValueError("folder extension must be '.exdir'")
 
-        self._exdir_folder = exdir.File(folder=folder, mode="a")
+        self._exdir_folder = exdir.File(folder=folder_path, mode="a")
+        
+        # TODO check if group exists
+        self._processing = self._exdir_folder.require_group("processing")
 
+    
+    def read_block(self,
+                   lazy=False,
+                   cascade=True):
+        # TODO read block
+        blk = Block()
+        if cascade:
+            seg = Segment(file_origin=self._absolute_folder_path)
+
+            for name in self._processing:
+                if(name=="Position"):
+                    seg.irregularlysampledsignals+=self.read_tracking(path="")
+                for key in self._processing[name]:
+                    if(key == "Position"):
+                        seg.irregularlysampledsignals+=self.read_tracking(path=name)
+                        
+                    else:
+                        pass
+                        
+            
+            #blk.channel_indexes = self._channel_indexes
+
+            blk.segments += [seg]
+
+            #seg.analogsignals = self.read_analogsignal(lazy=lazy, cascade=cascade)
+            # seg.irregularlysampledsignals = self.read_tracking(tracking_path="processing/tracking")
+            #seg.spiketrains = self.read_spiketrain()
+
+            # TODO Call all other read functions
+
+            #seg.duration = self._duration
+
+            # TODO May need to "populate_RecordingChannel"
+
+            # spiketrain = self.read_spiketrain()
+
+            # seg.spiketrains.append()
+
+        #blk.create_many_to_one_relationship()
+        return blk
+    
 
     def read_analogsignal(self):
         # TODO implement read analog signal
@@ -84,17 +126,54 @@ class ExdirIO(BaseIO):
     def read_epoch(self):
         # TODO read epoch data
         pass
-
-    def read_block(self):
-        # TODO read block
-        pass
-
-
-
-
-
+        
+    
+    def read_tracking(self, path):
+        """
+        Read tracking data_end
+        """
+        pos_group = self._processing[path]["Position"]
+        irr_signals = []
+        for key in pos_group:
+            spot_group = pos_group[key]
+            times = spot_group["timestamps"]
+            coords = spot_group["data"]
+            irr_signal = IrregularlySampledSignal(name=pos_group[key].name,
+                                                  signal=coords.data,
+                                                  times=times.data,
+                                                  units=coords.attrs["unit"],
+                                                  time_units=times.attrs["unit"])
+            irr_signals.append(irr_signal)
+        return irr_signals
+        
 
 if __name__ == "__main__":
     import sys
     testfile = "/tmp/test.exdir"
     io = ExdirIO(testfile)
+    
+    block = io.read_block()
+
+    from neo.io.hdf5io import NeoHdf5IO
+
+    testfile = "/tmp/test_exdir_to_neo.h5"
+    try:
+        os.remove(testfile)
+    except:
+        pass
+    hdf5io = NeoHdf5IO(testfile)
+    hdf5io.write(block)
+    
+    
+    # eio = neo.io.ExdirIO(filename)
+    # # eio.read_tracking("/processing/tracking/Position/tracked_spot_*")
+    # # eio.read_spiketrains("/processing/shank_*")
+    # spiketrains = [
+    #     "/processing/shank_*",
+    #     "/processing/tetrode_*"
+    # ]
+    # tracking= [
+    #     "/processing/Pos..."
+    # ]
+    # eio.read_block(lazy=True, cascade=True, tracking=tracking, spiketrains=spiketrains)
+    
