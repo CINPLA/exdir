@@ -26,13 +26,13 @@ FILE_TYPENAME = "file"
 def _assert_valid_name(name):
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
-        
+
     valid_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_ "
-    
+
     for char in name:
         if char not in valid_characters:
             raise NameError("Name contains invalid character '" + char + "'.")
-            
+
     invalid_names = [META_FILENAME,
                      ATTRIBUTES_FILENAME,
                      RAW_FOLDER_NAME]
@@ -48,7 +48,7 @@ def _create_object_folder(folder, typename):
     with open(meta_filename, "w") as meta_file:
         metadata = {
             EXDIR_METANAME: {
-                TYPE_METANAME: typename, 
+                TYPE_METANAME: typename,
                 VERSION_METANAME: 1}
         }
         yaml.dump(metadata,
@@ -73,7 +73,7 @@ def _is_valid_object_folder(folder):
             return False
         valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
         if meta_data[EXDIR_METANAME][TYPE_METANAME] not in valid_types:
-            return False 
+            return False
     return True
 
 
@@ -81,7 +81,7 @@ class AttributeManager:
     class Mode(Enum):
         attributes = 1
         metadata = 2
-    
+
     def __init__(self, parent, mode):
         self.parent = parent
         self.mode = mode
@@ -90,14 +90,14 @@ class AttributeManager:
         with open(self.filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         return meta_data[name]
-        
-    def __setitem__(self, name, value):      
+
+    def __setitem__(self, name, value):
         meta_data = {}
         # TODO consider failing or warning on missing yaml
         if os.path.exists(self.filename):
             with open(self.filename, "r") as meta_file:
                 meta_data = yaml.load(meta_file)
-        
+
         if isinstance(value, pq.Quantity):
             result = {
                 "value": value.magnitude.tolist(),
@@ -109,20 +109,25 @@ class AttributeManager:
             result = value.tolist()
         else:
             result = value
-        
+
         meta_data[name] = result
         self._set_data(meta_data)
-        
+
+    def items(self):
+        with open(self.filename, "r") as meta_file:
+            meta_data = yaml.load(meta_file)
+        return meta_data.items()
+
     def _set_data(self, meta_data):
         with open(self.filename, "w") as meta_file:
             yaml.dump(meta_data,
                       meta_file,
                       default_flow_style=False,
                       allow_unicode=True)
-                      
+
     @property
     def filename(self):
-        if self.mode == self.Mode.metadata:            
+        if self.mode == self.Mode.metadata:
             return self.parent.meta_filename
         else:
             return self.parent.attributes_filename
@@ -142,27 +147,27 @@ class Object(object):
         self.mode = mode
 
 
-    @property   
+    @property
     def attrs(self):
         return AttributeManager(self, AttributeManager.Mode.attributes)
-        
+
     @attrs.setter
     def attrs(self, value):
         manager = self.attrs
         manager._set_data(value)
-    
+
     @property
     def meta(self):
         return AttributeManager(self, AttributeManager.Mode.metadata)
-        
+
     @property
     def folder(self):
         return os.path.join(self.root_folder, self.relative_path.replace("/", os.sep))
-        
+
     @property
     def attributes_filename(self):
         return os.path.join(self.folder, ATTRIBUTES_FILENAME)
-    
+
     @property
     def meta_filename(self):
         return _metafile_from_folder(self.folder)
@@ -171,12 +176,12 @@ class Object(object):
 class Group(Object):
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         super(Group, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
-        
+
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
         if name in self:
             raise IOError("An object with name '" + name + "' already exists.")
-            
+
         dataset_folder = os.path.join(self.folder, name)
         _create_object_folder(dataset_folder, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
@@ -184,14 +189,14 @@ class Group(Object):
         if data is not None:
             dataset.set_data(data)
         return dataset
-        
+
     def create_group(self, name):
         _assert_valid_name(name)
         group_folder = os.path.join(self.folder, name)
         _create_object_folder(group_folder, GROUP_TYPENAME)
         group = Group(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
         return group
-        
+
     def require_group(self, name):
         if name in self:
             current_object = self[name]
@@ -200,9 +205,9 @@ class Group(Object):
             else:
                 raise TypeError("An object with name '" + name + "' already "
                                 "exists, but it is not a Group.")
-        else: 
+        else:
             return self.create_group(name)
-            
+
     def require_dataset(self, name, data=None):
         if name in self:
             current_object = self[name]
@@ -212,9 +217,9 @@ class Group(Object):
             else:
                 raise TypeError("An object with name '" + name + "' already "
                                 "exists, but it is not a Group.")
-        else: 
+        else:
             return self.create_dataset(name, data=data)
-        
+
     def __contains__(self, name):
         if len(name) < 1:
             return False
@@ -223,16 +228,16 @@ class Group(Object):
             return True
         else:
             return False
-        
+
     def __getitem__(self, name):
         # TODO support relative paths
         folder = os.path.join(self.folder, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
-        
+
         if not _is_valid_object_folder(folder):
             raise IOError("Folder '" + folder + "' is not a valid exdir object.")
-        
+
         meta_filename = os.path.join(self.folder, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
@@ -243,7 +248,7 @@ class Group(Object):
         else:
             print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
-    
+
     def __setitem__(self, name, value):
         if name not in self:
             self.create_dataset(name, value)
@@ -254,14 +259,14 @@ class Group(Object):
             else:
                 print("Data type")
                 raise NotImplementedError("Only dataset writing implemented")
-                
-                
-        
+
+
+
     def __iter__(self):
         for name in sorted(os.listdir(self.folder)):
             if name in self:
                 yield name
-                
+
 
 
 class File(Group):
@@ -269,16 +274,16 @@ class File(Group):
         if mode is None:
             mode = "a"
         super(File, self).__init__(root_folder=folder, parent_path="", object_name="", mode=mode)
-        
+
         already_exists = os.path.exists(folder)
         if already_exists:
             if not _is_valid_object_folder(folder):
                 raise FileExistsError("Path '" + folder + "' already exists, but is not a valid exdir object.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
                 raise FileExistsError("Path '" + folder + "' already exists, but is not a valid exdir file.")
-            
+
         should_create_folder = False
-        
+
         if mode == "r":
             if not already_exists:
                 raise IOError("Folder " + folder + " does not exist.")
@@ -296,20 +301,20 @@ class File(Group):
         elif mode == "a":
             if not already_exists:
                 should_create_folder = True
-        
+
         if should_create_folder:
             _create_object_folder(folder, FILE_TYPENAME)
-    
+
     def close(self):
         # yeah right, as if we would create a real file format
         pass
-                          
+
 
 class Dataset(Object):
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         super(Dataset, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
         self.data_filename = os.path.join(self.folder, "data.npy")
-    
+
     def set_data(self, data):
         if isinstance(data, pq.Quantity):
             result = data.magnitude
@@ -319,17 +324,21 @@ class Dataset(Object):
         else:
             result = data
         np.save(self.data_filename, result)
-        
-        
-    def __getitem__(self, args):        
+
+
+    def __getitem__(self, args):
         data = np.load(self.data_filename)
-        return data[args]
-        
+        if len(data.shape) == 0:
+            return data
+        else:
+            return data[args]
+
+
     def __setitem__(self, args, value):
         data = np.load(self.data_filename)
         data[args] = value
         np.save(self.data_filename, data)
-        
+
     @property
     def data(self):
         return self[:]
