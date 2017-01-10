@@ -92,11 +92,7 @@ class AttributeManager:
         return meta_data[name]
         
     def __setitem__(self, name, value):      
-        meta_data = {}
-        # TODO consider failing or warning on missing yaml
-        if os.path.exists(self.filename):
-            with open(self.filename, "r") as meta_file:
-                meta_data = yaml.load(meta_file)
+        meta_data = _open_or_create()
         
         if isinstance(value, pq.Quantity):
             result = {
@@ -112,6 +108,10 @@ class AttributeManager:
         
         meta_data[name] = result
         self._set_data(meta_data)
+
+    def keys(self):
+        meta_data = self._open_or_create()
+        return meta_data.keys()
         
     def _set_data(self, meta_data):
         with open(self.filename, "w") as meta_file:
@@ -119,6 +119,13 @@ class AttributeManager:
                       meta_file,
                       default_flow_style=False,
                       allow_unicode=True)
+
+    def _open_or_create(self):
+        meta_data = {}
+        if os.path.exists(self.filename):
+            with open(self.filename, "r") as meta_file:
+                meta_data = yaml.load(meta_file)
+        return meta_data
                       
     @property
     def filename(self):
