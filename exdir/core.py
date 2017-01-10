@@ -92,7 +92,7 @@ class AttributeManager:
         return meta_data[name]
 
     def __setitem__(self, name, value):
-        meta_data = _open_or_create()
+        meta_data = self._open_or_create()
 
         if isinstance(value, pq.Quantity):
             result = {
@@ -110,8 +110,8 @@ class AttributeManager:
         self._set_data(meta_data)
 
     def keys(self):
-	meta_data = self._open_or_create()
-	return meta_data.keys()
+    	meta_data = self._open_or_create()
+    	return meta_data.keys()
 
     def items(self):
         meta_data = self._open_or_create()
