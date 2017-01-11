@@ -110,12 +110,16 @@ class AttributeManager:
         self._set_data(meta_data)
 
     def keys(self):
-    	meta_data = self._open_or_create()
-    	return meta_data.keys()
+        meta_data = self._open_or_create()
+        return meta_data.keys()
 
     def items(self):
         meta_data = self._open_or_create()
         return meta_data.items()
+
+    def values(self):
+        meta_data = self._open_or_create()
+        return meta_data.values()
 
     def _set_data(self, meta_data):
         with open(self.filename, "w") as meta_file:
@@ -236,7 +240,17 @@ class Group(Object):
             return False
 
     def __getitem__(self, name):
-        # TODO support relative paths
+        if "/" in name:
+            if name[0] == '/':
+                if isinstance(self, File):
+                    name = name[1:]
+                else:
+                    raise KeyError('To begin tree structure with "/" is only' +
+                                   ' allowed for get item from root object')
+            top_folder_name, sub_folder_names = name.split("/", 1)
+            item = self[top_folder_name]
+            return item[sub_folder_names]
+
         folder = os.path.join(self.folder, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
@@ -266,7 +280,20 @@ class Group(Object):
                 print("Data type")
                 raise NotImplementedError("Only dataset writing implemented")
 
+    def keys(self):
+        for name in sorted(os.listdir(self.folder)):
+            if name in self:
+                yield name
 
+    def items(self):
+        for name in sorted(os.listdir(self.folder)):
+            if name in self:
+                yield name, self[name]
+
+    def values(self):
+        for name in sorted(os.listdir(self.folder)):
+            if name in self:
+                yield self[name]
 
     def __iter__(self):
         for name in sorted(os.listdir(self.folder)):
