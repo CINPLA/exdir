@@ -103,12 +103,15 @@ class AttributeManager:
                 result["uncertainty"] = value.uncertainty
         elif isinstance(value, np.ndarray):
             result = value.tolist()
-        elif isinstance(value, np.int64):
+        elif isinstance(value, np.integer):
             result = int(value)
         else:
             result = value
-
-        meta_data[name] = result
+        if isinstance(name, np.integer):
+            key = int(name)
+        else:
+            key = name
+        meta_data[key] = result
         self._set_data(meta_data)
 
     def keys(self):
