@@ -103,6 +103,8 @@ class AttributeManager:
                 result["uncertainty"] = value.uncertainty
         elif isinstance(value, np.ndarray):
             result = value.tolist()
+        elif isinstance(value, np.int64):
+            result = int(value)
         else:
             result = value
 
