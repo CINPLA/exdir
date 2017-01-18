@@ -399,12 +399,12 @@ if __name__ == "__main__":
 
     processing = exdir_output.create_group("processing")
 
-    # TODO for each shank, create LFP
+    # TODO for each channel_group, create LFP
 
     for channel_index in axona_folder._channel_indexes:
-        shank = processing.create_group("shank_{}".format(channel_index["group_id"]))
+        channel_group = processing.create_group("channel_group_{}".format(channel_index["group_id"]))
         if len(channel_index["analogsignals"]) > 0:
-            lfp = shank.create_group("LFP")
+            lfp = channel_group.create_group("LFP")
 
             for index, analog_signal in enumerate(channel_index["analogsignals"]):
                 lfp_timeseries = lfp.require_group("LFP_timeseries_{}".format(index))
@@ -418,7 +418,7 @@ if __name__ == "__main__":
                 data = lfp_timeseries.create_dataset("data", data=analog_signal["signal"])
 
         if len(channel_index["spiketrains"]) > 0:
-            event_waveform = shank.create_group("EventWaveform")
+            event_waveform = channel_group.create_group("EventWaveform")
 
             for index, spiketrain in enumerate(channel_index["spiketrains"]):
                 waveform_timeseries = event_waveform.create_group("waveform_timeseries_{}".format(index))
@@ -429,7 +429,7 @@ if __name__ == "__main__":
                 waveform_timeseries.create_dataset("timestamps", data=spiketrain["times"])
 
 
-    # TODO for each shank, create Event*
+    # TODO for each channel_group, create Event*
 
     # TODO create tracking
     tracking = processing.create_group("tracking")
