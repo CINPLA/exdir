@@ -171,8 +171,24 @@ class Object(object):
         if os.path.exists(self.attributes_filename):
             with open(self.attributes_filename, "r") as meta_file:
                 meta_data = yaml.load(meta_file)
+        if meta_data:
+            self.convert_back_quantities(meta_data)
         return meta_data or {}
         # return AttributeManager(self, AttributeManager.Mode.attributes)
+
+    def convert_back_quantities(self, value):
+        to_ret = value
+        if isinstance(value, dict):
+            if "unit" in value and "value" in value:
+                to_ret = pq.Quantity(value["value"], value["unit"])
+            else:
+                try:
+                    for key, value in to_ret.items():
+                        to_ret[key] = self.convert_back_quantities(value)
+                except AttributeError:
+                    pass
+
+        return to_ret
 
     def convert_quantities(self, value):
         to_ret = value
