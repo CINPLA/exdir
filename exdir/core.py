@@ -87,6 +87,7 @@ class AttributeManager:
         self.mode = mode
 
     def __getitem__(self, name):
+        # TODO return new AttributeManager with subpath
         meta_data = self._open_or_create()
         return meta_data[name]
 
@@ -164,15 +165,43 @@ class Object(object):
         self.name = "/" + self.relative_path
         self.mode = mode
 
-
     @property
     def attrs(self):
-        return AttributeManager(self, AttributeManager.Mode.attributes)
+        meta_data = {}
+        if os.path.exists(self.attributes_filename):
+            with open(self.attributes_filename, "r") as meta_file:
+                meta_data = yaml.load(meta_file)
+        return meta_data or {}
+        # return AttributeManager(self, AttributeManager.Mode.attributes)
+
+    def convert_quantities(self, value):
+        to_ret = value
+        if isinstance(value, pq.Quantity):
+            to_ret = {
+                "value": value.magnitude.tolist(),
+                "unit": value.dimensionality.string
+            }
+            if isinstance(value, pq.UncertainQuantity):
+                to_ret["uncertainty"] = value.uncertainty
+        else:
+            try:
+                for key, value in to_ret.items():
+                    to_ret[key] = self.convert_quantities(value)
+            except AttributeError:
+                pass
+
+        return to_ret
 
     @attrs.setter
     def attrs(self, value):
-        manager = self.attrs
-        manager._set_data(value)
+        self.convert_quantities(value)
+        with open(self.attributes_filename, "w") as meta_file:
+            yaml.dump(value,
+                      meta_file,
+                      default_flow_style=False,
+                      allow_unicode=True)
+        # manager = self.attrs
+        # manager._set_data(value)
 
     @property
     def meta(self):
