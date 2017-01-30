@@ -318,9 +318,14 @@ class Group(Object):
                 else:
                     raise KeyError('To begin tree structure with "/" is only' +
                                    ' allowed for get item from root object')
-            top_folder_name, sub_folder_names = name.split("/", 1)
-            item = self[top_folder_name]
-            return item[sub_folder_names]
+            name_split = name.split("/", 1)
+            if len(name_split) == 2:
+                item = self[name_split[0]]
+                return item[name_split[1]]
+            else:
+                return self[name_split[0]]
+                
+            
 
         folder = os.path.join(self.folder, name)
         if name not in self:
