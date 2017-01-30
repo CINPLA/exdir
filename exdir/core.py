@@ -22,6 +22,37 @@ DATASET_TYPENAME = "dataset"
 GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
 
+def convert_back_quantities(value):
+    to_ret = value
+    if isinstance(value, dict):
+        if "unit" in value and "value" in value:
+            to_ret = pq.Quantity(value["value"], value["unit"])
+        else:
+            try:
+                for key, value in to_ret.items():
+                    to_ret[key] = convert_back_quantities(value)
+            except AttributeError:
+                pass
+
+    return to_ret
+
+def convert_quantities(value):
+    to_ret = value
+    if isinstance(value, pq.Quantity):
+        to_ret = {
+            "value": value.magnitude.tolist(),
+            "unit": value.dimensionality.string
+        }
+        if isinstance(value, pq.UncertainQuantity):
+            to_ret["uncertainty"] = value.uncertainty
+    else:
+        try:
+            for key, value in to_ret.items():
+                to_ret[key] = convert_quantities(value)
+        except AttributeError:
+            pass
+
+    return to_ret
 
 def _assert_valid_name(name):
     if len(name) < 1:
@@ -77,19 +108,28 @@ def _is_valid_object_folder(folder):
     return True
 
 
-class AttributeManager:
+class Attribute:
     class Mode(Enum):
         attributes = 1
         metadata = 2
 
-    def __init__(self, parent, mode):
+    def __init__(self, parent, mode, path=None):
         self.parent = parent
         self.mode = mode
+        self.path = path or []
+        print("PATH is", self.path)
 
     def __getitem__(self, name):
         # TODO return new AttributeManager with subpath
         meta_data = self._open_or_create()
-        return meta_data[name]
+        convert_back_quantities(meta_data)
+        for i in self.path:
+            meta_data = meta_data[i]
+        meta_data = meta_data[name]
+        if isinstance(meta_data, dict):
+            return Attribute(self.parent, self.mode, self.path + [name])
+        else:
+            return meta_data
 
     def __setitem__(self, name, value):
         meta_data = self._open_or_create()
@@ -107,11 +147,17 @@ class AttributeManager:
             result = int(value)
         else:
             result = value
+            
         if isinstance(name, np.integer):
             key = int(name)
         else:
             key = name
-        meta_data[key] = result
+        
+        sub_meta_data = meta_data
+        for i in self.path:
+            sub_meta_data = sub_meta_data[i]
+        sub_meta_data[key] = result
+        
         self._set_data(meta_data)
     
     def __contains__(self, name):
@@ -131,6 +177,7 @@ class AttributeManager:
         return meta_data.values()
 
     def _set_data(self, meta_data):
+        convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
             yaml.dump(meta_data,
                       meta_file,
@@ -167,50 +214,11 @@ class Object(object):
 
     @property
     def attrs(self):
-        meta_data = {}
-        if os.path.exists(self.attributes_filename):
-            with open(self.attributes_filename, "r") as meta_file:
-                meta_data = yaml.load(meta_file)
-        if meta_data:
-            self.convert_back_quantities(meta_data)
-        return meta_data or {}
-        # return AttributeManager(self, AttributeManager.Mode.attributes)
-
-    def convert_back_quantities(self, value):
-        to_ret = value
-        if isinstance(value, dict):
-            if "unit" in value and "value" in value:
-                to_ret = pq.Quantity(value["value"], value["unit"])
-            else:
-                try:
-                    for key, value in to_ret.items():
-                        to_ret[key] = self.convert_back_quantities(value)
-                except AttributeError:
-                    pass
-
-        return to_ret
-
-    def convert_quantities(self, value):
-        to_ret = value
-        if isinstance(value, pq.Quantity):
-            to_ret = {
-                "value": value.magnitude.tolist(),
-                "unit": value.dimensionality.string
-            }
-            if isinstance(value, pq.UncertainQuantity):
-                to_ret["uncertainty"] = value.uncertainty
-        else:
-            try:
-                for key, value in to_ret.items():
-                    to_ret[key] = self.convert_quantities(value)
-            except AttributeError:
-                pass
-
-        return to_ret
+        return Attribute(self, Attribute.Mode.attributes)
 
     @attrs.setter
     def attrs(self, value):
-        self.convert_quantities(value)
+        convert_quantities(value)
         with open(self.attributes_filename, "w") as meta_file:
             yaml.dump(value,
                       meta_file,
@@ -221,7 +229,7 @@ class Object(object):
 
     @property
     def meta(self):
-        return AttributeManager(self, AttributeManager.Mode.metadata)
+        return Attribute(self, Attribute.Mode.metadata)
 
     @property
     def folder(self):
@@ -457,3 +465,8 @@ class Dataset(Object):
     @property
     def data(self):
         return self[:]
+    
+    @property
+    def shape(self):
+        # TODO don't load entire dataset
+        return self[:].shape
