@@ -23,36 +23,49 @@ GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
 
 def convert_back_quantities(value):
-    to_ret = value
+    result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value:
-            to_ret = pq.Quantity(value["value"], value["unit"])
+            result = pq.Quantity(value["value"], value["unit"])
         else:
             try:
-                for key, value in to_ret.items():
-                    to_ret[key] = convert_back_quantities(value)
+                for key, value in result.items():
+                    result[key] = convert_back_quantities(value)
             except AttributeError:
                 pass
 
-    return to_ret
+    return result
 
 def convert_quantities(value):
-    to_ret = value
+    result = value
     if isinstance(value, pq.Quantity):
-        to_ret = {
+        result = {
             "value": value.magnitude.tolist(),
             "unit": value.dimensionality.string
         }
         if isinstance(value, pq.UncertainQuantity):
-            to_ret["uncertainty"] = value.uncertainty
+            result["uncertainty"] = value.uncertainty
+    elif isinstance(value, np.ndarray):
+        result = value.tolist()
+    elif isinstance(value, np.integer):
+        result = int(value)
+    else:
+        result = value
+    if isinstance(value, pq.Quantity):
+        result = {
+            "value": value.magnitude.tolist(),
+            "unit": value.dimensionality.string
+        }
+        if isinstance(value, pq.UncertainQuantity):
+            result["uncertainty"] = value.uncertainty
     else:
         try:
-            for key, value in to_ret.items():
-                to_ret[key] = convert_quantities(value)
+            for key, value in result.items():
+                result[key] = convert_quantities(value)
         except AttributeError:
             pass
 
-    return to_ret
+    return result
 
 def _assert_valid_name(name):
     if len(name) < 1:
@@ -132,20 +145,6 @@ class Attribute:
 
     def __setitem__(self, name, value):
         meta_data = self._open_or_create()
-
-        if isinstance(value, pq.Quantity):
-            result = {
-                "value": value.magnitude.tolist(),
-                "unit": value.dimensionality.string
-            }
-            if isinstance(value, pq.UncertainQuantity):
-                result["uncertainty"] = value.uncertainty
-        elif isinstance(value, np.ndarray):
-            result = value.tolist()
-        elif isinstance(value, np.integer):
-            result = int(value)
-        else:
-            result = value
             
         if isinstance(name, np.integer):
             key = int(name)
@@ -155,7 +154,7 @@ class Attribute:
         sub_meta_data = meta_data
         for i in self.path:
             sub_meta_data = sub_meta_data[i]
-        sub_meta_data[key] = result
+        sub_meta_data[key] = value
         
         self._set_data(meta_data)
     
@@ -217,14 +216,7 @@ class Object(object):
 
     @attrs.setter
     def attrs(self, value):
-        convert_quantities(value)
-        with open(self.attributes_filename, "w") as meta_file:
-            yaml.dump(value,
-                      meta_file,
-                      default_flow_style=False,
-                      allow_unicode=True)
-        # manager = self.attrs
-        # manager._set_data(value)
+        self.attrs._set_data(value)
 
     @property
     def meta(self):
