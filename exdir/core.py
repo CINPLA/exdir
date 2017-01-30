@@ -117,7 +117,6 @@ class Attribute:
         self.parent = parent
         self.mode = mode
         self.path = path or []
-        print("PATH is", self.path)
 
     def __getitem__(self, name):
         # TODO return new AttributeManager with subpath
