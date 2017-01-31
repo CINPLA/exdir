@@ -133,7 +133,8 @@ class Attribute:
         convert_back_quantities(meta_data)
         for i in self.path:
             meta_data = meta_data[i]
-        meta_data = meta_data[name]
+        if name:
+            meta_data = meta_data[name]
         if isinstance(meta_data, dict):
             return Attribute(self.parent, self.mode, self.path + [name])
         else:
@@ -184,6 +185,10 @@ class Attribute:
             with open(self.filename, "r") as meta_file:
                 meta_data = yaml.load(meta_file)
         return meta_data
+        
+    def __iter__(self):
+        for key in self.keys():
+            yield key
 
     @property
     def filename(self):
@@ -191,6 +196,9 @@ class Attribute:
             return self.parent.meta_filename
         else:
             return self.parent.attributes_filename
+            
+    def __len__(self):
+        return len(self.keys())
 
 
 class Object(object):
@@ -424,6 +432,7 @@ class Dataset(Object):
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         super(Dataset, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
         self.data_filename = os.path.join(self.folder, "data.npy")
+        self._data = None
 
     def set_data(self, data):
         if isinstance(data, pq.Quantity):
@@ -437,7 +446,10 @@ class Dataset(Object):
 
 
     def __getitem__(self, args):
+        if not os.path.exists(self.data_filename):
+            return np.array()
         data = np.load(self.data_filename)
+        self._data = data
         if len(data.shape) == 0:
             return data
         else:
@@ -452,6 +464,10 @@ class Dataset(Object):
     @property
     def data(self):
         return self[:]
+        
+    @data.setter
+    def data(self, value):
+        self.set_data(value)
     
     @property
     def shape(self):
