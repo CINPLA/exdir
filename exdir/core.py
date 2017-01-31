@@ -49,19 +49,15 @@ def convert_quantities(value):
         result = value.tolist()
     elif isinstance(value, np.integer):
         result = int(value)
-    else:
-        result = value
-    if isinstance(value, pq.Quantity):
-        result = {
-            "value": value.magnitude.tolist(),
-            "unit": value.dimensionality.string
-        }
-        if isinstance(value, pq.UncertainQuantity):
-            result["uncertainty"] = value.uncertainty
+    elif isinstance(value, np.float):
+        result = float(value)
     else:
         try:
-            for key, value in result.items():
-                result[key] = convert_quantities(value)
+            new_result = {}
+            for key, val in value.items():
+                new_key = convert_quantities(key)
+                new_result[new_key] = convert_quantities(val)
+            result = new_result
         except AttributeError:
             pass
 
@@ -175,7 +171,7 @@ class Attribute:
         return meta_data.values()
 
     def _set_data(self, meta_data):
-        convert_quantities(meta_data)
+        meta_data = convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
             yaml.dump(meta_data,
                       meta_file,
