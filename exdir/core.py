@@ -127,13 +127,12 @@ class Attribute:
         self.mode = mode
         self.path = path or []
 
-    def __getitem__(self, name):
-        # TODO return new AttributeManager with subpath
+    def __getitem__(self, name=None):
         meta_data = self._open_or_create()
         convert_back_quantities(meta_data)
         for i in self.path:
             meta_data = meta_data[i]
-        if name:
+        if name is not None:
             meta_data = meta_data[name]
         if isinstance(meta_data, dict):
             return Attribute(self.parent, self.mode, self.path + [name])
@@ -157,18 +156,26 @@ class Attribute:
     
     def __contains__(self, name):
         meta_data = self._open_or_create()
+        for i in self.path:
+            meta_data = meta_data[i]
         return name in meta_data
 
     def keys(self):
         meta_data = self._open_or_create()
+        for i in self.path:
+            meta_data = meta_data[i]
         return meta_data.keys()
 
     def items(self):
         meta_data = self._open_or_create()
+        for i in self.path:
+            meta_data = meta_data[i]
         return meta_data.items()
 
     def values(self):
         meta_data = self._open_or_create()
+        for i in self.path:
+            meta_data = meta_data[i]
         return meta_data.values()
 
     def _set_data(self, meta_data):
