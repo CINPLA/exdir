@@ -1,4 +1,4 @@
-conda install conda-build anaconda-client
+conda install -y conda-build anaconda-client
 mkdir ~/conda-bld
 conda config --set anaconda_upload no
 export CONDA_BLD_PATH=~/conda-bld
