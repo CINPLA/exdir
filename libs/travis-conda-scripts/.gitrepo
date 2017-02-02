@@ -1,0 +1,11 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:CINPLA/travis-conda-scripts.git
+	branch = master
+	commit = 284cb060c8e30cc33a7aafe957db16000be2674b
+	parent = 17d6eda8f9e8a8486f091c2422a96891cf8ca308
+	cmdver = 0.3.0
