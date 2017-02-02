@@ -1,0 +1,40 @@
+package:
+  name: exdir
+  version: {{ environ['VERSION'] }}
+  
+source:
+  path: .
+ 
+build:
+  script_env:
+    - VERSION
+    - CONDA_BLD_PATH
+  script: python setup.py install
+
+requirements:
+  build:
+    - python
+    - setuptools
+    - pip
+    - numpy
+    - quantities
+    - pyyaml
+
+  run:
+    - python
+    - setuptools
+    - pip
+    - numpy
+    - scipy
+    - quantities
+    - pyyaml
+    - exdir
+
+test:
+  imports:
+    - exdir
+
+about:
+  home: https://github.com/CINPLA/exdir/
+  license: MIT
+  license_file: LICENSE

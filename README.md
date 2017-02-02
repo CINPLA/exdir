@@ -31,10 +31,12 @@ Here is an example structure:
 
 ```
 example.exdir (File, folder)
+│   attributes.yml (-, file)
 │   meta.yml (-, file)
 │
 ├── dataset1 (Dataset, folder)
 │   ├── data.npy (-, file)
+│   ├── attributes.yml (-, file)
 │   └── meta.yml (-, file)
 │
 ├── dataset2 (Dataset, folder)
@@ -42,10 +44,12 @@ example.exdir (File, folder)
 │   └── meta.yml (-, file)
 │
 └── group1 (Group, folder)
+│   ├── attributes.yml (-, file)
     └── meta.yml (-, file)
     │
     ├── dataset3 (Dataset, folder)
     │   ├── data.npy (-, file)
+    │   ├── attributes.yml (-, file)
     │   └── meta.yml (-, file)
     │
     ├── link1 (Link, folder)
@@ -53,6 +57,7 @@ example.exdir (File, folder)
     │
     └── dataset4 (Dataset, folder)
         ├── data.npy (-, file)
+        ├── attributes.yml (-, file)
         ├── meta.yml (-, file)
         │
         └── raw (Raw, folder)
@@ -75,7 +80,10 @@ It is however explicitly stored in the file system.
 The above structure shows that the `example.exdir` file is simply a folder in
 the file system, but when read by an exdir parser, it appears as a `File`.
 The `File` is the root object of any structure.
-The metadata of the `File` stored in a file named meta.yml.
+The metadata of the `File` is stored in a file named meta.yml.
+This is internal to exdir.
+Attributes of the `File` is stored in a file named attributes.yml.
+This is optional.
 
 Below the file, multiple objects may appear, among them `Dataset`s and `Group`s.
 Both `Dataset`s and `Group`s are stored as folders in the file system.
