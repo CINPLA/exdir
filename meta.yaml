@@ -28,7 +28,6 @@ requirements:
     - scipy
     - quantities
     - pyyaml
-    - exdir
 
 test:
   imports:
