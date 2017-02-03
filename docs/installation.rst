@@ -2,8 +2,8 @@
 
 .. _installation:
 
-Install
-=======
+Installation
+============
 
 Pre-configured installation (recommended)
 -----------------------------------------

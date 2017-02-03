@@ -22,7 +22,7 @@ def test_core():
 #     f = exdir.File(TESTFILE)
 #     f.attrs["temperature"] = 99.0
 #     print(f.attrs["temperature"])
-# 
+
 #     a = np.array([1, 2, 3, 4, 5])
 #     dset = f.require_dataset("mydata", data=a)
 # 

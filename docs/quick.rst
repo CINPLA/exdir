@@ -17,10 +17,7 @@ Core concepts
 -------------
 An exdir file is a container for two kinds of objects: `datasets`, which are
 array-like collections of data, and `groups`, which are directory-like containers
-that hold datasets and other groups. The most fundamental thing to remember
-when using exdir is:
-
-    **Groups work like dictionaries, and datasets work like NumPy arrays**
+that hold datasets and other groups. 
 
 The very first thing you'll need to do is create a new file:
   
@@ -28,30 +25,23 @@ The very first thing you'll need to do is create a new file:
   
     >>> import exdir
     >>> import numpy as np
-    >>>
-    >>> f = exdir.File("mytestfile.exdir")
+    >>> f = exdir.File("myfile.exdir", "w")
 
-The :ref:`File object <file>` is your starting point.  It has a couple of
-methods which look interesting.  One of them is :py:class:`exdir.core.Dataset`:
+The :ref:`File object <file>` is your starting point. 
+One of its methods is :py:class:`exdir.core.Dataset`:
 
-.. doctest::
-  
-    >>> a = np.arange(100)
-    >>> dset = f.require_dataset("mydata", data=a)
+    >>> data = np.arange(100)
+    >>> dset = f.require_dataset("mydataset", data)
 
 The object we created isn't an array, but :ref:`an exdir dataset<dataset>`.
 Like NumPy arrays, datasets have both a shape and a data type:
 
-.. doctest:: 
-  
     >>> dset.shape
     (100,)
 
 They also support array-style slicing.  This is how you read and write data
 from a dataset in the file:
 
-.. doctest::
-  
     >>> dset[0]
     0
     >>> dset[10]
@@ -61,4 +51,105 @@ from a dataset in the file:
 
 For more, see :ref:`file` and :ref:`dataset`.
 
-Test.
+
+Groups and hierarchical organization
+------------------------------------
+
+Every object in an exdir file
+has a name, and they're arranged in a POSIX-style hierarchy with 
+``/``-separators:
+
+    >>> dset.name
+    '/mydataset'
+
+The "directory" in this system are called :ref:`groups <group>`.  
+The ``File`` object we created is itself a group, in this case the `root group`, named ``/``
+
+    >>> f.name
+    '/'
+
+Creating a subgroup is accomplished via the aptly-named :py:meth:`exdir.core.Group.require_group`:
+
+    >>> grp = f.require_group("subgroup")
+
+All :py:class:`exdir.core.Group` objects also have the ``require_*`` methods like File:
+  
+    >>> dset2 = grp.require_dataset("another_dataset", data)
+    >>> dset2.name
+    '/subgroup/another_dataset'
+
+.. By the way, you don't have to create all the intermediate groups manually.
+.. Specifying a full path works just fine:
+.. 
+.. 
+..     >>> dset3 = f.create_dataset('subgroup2/dataset_three', (10,))
+..     >>> dset3.name
+..     '/subgroup2/dataset_three'
+
+Groups support most of the Python dictionary-style interface.  
+You retrieve objects in the file using the item-retrieval syntax:
+
+    >>> dataset_three = f['subgroup/another_dataset']
+
+Iterating over a group provides the names of its members:
+  
+    >>> for name in f:
+    ...     print(name)
+    mydataset
+    subgroup
+
+
+Containership testing also uses names:
+
+
+    >>> "mydataset" in f
+    True
+    >>> "somethingelse" in f
+    False
+
+You can even use full path names:
+
+    >>> "subgroup/another_dataset" in f
+    True
+    >>> "subgroup/somethingelse" in f
+    False
+
+There are also the familiar :py:meth:`exdir.core.Group.keys`, :py:meth:`exdir.core.Group.values`, :py:meth:`exdir.core.Group.items` and
+:py:meth:`exdir.core.Group.iter` methods, as well as :py:meth:`exdir.core.Group.get`.
+
+
+.. Since iterating over a group only yields its directly-attached members,
+.. iterating over an entire file is accomplished with the ``Group`` methods
+.. ``visit()`` and ``visititems()``, which take a callable:
+.. 
+.. 
+..   
+..     >>> def printname(name):
+..     ...     print(name)
+..     >>> f.visit(printname)
+..     mydataset
+..     subgroup
+..     subgroup/another_dataset
+..     subgroup2
+..     subgroup2/dataset_three
+
+For more, see :ref:`group`.
+
+
+
+Attributes
+----------
+
+With exdir you can store metadata right next to the data it describes.  
+All groups and datasets support attached named bits of data called :py:meth:`exdir.core.attributes`.
+
+Attributes are accessed through the ``attrs`` proxy object, which again
+implements the dictionary interface:
+
+    >>> dset.attrs['temperature'] = 99.5
+    >>> dset.attrs['temperature']
+    99.5
+    >>> 'temperature' in dset.attrs
+    True
+
+For more, see :ref:`attributes`.
