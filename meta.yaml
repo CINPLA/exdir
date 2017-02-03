@@ -1,6 +1,6 @@
 package:
   name: exdir
-  version: {{ environ['VERSION'] }}
+  version: {{ GIT_DESCRIBE_TAG }}_{{ GIT_BUILD_STR }}
   
 source:
   path: .
@@ -19,6 +19,8 @@ requirements:
     - numpy
     - quantities
     - pyyaml
+    - versioneer
+    - pytest
 
   run:
     - python
