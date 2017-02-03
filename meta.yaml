@@ -1,14 +1,11 @@
 package:
   name: exdir
-  version: {{ GIT_DESCRIBE_TAG|replace("v", "") }}_{{ GIT_BUILD_STR }}
+  version: {{ environ.get("GIT_DESCRIBE", "unknown_version")|replace("v", "")|replace("-", "_") }}
   
 source:
   path: .
  
 build:
-  script_env:
-    - VERSION
-    - CONDA_BLD_PATH
   script: python setup.py install
 
 requirements:
