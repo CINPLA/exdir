@@ -22,7 +22,7 @@ when using exdir is:
 
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
-The very first thing you'll need to do is create a new file::
+The very first thing you'll need to do is create a new file:
   
 .. doctest::
   
@@ -32,7 +32,7 @@ The very first thing you'll need to do is create a new file::
     >>> f = exdir.File("mytestfile.exdir")
 
 The :ref:`File object <file>` is your starting point.  It has a couple of
-methods which look interesting.  One of them is :py:class:`exdir.core.Dataset`::
+methods which look interesting.  One of them is :py:class:`exdir.core.Dataset`:
 
 .. doctest::
   
