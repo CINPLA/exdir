@@ -4,10 +4,11 @@ python:
   - "3.5"
   - "3.6"
 install:
-  - bash libs/travis-conda-scripts/scripts/install.sh
+  - bash -x libs/travis-conda-scripts/scripts/install.sh
 script:
   - echo "No tests to run..."
+after_success:
+  - bash -x libs/travis-conda-scripts/scripts/install.sh
+  - bash -x libs/travis-conda-scripts/scripts/upload.sh
 deploy:
   skip_cleanup: true
-after_success:
-  - bash libs/travis-conda-scripts/scripts/upload.sh
