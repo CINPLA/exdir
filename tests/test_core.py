@@ -19,8 +19,12 @@ def test_everything():
     f.attrs["temperature"] = 99.0
     print(f.attrs["temperature"])
 
-    a = np.array([1, 2, 3, 4, 5])
+    a = np.arange(100)
     dset = f.require_dataset("mydata", data=a)
+    print("shape", dset.shape)
+    print("dset[0]", dset[0])
+    print("dset[0]", dset[10])
+    print("dset[0:100:10]", dset[0:100:10])
 
     dset[1:3] = 8.0
 
@@ -40,44 +44,44 @@ def test_everything():
     print(group["some_data"][()])
     
 
-def test_modify_view():
-    remove_if_exists()
-    f = exdir.File(TESTFILE)
-    dataset = f.create_dataset("mydata", np.array([1, 2, 3, 4, 5, 6, 7, 8]))
-    dataset[3:5] = np.array([8, 9])
-    assert(np.array_equal(f["mydata"][3:5], np.array([8, 9])))
-    view = dataset[3:5]
-    view[0] = 10
-    assert(f["mydata"][3] == 10)
+# def test_modify_view():
+#     remove_if_exists()
+#     f = exdir.File(TESTFILE)
+#     dataset = f.create_dataset("mydata", np.array([1, 2, 3, 4, 5, 6, 7, 8]))
+#     dataset[3:5] = np.array([8, 9])
+#     assert(np.array_equal(f["mydata"][3:5], np.array([8, 9])))
+#     view = dataset[3:5]
+#     view[0] = 10
+#     assert(f["mydata"][3] == 10)
 
-def test_open_file():
-    remove_if_exists()
-    for mode in ["a", "r", "r+"]:
-        f = exdir.File(TESTFILE, mode)
-        f.close()
-        assert(os.path.exists(TESTFILE))
-    
-    # invalid file
-    dummy_file = "/tmp/dummy.exdir"
-    if not os.path.exists(dummy_file):
-        os.mkdir(dummy_file)
-    for mode in ["a", "r", "r+", "w", "w-"]:
-        with pytest.raises(FileExistsError):
-            f = exdir.File(dummy_file)
-    
-    # truncate
-    f = exdir.File(TESTFILE, "w")
-    f.create_group("test_group")
-    assert("test_group" in f)
-    f.close()
-    f = exdir.File(TESTFILE, "w")
-    assert("test_group" not in f)
-    f.close()
-    assert(os.path.exists(TESTFILE))
-    
-    # assume doesn't exist
-    remove_if_exists()
-    f = exdir.File(TESTFILE, "w-")
-    f.close()
-    
-    assert(os.path.exists(TESTFILE))
+# def test_open_file():
+#     remove_if_exists()
+#     for mode in ["a", "r", "r+"]:
+#         f = exdir.File(TESTFILE, mode)
+#         f.close()
+#         assert(os.path.exists(TESTFILE))
+#     
+#     # invalid file
+#     dummy_file = "/tmp/dummy.exdir"
+#     if not os.path.exists(dummy_file):
+#         os.mkdir(dummy_file)
+#     for mode in ["a", "r", "r+", "w", "w-"]:
+#         with pytest.raises(FileExistsError):
+#             f = exdir.File(dummy_file)
+#     
+#     # truncate
+#     f = exdir.File(TESTFILE, "w")
+#     f.create_group("test_group")
+#     assert("test_group" in f)
+#     f.close()
+#     f = exdir.File(TESTFILE, "w")
+#     assert("test_group" not in f)
+#     f.close()
+#     assert(os.path.exists(TESTFILE))
+#     
+#     # assume doesn't exist
+#     remove_if_exists()
+#     f = exdir.File(TESTFILE, "w-")
+#     f.close()
+#     
+#     assert(os.path.exists(TESTFILE))

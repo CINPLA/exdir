@@ -1,5 +1,24 @@
-Exdir 
-=====
+.. exdir documentation master file, created by
+   sphinx-quickstart on Fri Feb  3 09:52:17 2017.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to exdir's documentation!
+=================================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`search`
+
+
 The Experimental Directory Structure (exdir) is a proposed, open file format standard for
 experimental pipelines.
 exdir is currently a prototype published to invite researchers to give feedback on
@@ -13,8 +32,16 @@ The development of exdir owes a great deal to the efforts of others to standardi
 data formats in science in general and neuroscience in particular, among them 
 the Klusta Kwik Team and Neuroscience Without Borders.
 
-Quick introduction
-------------------
+
+Where to start
+--------------
+
+* :ref:`Quick-start guide <quick>`
+* :ref:`Installation <installation>`
+
+
+Exdir core
+----------
 
 exdir is not a file format in itself, but rather a standardized folder structure.
 The structure is equivalent to the internal structure of HDF5,
@@ -24,44 +51,44 @@ the hierarchy.
 The metadata is stored in the YAML format and the binary data in the NumPy
 format.
 
-Here is an example structure:
+Here is an example structure::
 
-```
-example.exdir (File, folder)
-│   attributes.yml (-, file)
-│   meta.yml (-, file)
-│
-├── dataset1 (Dataset, folder)
-│   ├── data.npy (-, file)
-│   ├── attributes.yml (-, file)
-│   └── meta.yml (-, file)
-│
-├── dataset2 (Dataset, folder)
-│   ├── data.npz (-, file)
-│   └── meta.yml (-, file)
-│
-└── group1 (Group, folder)
-│   ├── attributes.yml (-, file)
-    └── meta.yml (-, file)
-    │
-    ├── dataset3 (Dataset, folder)
-    │   ├── data.npy (-, file)
-    │   ├── attributes.yml (-, file)
-    │   └── meta.yml (-, file)
-    │
-    ├── link1 (Link, folder)
-    │   └── meta.yml (-, file)
-    │
-    └── dataset4 (Dataset, folder)
-        ├── data.npy (-, file)
-        ├── attributes.yml (-, file)
-        ├── meta.yml (-, file)
-        │
-        └── raw (Raw, folder)
-            ├── image0001.tif (-, file)
-            ├── image0002.tif (-, file)
-            └── ...
-```
+
+  example.exdir (File, folder)
+  │   attributes.yml (-, file)
+  │   meta.yml (-, file)
+  │
+  ├── dataset1 (Dataset, folder)
+  │   ├── data.npy (-, file)
+  │   ├── attributes.yml (-, file)
+  │   └── meta.yml (-, file)
+  │
+  ├── dataset2 (Dataset, folder)
+  │   ├── data.npz (-, file)
+  │   └── meta.yml (-, file)
+  │
+  └── group1 (Group, folder)
+  │   ├── attributes.yml (-, file)
+      └── meta.yml (-, file)
+      │
+      ├── dataset3 (Dataset, folder)
+      │   ├── data.npy (-, file)
+      │   ├── attributes.yml (-, file)
+      │   └── meta.yml (-, file)
+      │
+      ├── link1 (Link, folder)
+      │   └── meta.yml (-, file)
+      │
+      └── dataset4 (Dataset, folder)
+          ├── data.npy (-, file)
+          ├── attributes.yml (-, file)
+          ├── meta.yml (-, file)
+          │
+          └── raw (Raw, folder)
+              ├── image0001.tif (-, file)
+              ├── image0002.tif (-, file)
+              └── ...
+
 
 The above structure shows the name of the object, the type of the object in exdir and
 the type of the object on the file system as follows:
@@ -96,7 +123,8 @@ This differs from HDF5, but allows storing raw data from experiments (such as
 TIFF images from an external microscopy system) locally with the data 
 converted to the NumPy format.
 
-## Goals and benefits ##
+Goals and benefits
+------------------
 
 By reusing the structure of HDF5, exdir should be familiar to researchers that
 have experience with this format.
@@ -155,7 +183,7 @@ There are also other formats that we have investigated.
 Currently, we have only listed ASDF, but other formats will be discussed.
 
 ASDF
-----
+""""
 
 - Binary data is stored within YAML text files. 
   This is non-standard and requires additional tools to parse the files.
