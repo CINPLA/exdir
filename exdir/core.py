@@ -1,3 +1,10 @@
+"""
+.. module:: exdir.core
+   :platform: Linux
+   :synopsis: A useful module indeed.
+.. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperod
+"""
+
 from __future__ import print_function, division, unicode_literals
 
 import os
@@ -23,6 +30,10 @@ GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
 
 def convert_back_quantities(value):
+    '''
+    Converts quantities back from dictionary
+    '''
+    
     result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value:
@@ -436,12 +447,18 @@ class File(Group):
 
 
 class Dataset(Object):
+    """
+    Docstring for class Dataset.
+    """
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         super(Dataset, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
         self.data_filename = os.path.join(self.folder, "data.npy")
         self._data = None
 
     def set_data(self, data):
+        """
+        Docstring for class Dataset.
+        """
         if isinstance(data, pq.Quantity):
             result = data.magnitude
             self.attrs["unit"] = data.dimensionality.string
