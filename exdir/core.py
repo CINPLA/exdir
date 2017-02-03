@@ -2,7 +2,7 @@
 .. module:: core
    :platform: Linux
    :synopsis: A useful module indeed.
-.. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperod
+.. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød
 """
 
 from __future__ import print_function, division, unicode_literals
