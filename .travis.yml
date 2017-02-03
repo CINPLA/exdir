@@ -6,7 +6,7 @@ python:
 install:
   - bash -ex libs/travis-conda-scripts/scripts/install.sh
 script:
-  - echo "No tests to run..."
+  - bash -ex libs/travis-conda-scripts/scripts/build.sh
 after_success:
   - bash -ex libs/travis-conda-scripts/scripts/upload.sh
 deploy:
