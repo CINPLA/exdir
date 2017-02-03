@@ -74,7 +74,8 @@ It is however explicitly stored in the file system.
 
 Usage
 -----
-
+.. doctest::
+  
     >>> import exdir
     >>> import numpy as np
     >>> f = exdir.File("mytestfile.exdir")
@@ -83,27 +84,36 @@ The :ref:`File object <file>` points to the root folder in the exdir file
 structure.
 You can add groups and datasets to it.
 
+.. doctest::
+  
     >>> my_group = f.require_group("my_group")
     >>> a = np.arange(100)
     >>> dset = f.require_dataset("my_data", data=a)
 
 These can later be accessed with square brackets:
 
+.. doctest::
+  
     >>> f["my_data"][10]
     10
 
 Groups can hold other groups or datasets:
 
+.. doctest::
     >>> subgroup = my_group.require_group("subgroup")
-    >>> subgroup.require_dataset("subdata", data=a)
+    >>> subdata = subgroup.require_dataset("subdata", data=a)
     
 Datasets support array-style slicing:
 
+.. doctest::
+  
     >>> dset[0:100:10]
     array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     
 Attributes can be added to files, groups and datasets:
 
+.. doctest::
+  
     >>> f.attrs["description"] = "My first exdir file"
     >>> my_group.attrs["meaning_of_life"] = 42
     >>> dset.attrs["trial_number"] = 12
