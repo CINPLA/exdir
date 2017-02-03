@@ -1,3 +1,5 @@
+:orphan:
+
 .. _group:
 
 Group class
