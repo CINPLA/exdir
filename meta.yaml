@@ -1,6 +1,6 @@
 package:
   name: exdir
-  version: {{ environ['VERSION'] }}
+  version: {{ GIT_DESCRIBE_TAG|replace("v", "") }}_{{ GIT_BUILD_STR }}
   
 source:
   path: .
@@ -19,6 +19,8 @@ requirements:
     - numpy
     - quantities
     - pyyaml
+    - versioneer
+    - pytest
 
   run:
     - python
@@ -32,6 +34,8 @@ requirements:
 test:
   imports:
     - exdir
+  commands:
+    - python -c "import exdir; print(exdir.__version__)"
 
 about:
   home: https://github.com/CINPLA/exdir/
