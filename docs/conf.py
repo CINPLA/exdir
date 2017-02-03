@@ -53,8 +53,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'exdir'
-copyright = '2017, Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperod'
-author = 'Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperod'
+copyright = '2017, Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød'
+author = 'Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

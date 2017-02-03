@@ -189,3 +189,9 @@ ASDF
   This is non-standard and requires additional tools to parse the files.
 
 [1] http://cyrille.rossant.net/moving-away-hdf5/
+
+
+.. automodule:: exdir.core
+   :members:
+   :undoc-members:
+   :show-inheritance:
