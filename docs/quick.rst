@@ -23,7 +23,9 @@ when using exdir is:
     **Groups work like dictionaries, and datasets work like NumPy arrays**
 
 The very first thing you'll need to do is create a new file::
-
+  
+.. doctest::
+  
     >>> import exdir
     >>> import numpy as np
     >>>
@@ -32,20 +34,26 @@ The very first thing you'll need to do is create a new file::
 The :ref:`File object <file>` is your starting point.  It has a couple of
 methods which look interesting.  One of them is :py:class:`exdir.core.Dataset`::
 
+.. doctest::
+  
     >>> a = np.arange(100)
     >>> dset = f.require_dataset("mydata", data=a)
 
 The object we created isn't an array, but :ref:`an exdir dataset<dataset>`.
 Like NumPy arrays, datasets have both a shape and a data type:
 
+.. doctest:: 
+  
     >>> dset.shape
     (100,)
 
 They also support array-style slicing.  This is how you read and write data
 from a dataset in the file:
 
+.. doctest::
+  
     >>> dset[0]
-    1
+    0
     >>> dset[10]
     10
     >>> dset[0:100:10]
