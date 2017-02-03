@@ -2,8 +2,8 @@
 
 .. _file:
 
-File class
-==========
+File Objects
+============
 
 .. autoclass:: exdir.core.File
    :members:

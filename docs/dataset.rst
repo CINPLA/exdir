@@ -2,8 +2,8 @@
 
 .. _dataset:
 
-Dataset class
-=============
+Datasets
+========
 
 This is data set class.
 

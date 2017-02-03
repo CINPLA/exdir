@@ -2,8 +2,9 @@
 
 .. _attributes:
 
-Attribute class
-===============
+Attributes
+==========
+
 .. autoclass:: exdir.core.Attribute
    :members:
    :undoc-members:

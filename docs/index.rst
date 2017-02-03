@@ -13,7 +13,7 @@ Welcome to exdir's documentation!
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`search`
@@ -101,24 +101,24 @@ A dash (-) indicates that the object doesn't have a separate internal
 representation in the format, but is used indirectly.
 It is however explicitly stored in the file system.
 
-The above structure shows that the `example.exdir` file is simply a folder in
-the file system, but when read by an exdir parser, it appears as a `File`.
-The `File` is the root object of any structure.
-The metadata of the `File` is stored in a file named meta.yml.
+The above structure shows that the example.exdir file is simply a folder in
+the file system, but when read by an exdir parser, it appears as a File.
+The File is the root object of any structure.
+The metadata of the File is stored in a file named meta.yml.
 This is internal to exdir.
-Attributes of the `File` is stored in a file named attributes.yml.
+Attributes of the File is stored in a file named attributes.yml.
 This is optional.
 
-Below the file, multiple objects may appear, among them `Dataset`s and `Group`s.
-Both `Dataset`s and `Group`s are stored as folders in the file system.
+Below the file, multiple objects may appear, among them Datasets and Groups.
+Both Datasets and Groups are stored as folders in the file system.
 Both have their metadata stored in files named meta.yml.
 These are not visible as files within the exdir format, but appear simply as
-the metadata for the `Dataset`s and `Group`s.
+the metadata for the Datasets and Groups.
 
 The data within a dataset is stored in a file named data.npy (1D or 2D) or
 data.npz (3D).
 If there is any additional data assosciated with the dataset,
-it may (optionally) be stored in a folder named `raw`.
+it may (optionally) be stored in a folder named raw.
 This differs from HDF5, but allows storing raw data from experiments (such as
 TIFF images from an external microscopy system) locally with the data 
 converted to the NumPy format.
@@ -189,9 +189,3 @@ ASDF
   This is non-standard and requires additional tools to parse the files.
 
 [1] http://cyrille.rossant.net/moving-away-hdf5/
-
-
-.. automodule:: exdir.core
-   :members:
-   :undoc-members:
-   :show-inheritance:

@@ -32,12 +32,12 @@ The very first thing you'll need to do is create a new file::
     >>> f = exdir.File("mytestfile.exdir")
 
 The :ref:`File object <file>` is your starting point.  It has a couple of
-methods which look interesting.  One of them is ``require_dataset``::
+methods which look interesting.  One of them is :py:class:`exdir.core.Dataset`::
 
     >>> a = np.arange(100)
     >>> dset = f.require_dataset("mydata", data=a)
 
-The object we created isn't an array, but ().
+The object we created isn't an array, but :ref:`an exdir dataset<dataset>`.
 Like NumPy arrays, datasets have both a shape and a data type:
 
     >>> dset.shape

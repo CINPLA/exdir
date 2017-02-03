@@ -456,9 +456,6 @@ class Dataset(Object):
         self._data = None
 
     def set_data(self, data):
-        """
-        Docstring for class Dataset.
-        """
         if isinstance(data, pq.Quantity):
             result = data.magnitude
             self.attrs["unit"] = data.dimensionality.string
