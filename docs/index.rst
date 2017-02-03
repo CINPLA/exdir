@@ -100,6 +100,7 @@ These can later be accessed with square brackets:
 Groups can hold other groups or datasets:
 
 .. doctest::
+  
     >>> subgroup = my_group.require_group("subgroup")
     >>> subdata = subgroup.require_dataset("subdata", data=a)
     
