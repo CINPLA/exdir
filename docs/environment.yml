@@ -1,0 +1,40 @@
+channels:
+- conda-forge
+- cinpla
+dependencies:
+- exdir
+- certifi
+- decorator
+- ipython
+- ipython_genutils
+- ncurses
+- path.py
+- pexpect
+- pickleshare
+- pip
+- prompt_toolkit
+- ptyprocess
+- pygments
+- python=3.5
+- pyyaml
+- quantities
+- setuptools
+- simplegeneric
+- six
+- traitlets
+- wcwidth
+- wheel
+- yaml
+- libgfortran
+- mkl
+- numpy
+- openssl
+- readline
+- scipy
+- sqlite
+- tk
+- xz
+- zlib
+- pip:
+  - ipython-genutils
+  - prompt-toolkit

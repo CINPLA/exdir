@@ -1,5 +1,3 @@
-:orphan:
-
 .. _quick:
 
 
@@ -54,3 +52,5 @@ from a dataset in the file:
     array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
 
 For more, see :ref:`file` and :ref:`dataset`.
+
+Test.

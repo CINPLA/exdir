@@ -7,10 +7,14 @@ Welcome to exdir's documentation!
 =================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-
+   :maxdepth: 4
+   
+   quick
+   installation
+   file
+   group
+   dataset
+   attributes
 
 Indices and tables
 ------------------
