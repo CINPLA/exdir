@@ -1,5 +1,5 @@
 """
-.. module:: core
+.. module:: exdir.core
    :platform: Linux
    :synopsis: A useful module indeed.
 .. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperod
