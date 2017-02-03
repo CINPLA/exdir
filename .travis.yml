@@ -4,13 +4,15 @@ python:
   - "3.5"
   # - "3.6"
 install:
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - bash -ex libs/travis-conda-scripts/scripts/install.sh
+  - source libs/travis-conda-scripts/scripts/config.sh
+  - bash -ex libs/travis-conda-scripts/scripts/travis_install.sh
 script:
+  - source libs/travis-conda-scripts/scripts/config.sh
   - bash -ex libs/travis-conda-scripts/scripts/build.sh
-  - conda install --use-local exdir -c conda-forge
+  - bash -ex libs/travis-conda-scripts/scripts/install_package.sh exdir
   - bash -ex libs/travis-conda-scripts/scripts/doctest.sh
 after_success:
+  - source libs/travis-conda-scripts/scripts/config.sh
   - bash -ex libs/travis-conda-scripts/scripts/upload.sh
 deploy:
   skip_cleanup: true
