@@ -3,3 +3,4 @@ channels:
 - cinpla
 dependencies:
 - exdir
+- python=3.5
