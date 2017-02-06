@@ -15,11 +15,11 @@ With `Anaconda <http://continuum.io/downloads>`_ or
 
 Core concepts
 -------------
-An exdir file is a container for two kinds of objects: `datasets`, which are
-array-like collections of data, and `groups`, which are directory-like containers
-that hold datasets and other groups. 
+An exdir object contains two types of objects: `datasets`, which are
+array-like collections of data, and `groups`, which are directories containing
+datasets and other groups. 
 
-The very first thing you'll need to do is create a new file:
+An exdir directory is created by:
   
 .. doctest::
   
@@ -27,20 +27,18 @@ The very first thing you'll need to do is create a new file:
     >>> import numpy as np
     >>> f = exdir.File("myfile.exdir", "w")
 
-The :ref:`File object <file>` is your starting point. 
-One of its methods is :py:class:`exdir.core.Dataset`:
+The :ref:`File object <file>` containes many useful methods including :py:meth:`exdir.core.Group.require_dataset`:
 
     >>> data = np.arange(100)
     >>> dset = f.require_dataset("mydataset", data)
 
-The object we created isn't an array, but :ref:`an exdir dataset<dataset>`.
-Like NumPy arrays, datasets have both a shape and a data type:
+The created object is not an array but :ref:`an exdir dataset<dataset>`.
+Like NumPy arrays, datasets have a shape:
 
     >>> dset.shape
     (100,)
 
-They also support array-style slicing.  This is how you read and write data
-from a dataset in the file:
+Also array-style slicing is supported:
 
     >>> dset[0]
     0
@@ -55,9 +53,7 @@ For more, see :ref:`file` and :ref:`dataset`.
 Groups and hierarchical organization
 ------------------------------------
 
-Every object in an exdir file
-has a name, and they're arranged in a POSIX-style hierarchy with 
-``/``-separators:
+Every object in an exdir directory has a name, and they're arranged in a POSIX-style hierarchy with ``/``-separators:
 
     >>> dset.name
     '/mydataset'
@@ -68,7 +64,7 @@ The :ref:`File object <file>` we created is itself a group, in this case the `ro
     >>> f.name
     '/'
 
-Creating a subgroup is accomplished via the aptly-named :py:meth:`exdir.core.Group.require_group`:
+Creating a subgroup is done by using :py:meth:`exdir.core.Group.require_group` method:
 
     >>> grp = f.require_group("subgroup")
 
@@ -86,7 +82,6 @@ All :py:class:`exdir.core.Group` objects also have the ``require_*`` methods lik
 ..     >>> dset3.name
 ..     '/subgroup2/dataset_three'
 
-Groups support most of the Python dictionary-style interface.  
 You retrieve objects in the file using the item-retrieval syntax:
 
     >>> dataset_three = f['subgroup/another_dataset']
@@ -141,7 +136,7 @@ Attributes
 ----------
 
 With exdir you can store metadata right next to the data it describes.  
-All groups and datasets support attached named bits of data called :py:meth:`exdir.core.attributes`.
+All groups and datasets can have attributes which are descibed by :py:meth:`exdir.core.attributes`.
 
 Attributes are accessed through the ``attrs`` proxy object, which again
 implements the dictionary interface:
