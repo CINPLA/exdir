@@ -84,7 +84,8 @@ def _assert_valid_name(name):
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
-    valid_characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_ "
+    valid_characters = ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY" +
+                        "Z1234567890_ ")
 
     for char in name:
         if char not in valid_characters:
@@ -262,7 +263,8 @@ class Object(object):
 
     @property
     def directory(self):
-        return os.path.join(self.root_directory, self.relative_path.replace("/", os.sep))
+        return os.path.join(self.root_directory,
+                            self.relative_path.replace("/", os.sep))
 
     @property
     def attributes_filename(self):
@@ -275,7 +277,8 @@ class Object(object):
     def create_raw(self, name):
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
-            raise IOError("Raw directory " + directory_name + " already exists.")
+            raise IOError("Raw directory " + directory_name +
+                          " already exists.")
         os.mkdir(directory_name)
         return directory_name
         
@@ -292,7 +295,9 @@ class Group(Object):
     Container of other groups and datasets. 
     '''
     def __init__(self, root_directory, parent_path, object_name, mode=None):
-        super(Group, self).__init__(root_directory=root_directory, parent_path=parent_path, object_name=object_name, mode=mode)
+        super(Group, self).__init__(root_directory=root_directory,
+                                    parent_path=parent_path,
+                                    object_name=object_name, mode=mode)
 
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
@@ -302,7 +307,8 @@ class Group(Object):
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
-        dataset = Dataset(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
+        dataset = Dataset(root_directory=self.root_directory, 
+                          parent_path=self.relative_path, object_name=name)
         if data is not None:
             dataset.set_data(data)
         return dataset
@@ -311,7 +317,8 @@ class Group(Object):
         _assert_valid_name(name)
         group_directory = os.path.join(self.directory, name)
         _create_object_directory(group_directory, GROUP_TYPENAME)
-        group = Group(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
+        group = Group(root_directory=self.root_directory,
+                      parent_path=self.relative_path, object_name=name)
         return group
 
     def require_group(self, name):
@@ -324,10 +331,17 @@ class Group(Object):
                 raise TypeError("An object with name '" + name + "' already " +
                                 "exists, but it is not a Group.")
         elif os.path.exists(group_directory):
-            raise IOError("Directory " + group_directory + " already exists, " +
-                          "but is not an Exdir object.")
+            raise IOError("Directory " + group_directory + " already exists," +
+                          " but is not an Exdir object.")
         else:
             return self.create_group(name)
+
+    @property
+    def parent(self):
+        parent = self.parent_path.split('/')[-1]
+        parent_parent = "/".join(self.parent_path.split('/')[:-1])
+        return Group(root_directory=self.root_directory,
+                     parent_path=parent_parent, object_name=parent)
 
     def require_dataset(self, name, data=None):
         if name in self:
@@ -370,15 +384,18 @@ class Group(Object):
             raise KeyError("No such object: '" + name + "'")
 
         if not _is_valid_object_directory(directory):
-            raise IOError("Directory '" + directory + "' is not a valid exdir object.")
+            raise IOError("Directory '" + directory + 
+                          "' is not a valid exdir object.")
 
         meta_filename = os.path.join(self.directory, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
-            return Dataset(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
+            return Dataset(root_directory=self.root_directory,
+                           parent_path=self.relative_path, object_name=name)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
-            return Group(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
+            return Group(root_directory=self.root_directory,
+                         parent_path=self.relative_path, object_name=name)
         else:
             print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
@@ -422,14 +439,19 @@ class File(Group):
     def __init__(self, directory, mode=None, allow_remove=False):
         if mode is None:
             mode = "a"
-        super(File, self).__init__(root_directory=directory, parent_path="", object_name="", mode=mode)
+        super(File, self).__init__(root_directory=directory,
+                                   parent_path="", object_name="", mode=mode)
 
         already_exists = os.path.exists(directory)
         if already_exists:
             if not _is_valid_object_directory(directory):
-                raise FileExistsError("Path '" + directory + "' already exists, but is not a valid exdir object.")
+                raise FileExistsError("Path '" + directory +
+                                      "' already exists, but is not a valid " +
+                                      "exdir object.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
-                raise FileExistsError("Path '" + directory + "' already exists, but is not a valid exdir file.")
+                raise FileExistsError("Path '" + directory + 
+                                      "' already exists, but is not a valid " +
+                                      "exdir file.")
 
         should_create_directory = False
 
@@ -445,8 +467,8 @@ class File(Group):
                     shutil.rmtree(directory)
                 else:
                     raise FileExistsError(
-                        "File already exists. We won't delete the entire tree " +
-                        "by default. Add allow_remove=True to override."
+                        "File already exists. We won't delete the entire tree" +
+                        " by default. Add allow_remove=True to override."
                     )
             should_create_directory = True
         elif mode == "w-" or mode == "x":
@@ -470,7 +492,9 @@ class Dataset(Object):
     Dataset class
     """
     def __init__(self, root_directory, parent_path, object_name, mode=None):
-        super(Dataset, self).__init__(root_directory=root_directory, parent_path=parent_path, object_name=object_name, mode=mode)
+        super(Dataset, self).__init__(root_directory=root_directory,
+                                      parent_path=parent_path,
+                                      object_name=object_name, mode=mode)
         self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
 
