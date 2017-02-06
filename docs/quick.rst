@@ -63,7 +63,7 @@ has a name, and they're arranged in a POSIX-style hierarchy with
     '/mydataset'
 
 The "directory" in this system are called :ref:`groups <group>`.  
-The ``File`` object we created is itself a group, in this case the `root group`, named ``/``
+The :ref:`File object <file>` we created is itself a group, in this case the `root group`, named ``/``
 
     >>> f.name
     '/'

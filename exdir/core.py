@@ -1,8 +1,6 @@
 """
 .. module:: exdir.core
-   :platform: Linux
-   :synopsis: A useful module indeed.
-.. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperod
+.. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød
 """
 
 from __future__ import print_function, division, unicode_literals
@@ -29,11 +27,11 @@ DATASET_TYPENAME = "dataset"
 GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
 
+
 def convert_back_quantities(value):
     '''
     Converts quantities back from dictionary
     '''
-    
     result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value:
@@ -47,7 +45,11 @@ def convert_back_quantities(value):
 
     return result
 
+
 def convert_quantities(value):
+    '''
+    Converts quantities to dictionary
+    '''
     result = value
     if isinstance(value, pq.Quantity):
         result = {
@@ -74,7 +76,11 @@ def convert_quantities(value):
 
     return result
 
+
 def _assert_valid_name(name):
+    '''
+    Check if name (dataset or group) is valid
+    '''
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
@@ -92,6 +98,10 @@ def _assert_valid_name(name):
 
 
 def _create_object_folder(folder, typename):
+    '''
+    Create object folder and meta file if folder
+    don't already exist
+    '''
     if os.path.exists(folder):
         raise IOError("The folder '" + folder + "' already exists")
     os.mkdir(folder)
@@ -129,6 +139,9 @@ def _is_valid_object_folder(folder):
 
 
 class Attribute:
+    '''
+    Attribute class. 
+    '''
     class Mode(Enum):
         attributes = 1
         metadata = 2
@@ -220,6 +233,9 @@ class Attribute:
 
 
 class Object(object):
+    '''
+    Parent class for exdir Group and exdir dataset objects
+    '''
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         # TODO: use mode
         self.root_folder = root_folder
@@ -272,6 +288,9 @@ class Object(object):
 
 
 class Group(Object):
+    '''
+    Container of other groups and datasets. 
+    '''
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         super(Group, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
 
@@ -346,8 +365,6 @@ class Group(Object):
             else:
                 return self[name_split[0]]
                 
-            
-
         folder = os.path.join(self.folder, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
@@ -359,9 +376,9 @@ class Group(Object):
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
-            return Dataset(root_folder=self.root_folder, parent_path= self.relative_path, object_name=name)
+            return Dataset(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
-            return Group(root_folder=self.root_folder, parent_path= self.relative_path, object_name=name)
+            return Group(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
         else:
             print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
@@ -398,8 +415,10 @@ class Group(Object):
                 yield name
 
 
-
 class File(Group):
+    '''
+    Exdir file object
+    '''
     def __init__(self, folder, mode=None, allow_remove=False):
         if mode is None:
             mode = "a"
@@ -448,7 +467,7 @@ class File(Group):
 
 class Dataset(Object):
     """
-    Docstring for class Dataset.
+    Dataset class
     """
     def __init__(self, root_folder, parent_path, object_name, mode=None):
         super(Dataset, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
@@ -465,7 +484,6 @@ class Dataset(Object):
             result = data
         np.save(self.data_filename, result)
 
-
     def __getitem__(self, args):
         if not os.path.exists(self.data_filename):
             return np.array()
@@ -475,7 +493,6 @@ class Dataset(Object):
             return data
         else:
             return data[args]
-
 
     def __setitem__(self, args, value):
         data = np.load(self.data_filename)
