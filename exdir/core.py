@@ -97,15 +97,15 @@ def _assert_valid_name(name):
         raise NameError("Name cannot be '" + name + "'.")
 
 
-def _create_object_folder(folder, typename):
+def _create_object_directory(directory, typename):
     '''
-    Create object folder and meta file if folder
+    Create object directory and meta file if directory
     don't already exist
     '''
-    if os.path.exists(folder):
-        raise IOError("The folder '" + folder + "' already exists")
-    os.mkdir(folder)
-    meta_filename = _metafile_from_folder(folder)
+    if os.path.exists(directory):
+        raise IOError("The directory '" + directory + "' already exists")
+    os.mkdir(directory)
+    meta_filename = _metafile_from_directory(directory)
     with open(meta_filename, "w") as meta_file:
         metadata = {
             EXDIR_METANAME: {
@@ -118,12 +118,12 @@ def _create_object_folder(folder, typename):
                   allow_unicode=True)
 
 
-def _metafile_from_folder(folder):
-    return os.path.join(folder, META_FILENAME)
+def _metafile_from_directory(directory):
+    return os.path.join(directory, META_FILENAME)
 
 
-def _is_valid_object_folder(folder):
-    meta_filename = os.path.join(folder, META_FILENAME)
+def _is_valid_object_directory(directory):
+    meta_filename = os.path.join(directory, META_FILENAME)
     if not os.path.exists(meta_filename):
         return False
     with open(meta_filename, "r") as meta_file:
@@ -236,9 +236,9 @@ class Object(object):
     '''
     Parent class for exdir Group and exdir dataset objects
     '''
-    def __init__(self, root_folder, parent_path, object_name, mode=None):
+    def __init__(self, root_directory, parent_path, object_name, mode=None):
         # TODO: use mode
-        self.root_folder = root_folder
+        self.root_directory = root_directory
         self.object_name = object_name
         self.parent_path = parent_path
         if parent_path == "":
@@ -261,28 +261,28 @@ class Object(object):
         return Attribute(self, Attribute.Mode.metadata)
 
     @property
-    def folder(self):
-        return os.path.join(self.root_folder, self.relative_path.replace("/", os.sep))
+    def directory(self):
+        return os.path.join(self.root_directory, self.relative_path.replace("/", os.sep))
 
     @property
     def attributes_filename(self):
-        return os.path.join(self.folder, ATTRIBUTES_FILENAME)
+        return os.path.join(self.directory, ATTRIBUTES_FILENAME)
 
     @property
     def meta_filename(self):
-        return _metafile_from_folder(self.folder)
+        return _metafile_from_directory(self.directory)
         
     def create_raw(self, name):
-        folder_name = os.path.join(self.folder, name)
-        if os.path.exists(folder_name):
-            raise IOError("Raw folder " + folder_name + " already exists.")
-        os.mkdir(folder_name)
-        return folder_name
+        directory_name = os.path.join(self.directory, name)
+        if os.path.exists(directory_name):
+            raise IOError("Raw directory " + directory_name + " already exists.")
+        os.mkdir(directory_name)
+        return directory_name
         
     def require_raw(self, name):
-        folder_name = os.path.join(self.folder, name)
-        if os.path.exists(folder_name):
-            return folder_name
+        directory_name = os.path.join(self.directory, name)
+        if os.path.exists(directory_name):
+            return directory_name
         else:
             return self.create_raw(name)
 
@@ -291,31 +291,31 @@ class Group(Object):
     '''
     Container of other groups and datasets. 
     '''
-    def __init__(self, root_folder, parent_path, object_name, mode=None):
-        super(Group, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
+    def __init__(self, root_directory, parent_path, object_name, mode=None):
+        super(Group, self).__init__(root_directory=root_directory, parent_path=parent_path, object_name=object_name, mode=mode)
 
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
         if name in self:
             raise IOError("An object with name '" + name + "' already exists.")
 
-        dataset_folder = os.path.join(self.folder, name)
-        _create_object_folder(dataset_folder, DATASET_TYPENAME)
+        dataset_directory = os.path.join(self.directory, name)
+        _create_object_directory(dataset_directory, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
-        dataset = Dataset(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
+        dataset = Dataset(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
         if data is not None:
             dataset.set_data(data)
         return dataset
 
     def create_group(self, name):
         _assert_valid_name(name)
-        group_folder = os.path.join(self.folder, name)
-        _create_object_folder(group_folder, GROUP_TYPENAME)
-        group = Group(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
+        group_directory = os.path.join(self.directory, name)
+        _create_object_directory(group_directory, GROUP_TYPENAME)
+        group = Group(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
         return group
 
     def require_group(self, name):
-        group_folder = os.path.join(self.folder, name)
+        group_directory = os.path.join(self.directory, name)
         if name in self:
             current_object = self[name]
             if isinstance(current_object, Group):
@@ -323,8 +323,8 @@ class Group(Object):
             else:
                 raise TypeError("An object with name '" + name + "' already " +
                                 "exists, but it is not a Group.")
-        elif os.path.exists(group_folder):
-            raise IOError("Folder " + group_folder + " already exists, " +
+        elif os.path.exists(group_directory):
+            raise IOError("Directory " + group_directory + " already exists, " +
                           "but is not an Exdir object.")
         else:
             return self.create_group(name)
@@ -344,8 +344,8 @@ class Group(Object):
     def __contains__(self, name):
         if len(name) < 1:
             return False
-        folder = os.path.join(self.folder, name)
-        if _is_valid_object_folder(folder):
+        directory = os.path.join(self.directory, name)
+        if _is_valid_object_directory(directory):
             return True
         else:
             return False
@@ -365,20 +365,20 @@ class Group(Object):
             else:
                 return self[name_split[0]]
                 
-        folder = os.path.join(self.folder, name)
+        directory = os.path.join(self.directory, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
 
-        if not _is_valid_object_folder(folder):
-            raise IOError("Folder '" + folder + "' is not a valid exdir object.")
+        if not _is_valid_object_directory(directory):
+            raise IOError("Directory '" + directory + "' is not a valid exdir object.")
 
-        meta_filename = os.path.join(self.folder, name, META_FILENAME)
+        meta_filename = os.path.join(self.directory, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
-            return Dataset(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
+            return Dataset(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
-            return Group(root_folder=self.root_folder, parent_path=self.relative_path, object_name=name)
+            return Group(root_directory=self.root_directory, parent_path=self.relative_path, object_name=name)
         else:
             print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
@@ -395,22 +395,22 @@ class Group(Object):
                 raise NotImplementedError("Only dataset writing implemented")
 
     def keys(self):
-        for name in sorted(os.listdir(self.folder)):
+        for name in sorted(os.listdir(self.directory)):
             if name in self:
                 yield name
 
     def items(self):
-        for name in sorted(os.listdir(self.folder)):
+        for name in sorted(os.listdir(self.directory)):
             if name in self:
                 yield name, self[name]
 
     def values(self):
-        for name in sorted(os.listdir(self.folder)):
+        for name in sorted(os.listdir(self.directory)):
             if name in self:
                 yield self[name]
 
     def __iter__(self):
-        for name in sorted(os.listdir(self.folder)):
+        for name in sorted(os.listdir(self.directory)):
             if name in self:
                 yield name
 
@@ -419,46 +419,46 @@ class File(Group):
     '''
     Exdir file object
     '''
-    def __init__(self, folder, mode=None, allow_remove=False):
+    def __init__(self, directory, mode=None, allow_remove=False):
         if mode is None:
             mode = "a"
-        super(File, self).__init__(root_folder=folder, parent_path="", object_name="", mode=mode)
+        super(File, self).__init__(root_directory=directory, parent_path="", object_name="", mode=mode)
 
-        already_exists = os.path.exists(folder)
+        already_exists = os.path.exists(directory)
         if already_exists:
-            if not _is_valid_object_folder(folder):
-                raise FileExistsError("Path '" + folder + "' already exists, but is not a valid exdir object.")
+            if not _is_valid_object_directory(directory):
+                raise FileExistsError("Path '" + directory + "' already exists, but is not a valid exdir object.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
-                raise FileExistsError("Path '" + folder + "' already exists, but is not a valid exdir file.")
+                raise FileExistsError("Path '" + directory + "' already exists, but is not a valid exdir file.")
 
-        should_create_folder = False
+        should_create_directory = False
 
         if mode == "r":
             if not already_exists:
-                raise IOError("Folder " + folder + " does not exist.")
+                raise IOError("Directory " + directory + " does not exist.")
         elif mode == "r+":
             if not already_exists:
-                raise IOError("Folder " + folder + " does not exist.")
+                raise IOError("Directory " + directory + " does not exist.")
         elif mode == "w":
             if already_exists:
                 if allow_remove:
-                    shutil.rmtree(folder)
+                    shutil.rmtree(directory)
                 else:
                     raise FileExistsError(
                         "File already exists. We won't delete the entire tree " +
                         "by default. Add allow_remove=True to override."
                     )
-            should_create_folder = True
+            should_create_directory = True
         elif mode == "w-" or mode == "x":
             if already_exists:
-                raise IOError("Folder " + folder + " already exists.")
-            should_create_folder = True
+                raise IOError("Directory " + directory + " already exists.")
+            should_create_directory = True
         elif mode == "a":
             if not already_exists:
-                should_create_folder = True
+                should_create_directory = True
 
-        if should_create_folder:
-            _create_object_folder(folder, FILE_TYPENAME)
+        if should_create_directory:
+            _create_object_directory(directory, FILE_TYPENAME)
 
     def close(self):
         # yeah right, as if we would create a real file format
@@ -469,9 +469,9 @@ class Dataset(Object):
     """
     Dataset class
     """
-    def __init__(self, root_folder, parent_path, object_name, mode=None):
-        super(Dataset, self).__init__(root_folder=root_folder, parent_path=parent_path, object_name=object_name, mode=mode)
-        self.data_filename = os.path.join(self.folder, "data.npy")
+    def __init__(self, root_directory, parent_path, object_name, mode=None):
+        super(Dataset, self).__init__(root_directory=root_directory, parent_path=parent_path, object_name=object_name, mode=mode)
+        self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
 
     def set_data(self, data):
