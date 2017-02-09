@@ -20,6 +20,14 @@ array-like collections of data, and `groups`, which are directories containing
 datasets and other groups. 
 
 An exdir directory is created by:
+
+.. testsetup::
+   
+   import os
+   import shutil
+   if(os.path.exists("myfile.exdir")):
+          shutil.rmtree("myfile.exdir")
+
   
 .. doctest::
   
@@ -45,7 +53,7 @@ Also array-style slicing is supported:
     >>> dset[10]
     10
     >>> dset[0:100:10]
-    array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+    memmap([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
 
 For more, see :ref:`file` and :ref:`dataset`.
 

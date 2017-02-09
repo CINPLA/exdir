@@ -74,6 +74,15 @@ It is however explicitly stored in the file system.
 
 Usage
 -----
+
+.. testsetup::
+   
+   import os
+   import shutil
+   if(os.path.exists("mytestfile.exdir")):
+          shutil.rmtree("mytestfile.exdir")
+
+
 .. doctest::
   
     >>> import exdir
@@ -109,7 +118,7 @@ Datasets support array-style slicing:
 .. doctest::
   
     >>> dset[0:100:10]
-    array([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+    memmap([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
     
 Attributes can be added to files, groups and datasets:
 
