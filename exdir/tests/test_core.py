@@ -16,12 +16,12 @@ def remove_if_exists():
 
 def test_modify_view():
     f = exdir.File(TESTFILE, mode="w", allow_remove=True)
-    dataset = f.create_dataset("mydata", np.array([1, 2, 3, 4, 5, 6, 7, 8]))
+    dataset = f.create_dataset("mydata", data=np.array([1, 2, 3, 4, 5, 6, 7, 8]))
     dataset[3:5] = np.array([8, 9])
     assert(np.array_equal(f["mydata"][3:5], np.array([8, 9])))
     view = dataset[3:5]
     view[0] = 10
-    assert(f["mydata"][3] == 8)
+    assert(f["mydata"][3] == 10)
 
 
 def test_dataset():
@@ -30,7 +30,7 @@ def test_dataset():
     dset = f.require_dataset("mydata", data=a)
 
     dset[1:3] = 8.0
-    assert((f["mydata"][()] == np.array([1, 8, 8, 4, 5])).all())
+    assert(np.array_equal(f["mydata"].data, np.array([1, 8, 8, 4, 5])))
     assert(f["mydata"][2] == 8)
 
     group = f.require_group("mygroup")
@@ -86,9 +86,26 @@ def test_open_file():
     assert("test_group" not in f)
     f.close()
     assert(os.path.exists(TESTFILE))
-    
+
     # assume doesn't exist
     remove_if_exists()
     f = exdir.File(TESTFILE, "w-")
     f.close()
     assert(os.path.exists(TESTFILE))
+
+
+def test_open_mode():
+    for mode in ["a", "w", "w-"]:
+        remove_if_exists()
+        f = exdir.File(TESTFILE, mode)
+        f.require_dataset('dset', np.arange(10))
+        f.attrs = 'can write attr'
+
+    f = exdir.File(TESTFILE, "r+")
+    f.require_dataset('dset', np.arange(10))
+    f.attrs = 'can write attr'
+
+    f = exdir.File(TESTFILE, 'r')
+    with pytest.raises(IOError):
+        f.require_dataset('dset', np.arange(10))
+        f.attrs = 'cannot write attr'

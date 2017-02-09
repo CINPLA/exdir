@@ -139,6 +139,11 @@ def _is_valid_object_directory(directory):
     return True
 
 
+class OpenMode(Enum):
+    read_write = 1
+    read_only = 2
+
+
 class Attribute:
     '''
     Attribute class. 
@@ -147,9 +152,10 @@ class Attribute:
         attributes = 1
         metadata = 2
 
-    def __init__(self, parent, mode, path=None):
+    def __init__(self, parent, mode, io_mode, path=None):
         self.parent = parent
         self.mode = mode
+        self.io_mode = io_mode
         self.path = path or []
 
     def __getitem__(self, name=None):
@@ -160,7 +166,8 @@ class Attribute:
         if name is not None:
             meta_data = meta_data[name]
         if isinstance(meta_data, dict):
-            return Attribute(self.parent, self.mode, self.path + [name])
+            return Attribute(self.parent, self.mode, self.io_mode,
+                             self.path + [name])
         else:
             return meta_data
 
@@ -212,6 +219,8 @@ class Attribute:
         return meta_data.values()
 
     def _set_data(self, meta_data):
+        if self.io_mode == Object.OpenMode.read_only:
+            raise IOError('Cannot write in read only ("r") mode')
         meta_data = convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
             yaml.dump(meta_data,
@@ -245,8 +254,11 @@ class Object(object):
     '''
     Parent class for exdir Group and exdir dataset objects
     '''
-    def __init__(self, root_directory, parent_path, object_name, mode=None):
-        # TODO: use mode
+    class OpenMode(Enum):
+        read_write = 1
+        read_only = 2
+
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         self.root_directory = root_directory
         self.object_name = object_name
         self.parent_path = parent_path
@@ -255,11 +267,12 @@ class Object(object):
         else:
             self.relative_path = self.parent_path + "/" + self.object_name
         self.name = "/" + self.relative_path
-        self.mode = mode
+        self.io_mode = io_mode
 
     @property
     def attrs(self):
-        return Attribute(self, Attribute.Mode.attributes)
+        return Attribute(self, mode=Attribute.Mode.attributes,
+                         io_mode=self.io_mode)
 
     @attrs.setter
     def attrs(self, value):
@@ -267,7 +280,8 @@ class Object(object):
 
     @property
     def meta(self):
-        return Attribute(self, Attribute.Mode.metadata)
+        return Attribute(self, mode=Attribute.Mode.metadata,
+                         io_mode=self.io_mode)
 
     @property
     def directory(self):
@@ -302,10 +316,11 @@ class Group(Object):
     '''
     Container of other groups and datasets. 
     '''
-    def __init__(self, root_directory, parent_path, object_name, mode=None):
+        
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Group, self).__init__(root_directory=root_directory,
                                     parent_path=parent_path,
-                                    object_name=object_name, mode=mode)
+                                    object_name=object_name, io_mode=io_mode)
 
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
@@ -316,7 +331,8 @@ class Group(Object):
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
         dataset = Dataset(root_directory=self.root_directory, 
-                          parent_path=self.relative_path, object_name=name)
+                          parent_path=self.relative_path, object_name=name,
+                          io_mode=self.io_mode)
         if data is not None:
             dataset.set_data(data)
         return dataset
@@ -326,7 +342,8 @@ class Group(Object):
         group_directory = os.path.join(self.directory, name)
         _create_object_directory(group_directory, GROUP_TYPENAME)
         group = Group(root_directory=self.root_directory,
-                      parent_path=self.relative_path, object_name=name)
+                      parent_path=self.relative_path, object_name=name,
+                      io_mode=self.io_mode)
         return group
 
     def require_group(self, name):
@@ -349,13 +366,16 @@ class Group(Object):
         parent = self.parent_path.split('/')[-1]
         parent_parent = "/".join(self.parent_path.split('/')[:-1])
         return Group(root_directory=self.root_directory,
-                     parent_path=parent_parent, object_name=parent)
+                     parent_path=parent_parent, object_name=parent,
+                     io_mode=self.io_mode)
 
     def require_dataset(self, name, data=None):
         if name in self:
             current_object = self[name]
-            if isinstance(current_object, Dataset):
+            if isinstance(current_object, Dataset) and data is not None:
                 current_object.set_data(data)
+                return current_object
+            elif isinstance(current_object, Dataset) and data is None:
                 return current_object
             else:
                 raise TypeError("An object with name '" + name + "' already "
@@ -400,10 +420,12 @@ class Group(Object):
             meta_data = yaml.load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
             return Dataset(root_directory=self.root_directory,
-                           parent_path=self.relative_path, object_name=name)
+                           parent_path=self.relative_path, object_name=name,
+                           io_mode=self.io_mode)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
             return Group(root_directory=self.root_directory,
-                         parent_path=self.relative_path, object_name=name)
+                         parent_path=self.relative_path, object_name=name,
+                         io_mode=self.io_mode)
         else:
             print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Only dataset implemented")
@@ -444,11 +466,19 @@ class File(Group):
     '''
     Exdir file object
     '''
+
     def __init__(self, directory, mode=None, allow_remove=False):
+        if not directory.endswith('.exdir'):
+            directory = directory + '.exdir'
         if mode is None:
             mode = "a"
+        if mode == 'r':
+            self.io_mode = self.OpenMode.read_only
+        else:
+            self.io_mode = self.OpenMode.read_write
         super(File, self).__init__(root_directory=directory,
-                                   parent_path="", object_name="", mode=mode)
+                                   parent_path="", object_name="",
+                                   io_mode=self.io_mode)
 
         already_exists = os.path.exists(directory)
         if already_exists:
@@ -498,15 +528,24 @@ class File(Group):
 class Dataset(Object):
     """
     Dataset class
+    
+    Warning: MODIFIES VIEW!!!!!!! different from h5py
     """
-    def __init__(self, root_directory, parent_path, object_name, mode=None):
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Dataset, self).__init__(root_directory=root_directory,
                                       parent_path=parent_path,
-                                      object_name=object_name, mode=mode)
+                                      object_name=object_name,
+                                      io_mode=io_mode)
         self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
+        if self.io_mode == self.OpenMode.read_only:
+            self._mmap_mode = 'r'
+        else:
+            self._mmap_mode = 'r+'
 
     def set_data(self, data):
+        if self.io_mode == self.OpenMode.read_only:
+            raise IOError('Cannot write data to file in read only ("r") mode')
         if isinstance(data, pq.Quantity):
             result = data.magnitude
             self.attrs["unit"] = data.dimensionality.string
@@ -514,22 +553,25 @@ class Dataset(Object):
                 self.attrs["uncertainty"] = data.uncertainty
         else:
             result = data
-        np.save(self.data_filename, result)
+        if result is not None:
+            np.save(self.data_filename, result)
 
     def __getitem__(self, args):
         if not os.path.exists(self.data_filename):
             return np.array()
-        data = np.load(self.data_filename)
-        self._data = data
-        if len(data.shape) == 0:
-            return data
+        if self._data is None:
+            self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+        if len(self._data.shape) == 0:
+            return self._data
         else:
-            return data[args]
+            return self._data[args]
 
     def __setitem__(self, args, value):
-        data = np.load(self.data_filename)
-        data[args] = value
-        np.save(self.data_filename, data)
+        if self.io_mode == self.OpenMode.read_only:
+            raise IOError('Cannot write data to file in read only ("r") mode')
+        if self._data is None:
+            self[:]
+        self._data[args] = value
 
     @property
     def data(self):
@@ -541,5 +583,4 @@ class Dataset(Object):
     
     @property
     def shape(self):
-        # TODO don't load entire dataset
         return self[:].shape
