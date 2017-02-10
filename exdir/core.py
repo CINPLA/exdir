@@ -554,6 +554,10 @@ class Dataset(Object):
         else:
             result = data
         if result is not None:
+            if os.path.exists(self.data_filename):
+                raise FileExistsError('Unable to create dataset "' +
+                                      self.data_filename +
+                                      '"(dataset already exists)')
             np.save(self.data_filename, result)
 
     def __getitem__(self, args):

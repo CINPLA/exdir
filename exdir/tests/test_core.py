@@ -95,17 +95,44 @@ def test_open_file():
 
 
 def test_open_mode():
+    remove_if_exists()
+    # must exist
+    for mode in ["r+", "r"]:
+        with pytest.raises(IOError):
+            f = exdir.File(TESTFILE, mode)
+    # create if not exist
     for mode in ["a", "w", "w-"]:
         remove_if_exists()
         f = exdir.File(TESTFILE, mode)
         f.require_dataset('dset', np.arange(10))
-        f.attrs = 'can write attr'
+        f.attrs['can_overwrite'] = 42
+        f.attrs['can_overwrite'] = 14
+        f.require_group('mygroup')
 
+    remove_if_exists()
+    f = exdir.File(TESTFILE, 'w')
+    f.close()# dummy close
+    # read write if exist
     f = exdir.File(TESTFILE, "r+")
+    f.require_group('mygroup')
     f.require_dataset('dset', np.arange(10))
-    f.attrs = 'can write attr'
+    # can never overwrite dataset
+    with pytest.raises(FileExistsError):
+        f.require_dataset('dset', np.arange(10))
+    f.attrs['can_overwrite'] = 42
+    f.attrs['can_overwrite'] = 14
 
+    # read only, can not write
     f = exdir.File(TESTFILE, 'r')
     with pytest.raises(IOError):
         f.require_dataset('dset', np.arange(10))
-        f.attrs = 'cannot write attr'
+        f.attrs['can_not_write'] = 42
+        f.create_group('mygroup')
+
+    # can never overwrite dataset
+    for mode in ["a", "w", "w-"]:
+        remove_if_exists()
+        f = exdir.File(TESTFILE, mode)
+        f.require_dataset('dset', np.arange(10))
+        with pytest.raises(FileExistsError):
+            f.require_dataset('dset', np.arange(10))
