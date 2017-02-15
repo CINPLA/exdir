@@ -4,6 +4,7 @@ if [ $TRAVIS_TEST_RESULT -eq 0 ]; then
     set +x
     echo "Uploading to anaconda with anaconda upload..."
     anaconda -t "$CONDA_UPLOAD_TOKEN" upload -u cinpla --force $PACKAGE
+    echo "Upload command complete!"
     set -x
 else
     echo "Upload cancelled due to failed test."
