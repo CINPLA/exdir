@@ -6,7 +6,7 @@ source:
   path: .
  
 build:
-  noarch_python: True
+  noarch: python
   script: python setup.py install
 
 requirements:
