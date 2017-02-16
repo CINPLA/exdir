@@ -4,6 +4,10 @@ import exdir
 import numpy as np
 import os
 import quantities as pq
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from core import convert_quantities, convert_back_quantities
 
 TESTFILE = "/tmp/test_Aegoh4ahlaechohV5ooG9vew1yahDe2d.exdir"
 
@@ -38,7 +42,7 @@ def test_dataset():
     dset2 = group.require_dataset("some_data", b)
     c = np.zeros((2, 3, 4))
     group.require_dataset("some_data2", c)
-    
+
     assert(c.shape == (2, 3, 4))
     assert(group["some_data"][()].shape == (2, 3))
 
@@ -49,7 +53,7 @@ def test_attrs():
     assert(f.attrs["temperature"] == 99.0)
     f.attrs["temperature"] = 99.0 * pq.deg
     assert(f.attrs["temperature"] == 99.0 * pq.deg)
-    
+
     attrs = f.attrs
     assert(type(attrs) is exdir.core.Attribute)
 
@@ -68,7 +72,7 @@ def test_open_file():
         f = exdir.File(TESTFILE, mode)
         f.close()
         assert(os.path.exists(TESTFILE))
-    
+
     # invalid file
     dummy_file = "/tmp/dummy.exdir"
     if not os.path.exists(dummy_file):
@@ -136,3 +140,39 @@ def test_open_mode():
         f.require_dataset('dset', np.arange(10))
         with pytest.raises(FileExistsError):
             f.require_dataset('dset', np.arange(10))
+
+
+def test_convert_quantities():
+    pq_value = pq.Quantity(1, "m")
+    result = convert_quantities(pq_value)
+    assert(result["value"] == 1)
+    assert(result["unit"] == "m")
+
+    pq_value = pq.Quantity([1, 2, 3], "J")
+    result = convert_quantities(pq_value)
+    assert(result["value"] == [1, 2, 3])
+    assert(result["unit"] == "J")
+
+    result = convert_quantities(np.array([1, 2, 3]))
+    assert(result == [1, 2, 3])
+
+    result = convert_quantities(1)
+    assert(result == 1)
+
+    result = convert_quantities(2.3)
+    assert(result == 2.3)
+
+    pq_value = pq.UncertainQuantity([1, 2], "m", [3, 4])
+    result = convert_quantities(pq_value)
+    assert(result == {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]})
+
+
+    pq_values = {"quantity": pq.Quantity(1, "m"),
+                 "uq_quantity": pq.UncertainQuantity([1, 2], "m", [3, 4])}
+    result = convert_quantities(pq_values)
+    assert(result == {'quantity': {'unit': 'm', 'value': 1},
+                      'uq_quantity': {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}})
+
+
+def test_convert_back_quantities():
+    
