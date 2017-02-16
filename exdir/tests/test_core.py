@@ -145,13 +145,11 @@ def test_open_mode():
 def test_convert_quantities():
     pq_value = pq.Quantity(1, "m")
     result = convert_quantities(pq_value)
-    assert(result["value"] == 1)
-    assert(result["unit"] == "m")
+    assert(result == {"value": 1, "unit": "m"})
 
-    pq_value = pq.Quantity([1, 2, 3], "J")
+    pq_value = pq.Quantity([1, 2, 3], "m")
     result = convert_quantities(pq_value)
-    assert(result["value"] == [1, 2, 3])
-    assert(result["unit"] == "J")
+    assert(result == {"value": [1, 2, 3], "unit": "m"})
 
     result = convert_quantities(np.array([1, 2, 3]))
     assert(result == [1, 2, 3])
@@ -175,4 +173,31 @@ def test_convert_quantities():
 
 
 def test_convert_back_quantities():
-    
+    pq_dict = {"value": 1, "unit": "m"}
+    result = convert_back_quantities(pq_dict)
+    assert(result == pq.Quantity(1, "m"))
+
+    pq_dict = {"value": [1, 2, 3], "unit": "m"}
+    result = convert_back_quantities(pq_dict)
+    assert(np.array_equal(result, pq.Quantity([1, 2, 3], "m")))
+
+    # Is this wanted behaviour?
+    pq_dict = {"value": [1, 2, 3]}
+    result = convert_back_quantities(pq_dict)
+    assert(result == pq_dict)
+
+
+    result = convert_back_quantities(1)
+    assert(result == 1)
+
+    result = convert_back_quantities(2.3)
+    assert(result == 2.3)
+
+    pq_dict = {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}
+    result = convert_back_quantities(pq_dict)
+    pq_value = pq.UncertainQuantity([1, 2], "m", [3, 4])
+
+    assert(isinstance(result, pq.UncertainQuantity))
+    assert(result.magnitude.tolist() == pq_value.magnitude.tolist())
+    assert(result.dimensionality.string == pq_value.dimensionality.string)
+    assert(result.uncertainty.magnitude.tolist() == pq_value.uncertainty.magnitude.tolist())

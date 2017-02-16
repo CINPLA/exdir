@@ -66,7 +66,7 @@ def convert_quantities(value):
     elif isinstance(value, np.float):
         result = float(value)
     else:
-        # Does thos only work for dictionaries 
+        # Does thos only work for dictionaries?
         try:
             new_result = {}
             for key, val in value.items():
