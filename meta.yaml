@@ -1,11 +1,12 @@
 package:
   name: exdir
-  version: {{ environ.get("GIT_DESCRIBE", "unknown_version")|replace("v", "")|replace("-", "_") }}
+  version: {{ environ.get("GIT_DESCRIBE", "0.0.0_custom")|replace("v", "")|replace("-", "_") }}
   
 source:
   path: .
  
 build:
+  noarch: python
   script: python setup.py install
 
 requirements:
