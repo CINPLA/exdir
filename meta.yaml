@@ -6,7 +6,8 @@ source:
   path: .
  
 build:
-  # noarch: python
+  # noarch: python  # TODO Add back noarch when it works properly on Windows,
+                    # we are converting packages manually now
   script: python setup.py install
 
 requirements:
