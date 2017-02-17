@@ -1,6 +1,6 @@
 package:
   name: exdir
-  version: {{ environ.get("GIT_DESCRIBE", "0.0.0_custom")|replace("v", "")|replace("-", "_") }}
+  version: {{ environ.get("TAG_TRAVIS_BUILD_AND_COMMIT", "0.0.0_custom")|replace("v", "")|replace("-", "_") }}
   
 source:
   path: .
