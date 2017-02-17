@@ -7,7 +7,9 @@ import quantities as pq
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from core import convert_quantities, convert_back_quantities
+from core import *
+from core import _assert_valid_name
+
 
 TESTFILE = "/tmp/test_Aegoh4ahlaechohV5ooG9vew1yahDe2d.exdir"
 
@@ -230,3 +232,27 @@ def test_convert_back_quantities():
     pq_values = {"list": [1, 2, 3], "quantity": {'unit': 'm', 'value': 1}}
     result = convert_back_quantities(pq_values)
     assert(result == {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")})
+
+
+def test_assert_valid_name():
+    valid_name = ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY" +
+                  "Z1234567890_ ")
+
+    _assert_valid_name(valid_name)
+
+    invalid_name = ""
+    with pytest.raises(NameError):
+        _assert_valid_name(invalid_name)
+
+    invalid_name = "-"
+    with pytest.raises(NameError):
+        _assert_valid_name(invalid_name)
+
+    with pytest.raises(NameError):
+        _assert_valid_name(META_FILENAME)
+
+    with pytest.raises(NameError):
+        _assert_valid_name(ATTRIBUTES_FILENAME)
+
+    with pytest.raises(NameError):
+        _assert_valid_name(RAW_FOLDER_NAME)
