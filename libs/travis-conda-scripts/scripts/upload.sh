@@ -3,7 +3,7 @@ if [ $TRAVIS_TEST_RESULT -eq 0 ]; then
     echo "Package name $PACKAGE"
     set +x
     echo "Uploading to anaconda with anaconda upload..."
-    anaconda -t "$CONDA_UPLOAD_TOKEN" upload -u "$1" --force $PACKAGE
+    anaconda -t "$CONDA_UPLOAD_TOKEN" upload -u cinpla --force $PACKAGE
     echo "Upload command complete!"
     set -x
 else
