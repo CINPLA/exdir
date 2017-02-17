@@ -34,7 +34,11 @@ def convert_back_quantities(value):
     '''
     result = value
     if isinstance(value, dict):
-        if "unit" in value and "value" in value:
+        if "unit" in value and "value" in value and "uncertainty" in value:
+            result = pq.UncertainQuantity(value["value"],
+                                          value["unit"],
+                                          value["uncertainty"])
+        elif "unit" in value and "value" in value:
             result = pq.Quantity(value["value"], value["unit"])
         else:
             try:
@@ -56,8 +60,8 @@ def convert_quantities(value):
             "value": value.magnitude.tolist(),
             "unit": value.dimensionality.string
         }
-        # Error here?
         if isinstance(value, pq.UncertainQuantity):
+            assert(value.dimensionality == value.uncertainty.dimensionality)
             result["uncertainty"] = value.uncertainty.magnitude.tolist()
     elif isinstance(value, np.ndarray):
         result = value.tolist()
@@ -66,7 +70,10 @@ def convert_quantities(value):
     elif isinstance(value, np.float):
         result = float(value)
     else:
-        # Does thos only work for dictionaries?
+        # try if dictionary like objects can be converted if not return the
+        # original object
+        # Note, this might fail if .items() returns a strange combination of
+        # objects
         try:
             new_result = {}
             for key, val in value.items():

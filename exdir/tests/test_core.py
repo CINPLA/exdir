@@ -147,18 +147,23 @@ def test_convert_quantities():
     result = convert_quantities(pq_value)
     assert(result == {"value": 1, "unit": "m"})
 
+
     pq_value = pq.Quantity([1, 2, 3], "m")
     result = convert_quantities(pq_value)
     assert(result == {"value": [1, 2, 3], "unit": "m"})
 
+
     result = convert_quantities(np.array([1, 2, 3]))
     assert(result == [1, 2, 3])
+
 
     result = convert_quantities(1)
     assert(result == 1)
 
+
     result = convert_quantities(2.3)
     assert(result == 2.3)
+
 
     pq_value = pq.UncertainQuantity([1, 2], "m", [3, 4])
     result = convert_quantities(pq_value)
@@ -172,16 +177,23 @@ def test_convert_quantities():
                       'uq_quantity': {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}})
 
 
+    pq_values = {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")}
+    pq_dict = {"list": [1, 2, 3], "quantity": {'unit': 'm', 'value': 1}}
+    result = convert_quantities(pq_values)
+    assert(result == pq_dict)
+
+
 def test_convert_back_quantities():
     pq_dict = {"value": 1, "unit": "m"}
     result = convert_back_quantities(pq_dict)
     assert(result == pq.Quantity(1, "m"))
 
+
     pq_dict = {"value": [1, 2, 3], "unit": "m"}
     result = convert_back_quantities(pq_dict)
     assert(np.array_equal(result, pq.Quantity([1, 2, 3], "m")))
 
-    # Is this wanted behaviour?
+
     pq_dict = {"value": [1, 2, 3]}
     result = convert_back_quantities(pq_dict)
     assert(result == pq_dict)
@@ -190,8 +202,10 @@ def test_convert_back_quantities():
     result = convert_back_quantities(1)
     assert(result == 1)
 
+
     result = convert_back_quantities(2.3)
     assert(result == 2.3)
+
 
     pq_dict = {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}
     result = convert_back_quantities(pq_dict)
@@ -201,3 +215,18 @@ def test_convert_back_quantities():
     assert(result.magnitude.tolist() == pq_value.magnitude.tolist())
     assert(result.dimensionality.string == pq_value.dimensionality.string)
     assert(result.uncertainty.magnitude.tolist() == pq_value.uncertainty.magnitude.tolist())
+
+
+
+    pq_dict = {'quantity': {'unit': 'm', 'value': 1},
+               'uq_quantity': {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}}
+    pq_values = {"quantity": pq.Quantity(1, "m"),
+                 "uq_quantity": pq.UncertainQuantity([1, 2], "m", [3, 4])}
+    result = convert_back_quantities(pq_values)
+    assert(result == pq_values)
+
+
+
+    pq_values = {"list": [1, 2, 3], "quantity": {'unit': 'm', 'value': 1}}
+    result = convert_back_quantities(pq_values)
+    assert(result == {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")})
