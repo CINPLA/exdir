@@ -6,6 +6,7 @@
 feedback and as a basis for future reference implementations.
 They are not ready for production use.
 
+
 # Experimental Directory Structure #
 
 The Experimental Directory Structure (exdir) is a proposed, open file format standard for
@@ -20,6 +21,12 @@ retaining their benefits.
 The development of exdir owes a great deal to the efforts of others to standardize
 data formats in science in general and neuroscience in particular, among them 
 the Klusta Kwik Team and Neuroscience Without Borders.
+
+## Installation
+
+Exdir can be installed with Anaconda:
+
+    conda install exdir -c cinpla -c conda-forge
 
 ## Quick introduction ##
 
