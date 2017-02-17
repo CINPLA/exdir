@@ -16,10 +16,9 @@ deploy:
     skip_cleanup: true
     script: libs/travis-conda-scripts/scripts/upload.sh cinpla
     on:
+      tags: true
+  - provider: script
+    skip_cleanup: true
+    script: libs/travis-conda-scripts/scripts/upload.sh cinpla #-unstable
+    on:
       branch: dev
-      # tags: true # Add this when we start using cinpla-unstable
-  # - provider: script
-  #   skip_cleanup: true
-  #   script: libs/travis-conda-scripts/scripts/upload.sh cinpla-unstable
-  #   on:
-  #     branch: dev
