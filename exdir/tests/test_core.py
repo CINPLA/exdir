@@ -8,16 +8,22 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from core import *
-from core import _assert_valid_name
+from core import _assert_valid_name, _create_object_directory
 
 
+# TODO update these to work on Windowds?
 TESTFILE = "/tmp/test_Aegoh4ahlaechohV5ooG9vew1yahDe2d.exdir"
+TESTDIR = "/tmp/test_dir_Aegoh4ahlaechohV5ooG9vew1yahDe2d"
 
 
 def remove_if_exists():
     if os.path.exists(TESTFILE):
         shutil.rmtree(TESTFILE)
     assert(not os.path.exists(TESTFILE))
+
+    if os.path.exists(TESTDIR):
+        shutil.rmtree(TESTDIR)
+    assert(not os.path.exists(TESTDIR))
 
 
 def test_modify_view():
@@ -256,3 +262,29 @@ def test_assert_valid_name():
 
     with pytest.raises(NameError):
         _assert_valid_name(RAW_FOLDER_NAME)
+
+
+def test_create_object_directory():
+    remove_if_exists()
+
+    _create_object_directory(TESTDIR, DATASET_TYPENAME)
+
+    assert(os.path.isdir(TESTDIR))
+
+    file_path = os.path.join(TESTDIR, META_FILENAME)
+    assert(os.path.isfile(file_path))
+
+    compare_metadata = {
+        EXDIR_METANAME: {
+            TYPE_METANAME: DATASET_TYPENAME,
+            VERSION_METANAME: 1}
+    }
+
+    with open(file_path, "r") as meta_file:
+        metadata = yaml.load(meta_file)
+
+        assert(metadata == compare_metadata)
+
+
+    with pytest.raises(IOError):
+        _create_object_directory(TESTDIR, DATASET_TYPENAME)
