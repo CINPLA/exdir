@@ -7,7 +7,8 @@ import quantities as pq
 import sys
 
 from exdir.core import *
-from exdir.core import _assert_valid_name, _create_object_directory, _metafile_from_directory
+from exdir.core import _assert_valid_name, _create_object_directory
+from exdir.core import _metafile_from_directory, _is_valid_object_directory
 
 
 filepath = os.path.abspath(__file__)
@@ -39,6 +40,13 @@ def remove_testfile():
     if os.path.exists(TESTFILE):
         shutil.rmtree(TESTFILE)
     assert(not os.path.exists(TESTFILE))
+
+
+def remove_testdir():
+    if os.path.exists(TESTDIR):
+        shutil.rmtree(TESTDIR)
+    assert(not os.path.exists(TESTDIR))
+
 
 
 def test_modify_view(folderhandling):
@@ -309,3 +317,65 @@ def test_metafile_from_directory(folderhandling):
     metafile = _metafile_from_directory(TESTPATH)
 
     assert(metafile == compare_metafile)
+
+
+def test_is_valid_object_directory(folderhandling):
+    os.makedirs(TESTDIR)
+
+    result = _is_valid_object_directory(TESTDIR)
+    assert(result is False)
+
+    compare_metafile = os.path.join(TESTDIR, META_FILENAME)
+    with open(compare_metafile, 'w') as f:
+        pass
+
+    result = _is_valid_object_directory(TESTDIR)
+    assert(result is False)
+
+
+    remove_testfile()
+    with open(compare_metafile, "w") as meta_file:
+        metadata = {
+            EXDIR_METANAME: {
+                VERSION_METANAME: 1}
+        }
+        yaml.dump(metadata,
+                  meta_file,
+                  default_flow_style=False,
+                  allow_unicode=True)
+
+    result = _is_valid_object_directory(TESTDIR)
+    assert(result is False)
+
+
+    remove_testfile()
+    with open(compare_metafile, "w") as meta_file:
+        metadata = {
+            EXDIR_METANAME: {
+                TYPE_METANAME: "wrong_typename",
+                VERSION_METANAME: 1}
+        }
+        yaml.dump(metadata,
+                  meta_file,
+                  default_flow_style=False,
+                  allow_unicode=True)
+
+    result = _is_valid_object_directory(TESTDIR)
+    assert(result is False)
+
+    remove_testfile()
+    with open(compare_metafile, "w") as meta_file:
+        metadata = {
+            EXDIR_METANAME: {
+                TYPE_METANAME: DATASET_TYPENAME,
+                VERSION_METANAME: 1}
+        }
+        yaml.dump(metadata,
+                  meta_file,
+                  default_flow_style=False,
+                  allow_unicode=True)
+
+    result = _is_valid_object_directory(TESTDIR)
+    assert(result is True)
+
+    # _create_object_directory(TESTDIR, DATASET_TYPENAME)

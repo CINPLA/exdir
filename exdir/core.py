@@ -138,6 +138,10 @@ def _is_valid_object_directory(directory):
         return False
     with open(meta_filename, "r") as meta_file:
         meta_data = yaml.load(meta_file)
+
+        if not isinstance(meta_data, dict):
+            return False
+
         if EXDIR_METANAME not in meta_data:
             return False
         if TYPE_METANAME not in meta_data[EXDIR_METANAME]:
