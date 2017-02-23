@@ -117,7 +117,6 @@ def _create_object_directory(directory, typename):
     valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
     if typename not in valid_types:
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
-
     os.mkdir(directory)
     meta_filename = _metafile_from_directory(directory)
     with open(meta_filename, "w") as meta_file:
@@ -333,7 +332,6 @@ class Group(Object):
     '''
     Container of other groups and datasets.
     '''
-
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Group, self).__init__(root_directory=root_directory,
                                     parent_path=parent_path,
@@ -538,6 +536,8 @@ class File(Group):
             _create_object_directory(directory, FILE_TYPENAME)
 
     def close(self):
+        raise RuntimeWarning("Exdir is not a single file. " +
+                             "Calling close is not needed.")
         # yeah right, as if we would create a real file format
         pass
 
