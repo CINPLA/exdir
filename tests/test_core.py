@@ -6,9 +6,8 @@ import os
 import quantities as pq
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from core import *
-from core import _assert_valid_name, _create_object_directory
+from exdir.core import *
+from exdir.core import _assert_valid_name, _create_object_directory
 
 
 filepath = os.path.abspath(__file__)
