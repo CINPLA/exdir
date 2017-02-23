@@ -4,7 +4,7 @@ import exdir
 import numpy as np
 import os
 import quantities as pq
-import sys
+
 
 from exdir.core import *
 from exdir.core import _assert_valid_name, _create_object_directory
@@ -300,7 +300,7 @@ def test_create_object_directory(folderhandling):
     }
 
     with open(file_path, "r") as meta_file:
-        metadata = yaml.load(meta_file)
+        metadata = yaml.safe_load(meta_file)
 
         assert(metadata == compare_metadata)
 
@@ -339,10 +339,10 @@ def test_is_valid_object_directory(folderhandling):
             EXDIR_METANAME: {
                 VERSION_METANAME: 1}
         }
-        yaml.dump(metadata,
-                  meta_file,
-                  default_flow_style=False,
-                  allow_unicode=True)
+        yaml.safe_dump(metadata,
+                       meta_file,
+                       default_flow_style=False,
+                       allow_unicode=True)
 
     result = _is_valid_object_directory(TESTDIR)
     assert(result is False)
@@ -355,10 +355,10 @@ def test_is_valid_object_directory(folderhandling):
                 TYPE_METANAME: "wrong_typename",
                 VERSION_METANAME: 1}
         }
-        yaml.dump(metadata,
-                  meta_file,
-                  default_flow_style=False,
-                  allow_unicode=True)
+        yaml.safe_dump(metadata,
+                       meta_file,
+                       default_flow_style=False,
+                       allow_unicode=True)
 
     result = _is_valid_object_directory(TESTDIR)
     assert(result is False)
@@ -370,10 +370,10 @@ def test_is_valid_object_directory(folderhandling):
                 TYPE_METANAME: DATASET_TYPENAME,
                 VERSION_METANAME: 1}
         }
-        yaml.dump(metadata,
-                  meta_file,
-                  default_flow_style=False,
-                  allow_unicode=True)
+        yaml.safe_dump(metadata,
+                       meta_file,
+                       default_flow_style=False,
+                       allow_unicode=True)
 
     result = _is_valid_object_directory(TESTDIR)
     assert(result is True)

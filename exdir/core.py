@@ -122,10 +122,10 @@ def _create_object_directory(directory, typename):
                 TYPE_METANAME: typename,
                 VERSION_METANAME: 1}
         }
-        yaml.dump(metadata,
-                  meta_file,
-                  default_flow_style=False,
-                  allow_unicode=True)
+        yaml.safe_dump(metadata,
+                       meta_file,
+                       default_flow_style=False,
+                       allow_unicode=True)
 
 
 def _metafile_from_directory(directory):
@@ -137,7 +137,7 @@ def _is_valid_object_directory(directory):
     if not os.path.exists(meta_filename):
         return False
     with open(meta_filename, "r") as meta_file:
-        meta_data = yaml.load(meta_file)
+        meta_data = yaml.safe_load(meta_file)
 
         if not isinstance(meta_data, dict):
             return False
@@ -236,16 +236,16 @@ class Attribute:
             raise IOError('Cannot write in read only ("r") mode')
         meta_data = convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
-            yaml.dump(meta_data,
-                      meta_file,
-                      default_flow_style=False,
-                      allow_unicode=True)
+            yaml.safe_dump(meta_data,
+                           meta_file,
+                           default_flow_style=False,
+                           allow_unicode=True)
 
     def _open_or_create(self):
         meta_data = {}
         if os.path.exists(self.filename):
             with open(self.filename, "r") as meta_file:
-                meta_data = yaml.load(meta_file)
+                meta_data = yaml.safe_load(meta_file)
         return meta_data
 
     def __iter__(self):
@@ -430,7 +430,7 @@ class Group(Object):
 
         meta_filename = os.path.join(self.directory, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
-            meta_data = yaml.load(meta_file)
+            meta_data = yaml.safe_load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
             return Dataset(root_directory=self.root_directory,
                            parent_path=self.relative_path, object_name=name,
