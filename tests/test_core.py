@@ -386,3 +386,7 @@ def test_is_valid_object_directory(folderhandling):
     _create_object_directory(TESTDIR, DATASET_TYPENAME)
     result = _is_valid_object_directory(TESTDIR)
     assert(result is True)
+
+
+# def test_ObjectInit():
+#     testObject = Object()

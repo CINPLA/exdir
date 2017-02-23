@@ -536,8 +536,6 @@ class File(Group):
             _create_object_directory(directory, FILE_TYPENAME)
 
     def close(self):
-        raise RuntimeWarning("Exdir is not a single file. " +
-                             "Calling close is not needed.")
         # yeah right, as if we would create a real file format
         pass
 
