@@ -114,6 +114,10 @@ def _create_object_directory(directory, typename):
     '''
     if os.path.exists(directory):
         raise IOError("The directory '" + directory + "' already exists")
+    valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
+    if typename not in valid_types:
+        raise ValueError("{typename} is not a valid typename".format(typename=typename))
+
     os.mkdir(directory)
     meta_filename = _metafile_from_directory(directory)
     with open(meta_filename, "w") as meta_file:

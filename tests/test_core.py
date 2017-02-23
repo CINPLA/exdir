@@ -286,6 +286,9 @@ def test_assert_valid_name():
 
 
 def test_create_object_directory(folderhandling):
+    with pytest.raises(ValueError):
+        _create_object_directory(TESTDIR, "wrong_typename")
+
     _create_object_directory(TESTDIR, DATASET_TYPENAME)
 
     assert(os.path.isdir(TESTDIR))
@@ -378,4 +381,8 @@ def test_is_valid_object_directory(folderhandling):
     result = _is_valid_object_directory(TESTDIR)
     assert(result is True)
 
-    # _create_object_directory(TESTDIR, DATASET_TYPENAME)
+    remove_testdir()
+
+    _create_object_directory(TESTDIR, DATASET_TYPENAME)
+    result = _is_valid_object_directory(TESTDIR)
+    assert(result is True)
