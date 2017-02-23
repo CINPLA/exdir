@@ -7,7 +7,7 @@ import quantities as pq
 import sys
 
 from exdir.core import *
-from exdir.core import _assert_valid_name, _create_object_directory
+from exdir.core import _assert_valid_name, _create_object_directory, _metafile_from_directory
 
 
 filepath = os.path.abspath(__file__)
@@ -299,3 +299,13 @@ def test_create_object_directory(folderhandling):
 
     with pytest.raises(IOError):
         _create_object_directory(TESTDIR, DATASET_TYPENAME)
+
+
+def test_metafile_from_directory(folderhandling):
+    compare_metafile = os.path.join(TESTPATH, META_FILENAME)
+    with open(compare_metafile, 'w') as f:
+        pass
+
+    metafile = _metafile_from_directory(TESTPATH)
+
+    assert(metafile == compare_metafile)
