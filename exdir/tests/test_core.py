@@ -11,22 +11,38 @@ from core import *
 from core import _assert_valid_name, _create_object_directory
 
 
-# TODO update these to work on Windowds?
-TESTFILE = "/tmp/test_Aegoh4ahlaechohV5ooG9vew1yahDe2d.exdir"
-TESTDIR = "/tmp/test_dir_Aegoh4ahlaechohV5ooG9vew1yahDe2d"
+filepath = os.path.abspath(__file__)
+filedir = os.path.dirname(filepath)
+
+testmaindir = ".expipe_test_dir_Aegoh4ahlaechohV5ooG9vew1yahDe2d"
+TESTPATH = os.path.join(filedir, testmaindir)
+TESTDIR = os.path.join(TESTPATH, "expipe_dir")
+TESTFILE = os.path.join(TESTPATH, "test.exdir")
 
 
-def remove_if_exists():
+
+@pytest.fixture
+def folderhandling():
+    if os.path.exists(TESTPATH):
+        shutil.rmtree(TESTPATH)
+        assert(not os.path.exists(TESTPATH))
+
+    os.makedirs(TESTPATH)
+
+    yield
+
+    if os.path.exists(TESTPATH):
+        shutil.rmtree(TESTPATH)
+        assert(not os.path.exists(TESTPATH))
+
+
+def remove_testfile():
     if os.path.exists(TESTFILE):
         shutil.rmtree(TESTFILE)
     assert(not os.path.exists(TESTFILE))
 
-    if os.path.exists(TESTDIR):
-        shutil.rmtree(TESTDIR)
-    assert(not os.path.exists(TESTDIR))
 
-
-def test_modify_view():
+def test_modify_view(folderhandling):
     f = exdir.File(TESTFILE, mode="w", allow_remove=True)
     dataset = f.create_dataset("mydata", data=np.array([1, 2, 3, 4, 5, 6, 7, 8]))
     dataset[3:5] = np.array([8, 9])
@@ -36,7 +52,7 @@ def test_modify_view():
     assert(f["mydata"][3] == 10)
 
 
-def test_dataset():
+def test_dataset(folderhandling):
     f = exdir.File(TESTFILE, mode="w", allow_remove=True)
     a = np.array([1, 2, 3, 4, 5])
     dset = f.require_dataset("mydata", data=a)
@@ -55,7 +71,7 @@ def test_dataset():
     assert(group["some_data"][()].shape == (2, 3))
 
 
-def test_attrs():
+def test_attrs(folderhandling):
     f = exdir.File(TESTFILE, mode="w", allow_remove=True)
     f.attrs["temperature"] = 99.0
     assert(f.attrs["temperature"] == 99.0)
@@ -74,8 +90,7 @@ def test_attrs():
     assert(dict(f.attrs["test"]) == {"name": "temp", "value": 19})
 
 
-def test_open_file():
-    remove_if_exists()
+def test_open_file(folderhandling):
     for mode in ["a", "r", "r+"]:
         f = exdir.File(TESTFILE, mode)
         f.close()
@@ -100,28 +115,27 @@ def test_open_file():
     assert(os.path.exists(TESTFILE))
 
     # assume doesn't exist
-    remove_if_exists()
+    remove_testfile()
     f = exdir.File(TESTFILE, "w-")
     f.close()
     assert(os.path.exists(TESTFILE))
 
 
-def test_open_mode():
-    remove_if_exists()
+def test_open_mode(folderhandling):
     # must exist
     for mode in ["r+", "r"]:
         with pytest.raises(IOError):
             f = exdir.File(TESTFILE, mode)
     # create if not exist
     for mode in ["a", "w", "w-"]:
-        remove_if_exists()
+        remove_testfile()
         f = exdir.File(TESTFILE, mode)
         f.require_dataset('dset', np.arange(10))
         f.attrs['can_overwrite'] = 42
         f.attrs['can_overwrite'] = 14
         f.require_group('mygroup')
 
-    remove_if_exists()
+    remove_testfile()
     f = exdir.File(TESTFILE, 'w')
     f.close()# dummy close
     # read write if exist
@@ -143,7 +157,7 @@ def test_open_mode():
 
     # can never overwrite dataset
     for mode in ["a", "w", "w-"]:
-        remove_if_exists()
+        remove_testfile()
         f = exdir.File(TESTFILE, mode)
         f.require_dataset('dset', np.arange(10))
         with pytest.raises(FileExistsError):
@@ -264,9 +278,7 @@ def test_assert_valid_name():
         _assert_valid_name(RAW_FOLDER_NAME)
 
 
-def test_create_object_directory():
-    remove_if_exists()
-
+def test_create_object_directory(folderhandling):
     _create_object_directory(TESTDIR, DATASET_TYPENAME)
 
     assert(os.path.isdir(TESTDIR))
