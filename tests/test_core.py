@@ -445,3 +445,50 @@ def test_object_meta(folderhandling):
     assert(obj.meta.mode.value == 2)
     with pytest.raises(AttributeError):
         obj.meta = "test value"
+
+
+def test_object_directory(folderhandling):
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
+
+    assert(obj.directory == os.path.join(TESTDIR, "", "test_object"))
+
+
+def test_object_attributes_filename(folderhandling):
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
+
+    assert(obj.attributes_filename == os.path.join(TESTDIR, "", "test_object", ATTRIBUTES_FILENAME))
+
+
+def test_object_meta_filename(folderhandling):
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
+
+    assert(obj.meta_filename == os.path.join(TESTDIR, "", "test_object", META_FILENAME))
+
+
+def test_object_create_raw(folderhandling):
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
+
+    _create_object_directory(TESTDIR, DATASET_TYPENAME)
+    _create_object_directory(os.path.join(TESTDIR, "test_object"),
+                             GROUP_TYPENAME)
+
+    obj.create_raw("test_raw")
+    assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
+
+    with pytest.raises(IOError):
+        obj.create_raw("test_raw")
+
+
+def test_object_require_raw(folderhandling):
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
+
+
+    _create_object_directory(TESTDIR, DATASET_TYPENAME)
+    _create_object_directory(os.path.join(TESTDIR, "test_object"),
+                             GROUP_TYPENAME)
+
+    obj.require_raw("test_raw")
+    assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
+
+    obj.require_raw("test_raw")
+    assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
