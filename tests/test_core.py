@@ -406,8 +406,9 @@ def test_attr_init():
 def test_object_init(folderhandling):
     group = Group(TESTDIR, "", "test_object", io_mode=None)
 
-    assert(attribute.root_directory == TESTDIR)
-    assert(attribute.object_name == "test_object")
-    assert(attribute.parent_path == "")
-    assert(attribute.io_mode is None)
-    assert(attribute.path == [])
+    assert(group.root_directory == TESTDIR)
+    assert(group.object_name == "test_object")
+    assert(group.parent_path == "")
+    assert(group.io_mode is None)
+    assert(group.relative_path == os.path.join("", "test_object"))
+    assert(group.name == os.sep + os.path.join("", "test_object"))

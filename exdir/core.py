@@ -278,10 +278,7 @@ class Object():
         self.root_directory = root_directory
         self.object_name = object_name
         self.parent_path = parent_path
-        if parent_path == "":
-            self.relative_path = self.object_name
-        else:
-            self.relative_path = os.path.join(self.parent_path, self.object_name)
+        self.relative_path = os.path.join(self.parent_path, self.object_name)
         self.name = os.sep + self.relative_path
         self.io_mode = io_mode
 
