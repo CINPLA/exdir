@@ -160,8 +160,8 @@ class Attribute:
     Attribute class.
     '''
     class Mode(Enum):
-        attributes = 1
-        metadata = 2
+        ATTRIBUTES = 1
+        METADATA = 2
 
     def __init__(self, parent, mode, io_mode, path=None):
         self.parent = parent
@@ -230,7 +230,7 @@ class Attribute:
         return meta_data.values()
 
     def _set_data(self, meta_data):
-        if self.io_mode == Object.OpenMode.read_only:
+        if self.io_mode == Object.OpenMode.READ_ONLY:
             raise IOError('Cannot write in read only ("r") mode')
         meta_data = convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
@@ -252,7 +252,7 @@ class Attribute:
 
     @property
     def filename(self):
-        if self.mode == self.Mode.metadata:
+        if self.mode == self.Mode.METADATA:
             return self.parent.meta_filename
         else:
             return self.parent.attributes_filename
@@ -266,8 +266,8 @@ class Object():
     Parent class for exdir Group and exdir dataset objects
     '''
     class OpenMode(Enum):
-        read_write = 1
-        read_only = 2
+        READ_WRITE = 1
+        READ_ONLY = 2
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         self.root_directory = root_directory
@@ -279,7 +279,7 @@ class Object():
 
     @property
     def attrs(self):
-        return Attribute(self, mode=Attribute.Mode.attributes,
+        return Attribute(self, mode=Attribute.Mode.ATTRIBUTES,
                          io_mode=self.io_mode)
 
     @attrs.setter
@@ -288,7 +288,7 @@ class Object():
 
     @property
     def meta(self):
-        return Attribute(self, mode=Attribute.Mode.metadata,
+        return Attribute(self, mode=Attribute.Mode.METADATA,
                          io_mode=self.io_mode)
 
     @property
@@ -479,9 +479,9 @@ class File(Group):
         if mode is None:
             mode = "a"
         if mode == 'r':
-            self.io_mode = self.OpenMode.read_only
+            self.io_mode = self.OpenMode.READ_ONLY
         else:
-            self.io_mode = self.OpenMode.read_write
+            self.io_mode = self.OpenMode.READ_WRITE
         super(File, self).__init__(root_directory=directory,
                                    parent_path="", object_name="",
                                    io_mode=self.io_mode)
@@ -544,13 +544,13 @@ class Dataset(Object):
                                       io_mode=io_mode)
         self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
-        if self.io_mode == self.OpenMode.read_only:
+        if self.io_mode == self.OpenMode.READ_ONLY:
             self._mmap_mode = 'r'
         else:
             self._mmap_mode = 'r+'
 
     def set_data(self, data):
-        if self.io_mode == self.OpenMode.read_only:
+        if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
         if isinstance(data, pq.Quantity):
             result = data.magnitude
@@ -577,7 +577,7 @@ class Dataset(Object):
             return self._data[args]
 
     def __setitem__(self, args, value):
-        if self.io_mode == self.OpenMode.read_only:
+        if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
         if self._data is None:
             self[:]
