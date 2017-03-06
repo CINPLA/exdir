@@ -432,3 +432,21 @@ def test_object_attrs(folderhandling):
         meta_data = yaml.safe_load(meta_file)
 
         assert(meta_data == "test value")
+
+def test_object_meta(folderhandling):
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
+
+    _create_object_directory(TESTDIR, DATASET_TYPENAME)
+    _create_object_directory(os.path.join(TESTDIR, "test_object"),
+                             GROUP_TYPENAME)
+
+    assert(obj.attrs.mode.value == 2)
+    assert(isinstance(obj.attrs, Attribute))
+    obj.attrs = "test value"
+
+    assert(_is_valid_object_directory(os.path.join(TESTDIR, "test_object")))
+
+    with open(os.path.join(TESTDIR, "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
+        meta_data = yaml.safe_load(meta_file)
+
+        assert(meta_data == "test value")
