@@ -387,29 +387,20 @@ def test_is_valid_object_directory(folderhandling):
     result = _is_valid_object_directory(TESTDIR)
     assert(result is True)
 
-# tests for Attribute class
-
-def test_attr_init():
-    attribute = Attribute("parent", "mode", "io_mode")
-
-    assert(attribute.parent == "parent")
-    assert(attribute.mode == "mode")
-    assert(attribute.io_mode == "io_mode")
-    assert(attribute.path == [])
 
 
 
 # tests for Object class
 
 def test_object_init(folderhandling):
-    group = Group(TESTDIR, "", "test_object", io_mode=None)
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
 
-    assert(group.root_directory == TESTDIR)
-    assert(group.object_name == "test_object")
-    assert(group.parent_path == "")
-    assert(group.io_mode is None)
-    assert(group.relative_path == os.path.join("", "test_object"))
-    assert(group.name == os.sep + os.path.join("", "test_object"))
+    assert(obj.root_directory == TESTDIR)
+    assert(obj.object_name == "test_object")
+    assert(obj.parent_path == "")
+    assert(obj.io_mode is None)
+    assert(obj.relative_path == os.path.join("", "test_object"))
+    assert(obj.name == os.sep + os.path.join("", "test_object"))
 
 
 
@@ -495,6 +486,7 @@ def test_object_require_raw(folderhandling):
 
 
 # tests for File class
+
 def test_file_init(folderhandling):
     no_exdir = os.path.join(TESTPATH, "no_exdir")
 
@@ -532,6 +524,7 @@ def test_file_init(folderhandling):
 
     with pytest.raises(IOError):
         f = File(TESTFILE, mode="r")
+    with pytest.raises(IOError):
         f = File(TESTFILE, mode="r+")
 
 
@@ -550,6 +543,8 @@ def test_file_init(folderhandling):
 
     with pytest.raises(IOError):
         f = File(TESTFILE, mode="w-")
+
+    with pytest.raises(IOError):
         f = File(TESTFILE, mode="x")
 
 
@@ -557,3 +552,28 @@ def test_file_init(folderhandling):
 def test_file_close(folderhandling):
     f = File(TESTFILE, mode="w")
     f.close()
+
+
+# tests for Attribute class
+
+def test_attr_init():
+    attribute = Attribute("parent", "mode", "io_mode")
+
+    assert(attribute.parent == "parent")
+    assert(attribute.mode == "mode")
+    assert(attribute.io_mode == "io_mode")
+    assert(attribute.path == [])
+
+
+# tests for Group class
+
+
+def test_group_init(folderhandling):
+    group = Group(TESTDIR, "", "test_object", io_mode=None)
+
+    assert(group.root_directory == TESTDIR)
+    assert(group.object_name == "test_object")
+    assert(group.parent_path == "")
+    assert(group.io_mode is None)
+    assert(group.relative_path == os.path.join("", "test_object"))
+    assert(group.name == os.sep + os.path.join("", "test_object"))

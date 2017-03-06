@@ -404,8 +404,8 @@ class Group(Object):
                 if isinstance(self, File):
                     name = name[1:]
                 else:
-                    raise KeyError('To begin tree structure with os.sep is only' +
-                                   ' allowed for get item from root object')
+                    raise KeyError("To begin the tree structure with '" + os.sep + "' is only" +
+                                   " allowed for get item from root object")
             name_split = name.split(os.sep, 1)
             if len(name_split) == 2:
                 item = self[name_split[0]]
