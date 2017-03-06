@@ -416,14 +416,14 @@ def test_object_init(folderhandling):
 
 
 def test_object_attrs(folderhandling):
-    group = Object(TESTDIR, "", "test_object", io_mode=None)
+    obj = Object(TESTDIR, "", "test_object", io_mode=None)
 
     _create_object_directory(TESTDIR, DATASET_TYPENAME)
     _create_object_directory(os.path.join(TESTDIR, "test_object"),
                              GROUP_TYPENAME)
 
-    assert(isinstance(group.attrs, Attribute))
-    assert(group.attrs.mode.value == 1)
+    assert(isinstance(obj.attrs, Attribute))
+    assert(obj.attrs.mode.value == 1)
     obj.attrs = "test value"
 
     assert(_is_valid_object_directory(os.path.join(TESTDIR, "test_object")))
@@ -431,4 +431,4 @@ def test_object_attrs(folderhandling):
     with open(os.path.join(TESTDIR, "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
 
-        assert(meta_data == "test_value")
+        assert(meta_data == "test value")
