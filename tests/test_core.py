@@ -392,9 +392,10 @@ def test_is_valid_object_directory(folderhandling):
 #     testObject = Object()
 
 
-def test_attr_init()
+def test_attr_init():
     attribute = Attribute("parent", "mode", "io_mode")
-    
+
     assert(attribute.parent == "parent")
     assert(attribute.mode == "mode")
     assert(attribute.io_mode == "io_mode")
+    assert(attribute.path == [])
