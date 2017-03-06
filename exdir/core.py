@@ -266,7 +266,7 @@ class Attribute:
         return len(self.keys())
 
 
-class Object(object):
+class Object():
     '''
     Parent class for exdir Group and exdir dataset objects
     '''
@@ -281,8 +281,8 @@ class Object(object):
         if parent_path == "":
             self.relative_path = self.object_name
         else:
-            self.relative_path = self.parent_path + "/" + self.object_name
-        self.name = "/" + self.relative_path
+            self.relative_path = os.path.join(self.parent_path, self.object_name)
+        self.name = os.sep + self.relative_path
         self.io_mode = io_mode
 
     @property
@@ -301,8 +301,7 @@ class Object(object):
 
     @property
     def directory(self):
-        return os.path.join(self.root_directory,
-                            self.relative_path.replace("/", os.sep))
+        return os.path.join(self.root_directory, self.relative_path)
 
     @property
     def attributes_filename(self):

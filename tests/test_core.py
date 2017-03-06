@@ -399,3 +399,15 @@ def test_attr_init():
     assert(attribute.mode == "mode")
     assert(attribute.io_mode == "io_mode")
     assert(attribute.path == [])
+
+# def test_attr_open_or_create():
+#     attribute = Attribute("parent", "mode", "io_mode")
+
+def test_object_init(folderhandling):
+    group = Group(TESTDIR, "", "test_object", io_mode=None)
+
+    assert(attribute.root_directory == TESTDIR)
+    assert(attribute.object_name == "test_object")
+    assert(attribute.parent_path == "")
+    assert(attribute.io_mode is None)
+    assert(attribute.path == [])
