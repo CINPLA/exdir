@@ -374,8 +374,8 @@ class Group(Object):
 
     @property
     def parent(self):
-        parent = self.parent_path.split('/')[-1]
-        parent_parent = "/".join(self.parent_path.split('/')[:-1])
+        parent = self.parent_path.split(os.sep)[-1]
+        parent_parent = os.sep.join(self.parent_path.split(os.sep)[:-1])
         return Group(root_directory=self.root_directory,
                      parent_path=parent_parent, object_name=parent,
                      io_mode=self.io_mode)
@@ -404,14 +404,14 @@ class Group(Object):
             return False
 
     def __getitem__(self, name):
-        if "/" in name:
-            if name[0] == '/':
+        if os.sep in name:
+            if name[0] == os.sep:
                 if isinstance(self, File):
                     name = name[1:]
                 else:
-                    raise KeyError('To begin tree structure with "/" is only' +
+                    raise KeyError('To begin tree structure with os.sep is only' +
                                    ' allowed for get item from root object')
-            name_split = name.split("/", 1)
+            name_split = name.split(os.sep, 1)
             if len(name_split) == 2:
                 item = self[name_split[0]]
                 return item[name_split[1]]
