@@ -16,7 +16,7 @@ filedir = os.path.dirname(filepath)
 
 testmaindir = ".expipe_test_dir_Aegoh4ahlaechohV5ooG9vew1yahDe2d"
 TESTPATH = os.path.join(filedir, testmaindir)
-TESTDIR = os.path.join(TESTPATH, "expipe_dir")
+TESTDIR = os.path.join(TESTPATH, "exdir_dir")
 TESTFILE = os.path.join(TESTPATH, "test.exdir")
 
 
@@ -387,10 +387,7 @@ def test_is_valid_object_directory(folderhandling):
     result = _is_valid_object_directory(TESTDIR)
     assert(result is True)
 
-
-# def test_ObjectInit():
-#     testObject = Object()
-
+# tests for Attribute class
 
 def test_attr_init():
     attribute = Attribute("parent", "mode", "io_mode")
@@ -400,8 +397,9 @@ def test_attr_init():
     assert(attribute.io_mode == "io_mode")
     assert(attribute.path == [])
 
-# def test_attr_open_or_create():
-#     attribute = Attribute("parent", "mode", "io_mode")
+
+
+# tests for Object class
 
 def test_object_init(folderhandling):
     group = Group(TESTDIR, "", "test_object", io_mode=None)
@@ -492,3 +490,70 @@ def test_object_require_raw(folderhandling):
 
     obj.require_raw("test_raw")
     assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
+
+
+
+
+# tests for File class
+def test_file_init(folderhandling):
+    no_exdir = os.path.join(TESTPATH, "no_exdir")
+
+    f = File(no_exdir, mode="w")
+    f.close()
+    assert(_is_valid_object_directory(no_exdir + ".exdir"))
+    remove_testfile()
+
+    f = File(TESTFILE, mode="w")
+    f.close()
+    assert(_is_valid_object_directory(TESTFILE))
+    remove_testfile()
+
+    f = File(TESTFILE, mode="a")
+    f.close()
+    assert(_is_valid_object_directory(TESTFILE))
+    remove_testfile()
+
+    f = File(TESTFILE, mode="a")
+    f.close()
+    assert(_is_valid_object_directory(TESTFILE))
+    remove_testfile()
+
+    os.makedirs(TESTFILE)
+    with pytest.raises(FileExistsError):
+        f = File(TESTFILE, mode="w")
+
+    remove_testfile()
+
+    _create_object_directory(TESTFILE, DATASET_TYPENAME)
+    with pytest.raises(FileExistsError):
+        f = File(TESTFILE, mode="w")
+
+    remove_testfile()
+
+    with pytest.raises(IOError):
+        f = File(TESTFILE, mode="r")
+        f = File(TESTFILE, mode="r+")
+
+
+    _create_object_directory(TESTFILE, FILE_TYPENAME)
+
+    with pytest.raises(FileExistsError):
+        f = File(TESTFILE, mode="w")
+
+    remove_testfile()
+
+    _create_object_directory(TESTFILE, FILE_TYPENAME)
+    f = File(TESTFILE, mode="w", allow_remove=True)
+    remove_testfile()
+
+    _create_object_directory(TESTFILE, FILE_TYPENAME)
+
+    with pytest.raises(IOError):
+        f = File(TESTFILE, mode="w-")
+        f = File(TESTFILE, mode="x")
+
+
+
+def test_file_close(folderhandling):
+    f = File(TESTFILE, mode="w")
+    f.close()

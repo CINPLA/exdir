@@ -154,11 +154,6 @@ def _is_valid_object_directory(directory):
             return False
     return True
 
-# Unused remove this?
-# class OpenMode(Enum):
-#     read_write = 1
-#     read_only = 2
-
 
 class Attribute:
     '''
@@ -496,7 +491,7 @@ class File(Group):
             if not _is_valid_object_directory(directory):
                 raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
-                                      "exdir object.")
+                                      "exdir file.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
                 raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
@@ -506,23 +501,23 @@ class File(Group):
 
         if mode == "r":
             if not already_exists:
-                raise IOError("Directory " + directory + " does not exist.")
+                raise IOError("File " + directory + " does not exist.")
         elif mode == "r+":
             if not already_exists:
-                raise IOError("Directory " + directory + " does not exist.")
+                raise IOError("File " + directory + " does not exist.")
         elif mode == "w":
             if already_exists:
                 if allow_remove:
                     shutil.rmtree(directory)
                 else:
                     raise FileExistsError(
-                        "File already exists. We won't delete the entire tree" +
+                        "File " + directory + " already exists. We won't delete the entire tree" +
                         " by default. Add allow_remove=True to override."
                     )
             should_create_directory = True
         elif mode == "w-" or mode == "x":
             if already_exists:
-                raise IOError("Directory " + directory + " already exists.")
+                raise IOError("File " + directory + " already exists.")
             should_create_directory = True
         elif mode == "a":
             if not already_exists:
