@@ -154,10 +154,10 @@ def _is_valid_object_directory(directory):
             return False
     return True
 
-
-class OpenMode(Enum):
-    read_write = 1
-    read_only = 2
+# Unused remove this?
+# class OpenMode(Enum):
+#     read_write = 1
+#     read_only = 2
 
 
 class Attribute:
