@@ -1,3 +1,4 @@
+ # -*- coding: utf-8 -*-
 """
 .. module:: exdir.core
 .. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød
@@ -323,6 +324,7 @@ class Group(Object):
     '''
     Container of other groups and datasets.
     '''
+
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Group, self).__init__(root_directory=root_directory,
                                     parent_path=parent_path,
