@@ -1,5 +1,4 @@
 import pytest
-import shutil
 import exdir
 import numpy as np
 import os
@@ -10,47 +9,10 @@ from exdir.core import *
 from exdir.core import _assert_valid_name, _create_object_directory
 from exdir.core import _metafile_from_directory, _is_valid_object_directory
 
+from conftest import remove
 
-filepath = os.path.abspath(__file__)
-filedir = os.path.dirname(filepath)
-
-testmaindir = ".expipe_test_dir_Aegoh4ahlaechohV5ooG9vew1yahDe2d"
-TESTPATH = os.path.join(filedir, testmaindir)
-TESTDIR = os.path.join(TESTPATH, "exdir_dir")
-TESTFILE = os.path.join(TESTPATH, "test.exdir")
-
-
-
-@pytest.fixture
-def folderhandling():
-    if os.path.exists(TESTPATH):
-        shutil.rmtree(TESTPATH)
-        assert(not os.path.exists(TESTPATH))
-
-    os.makedirs(TESTPATH)
-
-    yield
-
-    if os.path.exists(TESTPATH):
-        shutil.rmtree(TESTPATH)
-        assert(not os.path.exists(TESTPATH))
-
-
-def remove_testfile():
-    if os.path.exists(TESTFILE):
-        shutil.rmtree(TESTFILE)
-    assert(not os.path.exists(TESTFILE))
-
-
-def remove_testdir():
-    if os.path.exists(TESTDIR):
-        shutil.rmtree(TESTDIR)
-    assert(not os.path.exists(TESTDIR))
-
-
-
-def test_modify_view(folderhandling):
-    f = exdir.File(TESTFILE, mode="w", allow_remove=True)
+def test_modify_view(setup_teardown_file):
+    f = setup_teardown_file
     dataset = f.create_dataset("mydata", data=np.array([1, 2, 3, 4, 5, 6, 7, 8]))
     dataset[3:5] = np.array([8, 9])
     assert(np.array_equal(f["mydata"][3:5], np.array([8, 9])))
@@ -59,8 +21,9 @@ def test_modify_view(folderhandling):
     assert(f["mydata"][3] == 10)
 
 
-def test_dataset(folderhandling):
-    f = exdir.File(TESTFILE, mode="w", allow_remove=True)
+def test_dataset(setup_teardown_file):
+    f = setup_teardown_file
+
     a = np.array([1, 2, 3, 4, 5])
     dset = f.require_dataset("mydata", data=a)
 
@@ -78,8 +41,9 @@ def test_dataset(folderhandling):
     assert(group["some_data"][()].shape == (2, 3))
 
 
-def test_attrs(folderhandling):
-    f = exdir.File(TESTFILE, mode="w", allow_remove=True)
+def test_attrs(setup_teardown_file):
+    f = setup_teardown_file
+
     f.attrs["temperature"] = 99.0
     assert(f.attrs["temperature"] == 99.0)
     f.attrs["temperature"] = 99.0 * pq.deg
@@ -97,11 +61,11 @@ def test_attrs(folderhandling):
     assert(dict(f.attrs["test"]) == {"name": "temp", "value": 19})
 
 
-def test_open_file(folderhandling):
+def test_open_file(setup_teardown_folder):
     for mode in ["a", "r", "r+"]:
-        f = exdir.File(TESTFILE, mode)
+        f = exdir.File(pytest.TESTFILE, mode)
         f.close()
-        assert(os.path.exists(TESTFILE))
+        assert(os.path.exists(pytest.TESTFILE))
 
     # invalid file
     dummy_file = "/tmp/dummy.exdir"
@@ -112,41 +76,41 @@ def test_open_file(folderhandling):
             f = exdir.File(dummy_file)
 
     # truncate
-    f = exdir.File(TESTFILE)
+    f = exdir.File(pytest.TESTFILE)
     f.create_group("test_group")
     assert("test_group" in f)
     f.close()
-    f = exdir.File(TESTFILE, "w", allow_remove=True)
+    f = exdir.File(pytest.TESTFILE, "w", allow_remove=True)
     assert("test_group" not in f)
     f.close()
-    assert(os.path.exists(TESTFILE))
+    assert(os.path.exists(pytest.TESTFILE))
 
     # assume doesn't exist
-    remove_testfile()
-    f = exdir.File(TESTFILE, "w-")
+    remove(pytest.TESTFILE)
+    f = exdir.File(pytest.TESTFILE, "w-")
     f.close()
-    assert(os.path.exists(TESTFILE))
+    assert(os.path.exists(pytest.TESTFILE))
 
 
-def test_open_mode(folderhandling):
+def test_open_mode(setup_teardown_folder):
     # must exist
     for mode in ["r+", "r"]:
         with pytest.raises(IOError):
-            f = exdir.File(TESTFILE, mode)
+            f = exdir.File(pytest.TESTFILE, mode)
     # create if not exist
     for mode in ["a", "w", "w-"]:
-        remove_testfile()
-        f = exdir.File(TESTFILE, mode)
+        remove(pytest.TESTFILE)
+        f = exdir.File(pytest.TESTFILE, mode)
         f.require_dataset('dset', np.arange(10))
         f.attrs['can_overwrite'] = 42
         f.attrs['can_overwrite'] = 14
         f.require_group('mygroup')
 
-    remove_testfile()
-    f = exdir.File(TESTFILE, 'w')
+    remove(pytest.TESTFILE)
+    f = exdir.File(pytest.TESTFILE, 'w')
     f.close()# dummy close
     # read write if exist
-    f = exdir.File(TESTFILE, "r+")
+    f = exdir.File(pytest.TESTFILE, "r+")
     f.require_group('mygroup')
     f.require_dataset('dset', np.arange(10))
     # can never overwrite dataset
@@ -156,7 +120,7 @@ def test_open_mode(folderhandling):
     f.attrs['can_overwrite'] = 14
 
     # read only, can not write
-    f = exdir.File(TESTFILE, 'r')
+    f = exdir.File(pytest.TESTFILE, 'r')
     with pytest.raises(IOError):
         f.require_dataset('dset', np.arange(10))
         f.attrs['can_not_write'] = 42
@@ -164,393 +128,85 @@ def test_open_mode(folderhandling):
 
     # can never overwrite dataset
     for mode in ["a", "w", "w-"]:
-        remove_testfile()
-        f = exdir.File(TESTFILE, mode)
+        remove(pytest.TESTFILE)
+        f = exdir.File(pytest.TESTFILE, mode)
         f.require_dataset('dset', np.arange(10))
         with pytest.raises(FileExistsError):
             f.require_dataset('dset', np.arange(10))
 
 
-def test_convert_quantities():
-    pq_value = pq.Quantity(1, "m")
-    result = convert_quantities(pq_value)
-    assert(result == {"value": 1, "unit": "m"})
 
 
-    pq_value = pq.Quantity([1, 2, 3], "m")
-    result = convert_quantities(pq_value)
-    assert(result == {"value": [1, 2, 3], "unit": "m"})
-
-
-    result = convert_quantities(np.array([1, 2, 3]))
-    assert(result == [1, 2, 3])
-
-
-    result = convert_quantities(1)
-    assert(result == 1)
-
-
-    result = convert_quantities(2.3)
-    assert(result == 2.3)
-
-
-    pq_value = pq.UncertainQuantity([1, 2], "m", [3, 4])
-    result = convert_quantities(pq_value)
-    assert(result == {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]})
-
-
-    pq_values = {"quantity": pq.Quantity(1, "m"),
-                 "uq_quantity": pq.UncertainQuantity([1, 2], "m", [3, 4])}
-    result = convert_quantities(pq_values)
-    assert(result == {'quantity': {'unit': 'm', 'value': 1},
-                      'uq_quantity': {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}})
-
-
-    pq_values = {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")}
-    pq_dict = {"list": [1, 2, 3], "quantity": {'unit': 'm', 'value': 1}}
-    result = convert_quantities(pq_values)
-    assert(result == pq_dict)
-
-
-def test_convert_back_quantities():
-    pq_dict = {"value": 1, "unit": "m"}
-    result = convert_back_quantities(pq_dict)
-    assert(result == pq.Quantity(1, "m"))
-
-
-    pq_dict = {"value": [1, 2, 3], "unit": "m"}
-    result = convert_back_quantities(pq_dict)
-    assert(np.array_equal(result, pq.Quantity([1, 2, 3], "m")))
-
-
-    pq_dict = {"value": [1, 2, 3]}
-    result = convert_back_quantities(pq_dict)
-    assert(result == pq_dict)
-
-
-    result = convert_back_quantities(1)
-    assert(result == 1)
-
-
-    result = convert_back_quantities(2.3)
-    assert(result == 2.3)
-
-
-    pq_dict = {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}
-    result = convert_back_quantities(pq_dict)
-    pq_value = pq.UncertainQuantity([1, 2], "m", [3, 4])
-
-    assert(isinstance(result, pq.UncertainQuantity))
-    assert(result.magnitude.tolist() == pq_value.magnitude.tolist())
-    assert(result.dimensionality.string == pq_value.dimensionality.string)
-    assert(result.uncertainty.magnitude.tolist() == pq_value.uncertainty.magnitude.tolist())
-
-
-
-    pq_dict = {'quantity': {'unit': 'm', 'value': 1},
-               'uq_quantity': {'unit': 'm', 'uncertainty': [3, 4], 'value': [1.0, 2.0]}}
-    pq_values = {"quantity": pq.Quantity(1, "m"),
-                 "uq_quantity": pq.UncertainQuantity([1, 2], "m", [3, 4])}
-    result = convert_back_quantities(pq_values)
-    assert(result == pq_values)
-
-
-
-    pq_values = {"list": [1, 2, 3], "quantity": {'unit': 'm', 'value': 1}}
-    result = convert_back_quantities(pq_values)
-    assert(result == {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")})
-
-
-def test_assert_valid_name():
-    valid_name = ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY" +
-                  "Z1234567890_ ")
-
-    _assert_valid_name(valid_name)
-
-    invalid_name = ""
-    with pytest.raises(NameError):
-        _assert_valid_name(invalid_name)
-
-    invalid_name = "-"
-    with pytest.raises(NameError):
-        _assert_valid_name(invalid_name)
-
-    with pytest.raises(NameError):
-        _assert_valid_name(META_FILENAME)
-
-    with pytest.raises(NameError):
-        _assert_valid_name(ATTRIBUTES_FILENAME)
-
-    with pytest.raises(NameError):
-        _assert_valid_name(RAW_FOLDER_NAME)
-
-
-def test_create_object_directory(folderhandling):
-    with pytest.raises(ValueError):
-        _create_object_directory(TESTDIR, "wrong_typename")
-
-    _create_object_directory(TESTDIR, DATASET_TYPENAME)
-
-    assert(os.path.isdir(TESTDIR))
-
-    file_path = os.path.join(TESTDIR, META_FILENAME)
-    assert(os.path.isfile(file_path))
-
-    compare_metadata = {
-        EXDIR_METANAME: {
-            TYPE_METANAME: DATASET_TYPENAME,
-            VERSION_METANAME: 1}
-    }
-
-    with open(file_path, "r") as meta_file:
-        metadata = yaml.safe_load(meta_file)
-
-        assert(metadata == compare_metadata)
-
-
-    with pytest.raises(IOError):
-        _create_object_directory(TESTDIR, DATASET_TYPENAME)
-
-
-def test_metafile_from_directory(folderhandling):
-    compare_metafile = os.path.join(TESTPATH, META_FILENAME)
-    with open(compare_metafile, 'w') as f:
-        pass
-
-    metafile = _metafile_from_directory(TESTPATH)
-
-    assert(metafile == compare_metafile)
-
-
-def test_is_valid_object_directory(folderhandling):
-    os.makedirs(TESTDIR)
-
-    result = _is_valid_object_directory(TESTDIR)
-    assert(result is False)
-
-    compare_metafile = os.path.join(TESTDIR, META_FILENAME)
-    with open(compare_metafile, 'w') as f:
-        pass
-
-    result = _is_valid_object_directory(TESTDIR)
-    assert(result is False)
-
-
-    remove_testfile()
-    with open(compare_metafile, "w") as meta_file:
-        metadata = {
-            EXDIR_METANAME: {
-                VERSION_METANAME: 1}
-        }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
-
-    result = _is_valid_object_directory(TESTDIR)
-    assert(result is False)
-
-
-    remove_testfile()
-    with open(compare_metafile, "w") as meta_file:
-        metadata = {
-            EXDIR_METANAME: {
-                TYPE_METANAME: "wrong_typename",
-                VERSION_METANAME: 1}
-        }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
-
-    result = _is_valid_object_directory(TESTDIR)
-    assert(result is False)
-
-    remove_testfile()
-    with open(compare_metafile, "w") as meta_file:
-        metadata = {
-            EXDIR_METANAME: {
-                TYPE_METANAME: DATASET_TYPENAME,
-                VERSION_METANAME: 1}
-        }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
-
-    result = _is_valid_object_directory(TESTDIR)
-    assert(result is True)
-
-    remove_testdir()
-
-    _create_object_directory(TESTDIR, DATASET_TYPENAME)
-    result = _is_valid_object_directory(TESTDIR)
-    assert(result is True)
-
-
-
-
-# tests for Object class
-
-def test_object_init(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    assert(obj.root_directory == TESTDIR)
-    assert(obj.object_name == "test_object")
-    assert(obj.parent_path == "")
-    assert(obj.io_mode is None)
-    assert(obj.relative_path == os.path.join("", "test_object"))
-    assert(obj.name == os.sep + os.path.join("", "test_object"))
-
-
-
-def test_object_attrs(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    _create_object_directory(TESTDIR, DATASET_TYPENAME)
-    _create_object_directory(os.path.join(TESTDIR, "test_object"),
-                             GROUP_TYPENAME)
-
-    assert(isinstance(obj.attrs, Attribute))
-    assert(obj.attrs.mode.value == 1)
-    obj.attrs = "test value"
-
-    assert(_is_valid_object_directory(os.path.join(TESTDIR, "test_object")))
-
-    with open(os.path.join(TESTDIR, "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
-        meta_data = yaml.safe_load(meta_file)
-
-        assert(meta_data == "test value")
-
-
-def test_object_meta(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    _create_object_directory(TESTDIR, DATASET_TYPENAME)
-    _create_object_directory(os.path.join(TESTDIR, "test_object"),
-                             GROUP_TYPENAME)
-
-    assert(isinstance(obj.meta, Attribute))
-    assert(obj.meta.mode.value == 2)
-    with pytest.raises(AttributeError):
-        obj.meta = "test value"
-
-
-def test_object_directory(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    assert(obj.directory == os.path.join(TESTDIR, "", "test_object"))
-
-
-def test_object_attributes_filename(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    assert(obj.attributes_filename == os.path.join(TESTDIR, "", "test_object", ATTRIBUTES_FILENAME))
-
-
-def test_object_meta_filename(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    assert(obj.meta_filename == os.path.join(TESTDIR, "", "test_object", META_FILENAME))
-
-
-def test_object_create_raw(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-    _create_object_directory(TESTDIR, DATASET_TYPENAME)
-    _create_object_directory(os.path.join(TESTDIR, "test_object"),
-                             GROUP_TYPENAME)
-
-    obj.create_raw("test_raw")
-    assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
-
-    with pytest.raises(IOError):
-        obj.create_raw("test_raw")
-
-
-def test_object_require_raw(folderhandling):
-    obj = Object(TESTDIR, "", "test_object", io_mode=None)
-
-
-    _create_object_directory(TESTDIR, DATASET_TYPENAME)
-    _create_object_directory(os.path.join(TESTDIR, "test_object"),
-                             GROUP_TYPENAME)
-
-    obj.require_raw("test_raw")
-    assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
-
-    obj.require_raw("test_raw")
-    assert(os.path.isdir(os.path.join(TESTDIR, "test_object", "test_raw")))
 
 
 
 
 # tests for File class
 
-def test_file_init(folderhandling):
-    no_exdir = os.path.join(TESTPATH, "no_exdir")
+def test_file_init(setup_teardown_folder):
+    no_exdir = os.path.join(pytest.TESTPATH, "no_exdir")
 
     f = File(no_exdir, mode="w")
     f.close()
     assert(_is_valid_object_directory(no_exdir + ".exdir"))
-    remove_testfile()
+    remove(pytest.TESTFILE)
 
-    f = File(TESTFILE, mode="w")
+    f = File(pytest.TESTFILE, mode="w")
     f.close()
-    assert(_is_valid_object_directory(TESTFILE))
-    remove_testfile()
+    assert(_is_valid_object_directory(pytest.TESTFILE))
+    remove(pytest.TESTFILE)
 
-    f = File(TESTFILE, mode="a")
+    f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_valid_object_directory(TESTFILE))
-    remove_testfile()
+    assert(_is_valid_object_directory(pytest.TESTFILE))
+    remove(pytest.TESTFILE)
 
-    f = File(TESTFILE, mode="a")
+    f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_valid_object_directory(TESTFILE))
-    remove_testfile()
+    assert(_is_valid_object_directory(pytest.TESTFILE))
+    remove(pytest.TESTFILE)
 
-    os.makedirs(TESTFILE)
+    os.makedirs(pytest.TESTFILE)
     with pytest.raises(FileExistsError):
-        f = File(TESTFILE, mode="w")
+        f = File(pytest.TESTFILE, mode="w")
 
-    remove_testfile()
+    remove(pytest.TESTFILE)
 
-    _create_object_directory(TESTFILE, DATASET_TYPENAME)
+    _create_object_directory(pytest.TESTFILE, DATASET_TYPENAME)
     with pytest.raises(FileExistsError):
-        f = File(TESTFILE, mode="w")
+        f = File(pytest.TESTFILE, mode="w")
 
-    remove_testfile()
+    remove(pytest.TESTFILE)
 
     with pytest.raises(IOError):
-        f = File(TESTFILE, mode="r")
+        f = File(pytest.TESTFILE, mode="r")
     with pytest.raises(IOError):
-        f = File(TESTFILE, mode="r+")
+        f = File(pytest.TESTFILE, mode="r+")
 
 
-    _create_object_directory(TESTFILE, FILE_TYPENAME)
+    _create_object_directory(pytest.TESTFILE, FILE_TYPENAME)
 
     with pytest.raises(FileExistsError):
-        f = File(TESTFILE, mode="w")
+        f = File(pytest.TESTFILE, mode="w")
 
-    remove_testfile()
+    remove(pytest.TESTFILE)
 
-    _create_object_directory(TESTFILE, FILE_TYPENAME)
-    f = File(TESTFILE, mode="w", allow_remove=True)
-    remove_testfile()
+    _create_object_directory(pytest.TESTFILE, FILE_TYPENAME)
+    f = File(pytest.TESTFILE, mode="w", allow_remove=True)
+    remove(pytest.TESTFILE)
 
-    _create_object_directory(TESTFILE, FILE_TYPENAME)
-
-    with pytest.raises(IOError):
-        f = File(TESTFILE, mode="w-")
+    _create_object_directory(pytest.TESTFILE, FILE_TYPENAME)
 
     with pytest.raises(IOError):
-        f = File(TESTFILE, mode="x")
+        f = File(pytest.TESTFILE, mode="w-")
+
+    with pytest.raises(IOError):
+        f = File(pytest.TESTFILE, mode="x")
 
 
 
-def test_file_close(folderhandling):
-    f = File(TESTFILE, mode="w")
+def test_file_close(setup_teardown_folder):
+    f = File(pytest.TESTFILE, mode="w")
     f.close()
 
 
@@ -565,13 +221,20 @@ def test_attr_init():
     assert(attribute.path == [])
 
 
+# def test_attr_getitem():
+#     attr_file = os.path.join(pytest.TESTPATH, "test_attrs")
+#     _create_object_directory(attr_file, GROUP_TYPENAME)
+#     attribute = Attribute("", Attribute.Mode.ATTRIBUTES, "io_mode")
+
+
+
 # tests for Group class
 
 
-def test_group_init(folderhandling):
-    group = Group(TESTDIR, "", "test_object", io_mode=None)
+def test_group_init(setup_teardown_folder):
+    group = Group(pytest.TESTDIR, "", "test_object", io_mode=None)
 
-    assert(group.root_directory == TESTDIR)
+    assert(group.root_directory == pytest.TESTDIR)
     assert(group.object_name == "test_object")
     assert(group.parent_path == "")
     assert(group.io_mode is None)
