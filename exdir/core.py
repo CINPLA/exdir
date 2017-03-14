@@ -112,7 +112,7 @@ def _assert_valid_name(name, strict=True):
                      RAW_FOLDER_NAME]
 
     if name in invalid_names:
-        raise NameError("Name cannot be "" + name + "".")
+        raise NameError("Name cannot be '" + name + "'.")
 
 
 def _create_object_directory(directory, typename):
@@ -121,7 +121,7 @@ def _create_object_directory(directory, typename):
     don"t already exist
     """
     if os.path.exists(directory):
-        raise IOError("The directory "" + directory + "" already exists")
+        raise IOError("The directory '" + directory + "' already exists")
     valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
     if typename not in valid_types:
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
