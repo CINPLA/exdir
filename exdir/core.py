@@ -30,9 +30,9 @@ FILE_TYPENAME = "file"
 
 
 def convert_back_quantities(value):
-    '''
+    """
     Converts quantities back from dictionary
-    '''
+    """
     result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value and "uncertainty" in value:
@@ -52,9 +52,9 @@ def convert_back_quantities(value):
 
 
 def convert_quantities(value):
-    '''
+    """
     Converts quantities to dictionary
-    '''
+    """
     result = value
     if isinstance(value, pq.Quantity):
         result = {
@@ -87,34 +87,41 @@ def convert_quantities(value):
     return result
 
 
-def _assert_valid_name(name):
-    '''
+def _assert_valid_name(name, strict=True):
+    """
     Check if name (dataset or group) is valid
-    '''
+    """
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
-    valid_characters = ("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY" +
-                        "Z1234567890_ ")
+    if strict:
+        valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_")
+        for char in name:
+            if char not in valid_characters:
+                raise NameError("Name contains invalid character "" + char + "".")
 
-    for char in name:
-        if char not in valid_characters:
-            raise NameError("Name contains invalid character '" + char + "'.")
+
+    dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
+                "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",
+                "LPT7", "LPT8", "LPT9"]
+
 
     invalid_names = [META_FILENAME,
                      ATTRIBUTES_FILENAME,
                      RAW_FOLDER_NAME]
+
     if name in invalid_names:
-        raise NameError("Name cannot be '" + name + "'.")
+        raise NameError("Name cannot be "" + name + "".")
 
 
 def _create_object_directory(directory, typename):
-    '''
+    """
     Create object directory and meta file if directory
-    don't already exist
-    '''
+    don"t already exist
+    """
     if os.path.exists(directory):
-        raise IOError("The directory '" + directory + "' already exists")
+        raise IOError("The directory "" + directory + "" already exists")
     valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
     if typename not in valid_types:
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
@@ -157,9 +164,9 @@ def _is_valid_object_directory(directory):
 
 
 class Attribute:
-    '''
+    """
     Attribute class.
-    '''
+    """
     class Mode(Enum):
         ATTRIBUTES = 1
         METADATA = 2
@@ -231,7 +238,7 @@ class Attribute:
 
     def _set_data(self, meta_data):
         if self.io_mode == Object.OpenMode.READ_ONLY:
-            raise IOError('Cannot write in read only ("r") mode')
+            raise IOError("Cannot write in read only ("r") mode")
         meta_data = convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
             yaml.safe_dump(meta_data,
@@ -262,9 +269,9 @@ class Attribute:
 
 
 class Object():
-    '''
+    """
     Parent class for exdir Group and exdir dataset objects
-    '''
+    """
     class OpenMode(Enum):
         READ_WRITE = 1
         READ_ONLY = 2
@@ -320,9 +327,9 @@ class Object():
 
 
 class Group(Object):
-    '''
+    """
     Container of other groups and datasets.
-    '''
+    """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Group, self).__init__(root_directory=root_directory,
@@ -332,7 +339,7 @@ class Group(Object):
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
         if name in self:
-            raise IOError("An object with name '" + name + "' already exists.")
+            raise IOError("An object with name "" + name + "" already exists.")
 
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
@@ -360,7 +367,7 @@ class Group(Object):
             if isinstance(current_object, Group):
                 return current_object
             else:
-                raise TypeError("An object with name '" + name + "' already " +
+                raise TypeError("An object with name "" + name + "" already " +
                                 "exists, but it is not a Group.")
         elif os.path.exists(group_directory):
             raise IOError("Directory " + group_directory + " already exists," +
@@ -385,7 +392,7 @@ class Group(Object):
             elif isinstance(current_object, Dataset) and data is None:
                 return current_object
             else:
-                raise TypeError("An object with name '" + name + "' already "
+                raise TypeError("An object with name "" + name + "" already "
                                 "exists, but it is not a Group.")
         else:
             return self.create_dataset(name, data=data)
@@ -405,7 +412,7 @@ class Group(Object):
                 if isinstance(self, File):
                     name = name[1:]
                 else:
-                    raise KeyError("To begin the tree structure with '" + os.sep + "' is only" +
+                    raise KeyError("To begin the tree structure with "" + os.sep + "" is only" +
                                    " allowed for get item from root object")
             name_split = name.split(os.sep, 1)
             if len(name_split) == 2:
@@ -416,11 +423,11 @@ class Group(Object):
 
         directory = os.path.join(self.directory, name)
         if name not in self:
-            raise KeyError("No such object: '" + name + "'")
+            raise KeyError("No such object: "" + name + """)
 
         if not _is_valid_object_directory(directory):
-            raise IOError("Directory '" + directory +
-                          "' is not a valid exdir object.")
+            raise IOError("Directory "" + directory +
+                          "" is not a valid exdir object.")
 
         meta_filename = os.path.join(self.directory, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
@@ -470,16 +477,16 @@ class Group(Object):
 
 
 class File(Group):
-    '''
+    """
     Exdir file object
-    '''
+    """
 
     def __init__(self, directory, mode=None, allow_remove=False):
-        if not directory.endswith('.exdir'):
-            directory = directory + '.exdir'
+        if not directory.endswith(".exdir"):
+            directory = directory + ".exdir"
         if mode is None:
             mode = "a"
-        if mode == 'r':
+        if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY
         else:
             self.io_mode = self.OpenMode.READ_WRITE
@@ -490,12 +497,12 @@ class File(Group):
         already_exists = os.path.exists(directory)
         if already_exists:
             if not _is_valid_object_directory(directory):
-                raise FileExistsError("Path '" + directory +
-                                      "' already exists, but is not a valid " +
+                raise FileExistsError("Path "" + directory +
+                                      "" already exists, but is not a valid " +
                                       "exdir file.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
-                raise FileExistsError("Path '" + directory +
-                                      "' already exists, but is not a valid " +
+                raise FileExistsError("Path "" + directory +
+                                      "" already exists, but is not a valid " +
                                       "exdir file.")
 
         should_create_directory = False
@@ -512,7 +519,7 @@ class File(Group):
                     shutil.rmtree(directory)
                 else:
                     raise FileExistsError(
-                        "File " + directory + " already exists. We won't delete the entire tree" +
+                        "File " + directory + " already exists. We won"t delete the entire tree" +
                         " by default. Add allow_remove=True to override."
                     )
             should_create_directory = True
@@ -546,13 +553,13 @@ class Dataset(Object):
         self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
         if self.io_mode == self.OpenMode.READ_ONLY:
-            self._mmap_mode = 'r'
+            self._mmap_mode = "r"
         else:
-            self._mmap_mode = 'r+'
+            self._mmap_mode = "r+"
 
     def set_data(self, data):
         if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError('Cannot write data to file in read only ("r") mode')
+            raise IOError("Cannot write data to file in read only ("r") mode")
         if isinstance(data, pq.Quantity):
             result = data.magnitude
             self.attrs["unit"] = data.dimensionality.string
@@ -562,9 +569,9 @@ class Dataset(Object):
             result = data
         if result is not None:
             if os.path.exists(self.data_filename):
-                raise FileExistsError('Unable to create dataset "' +
+                raise FileExistsError("Unable to create dataset "" +
                                       self.data_filename +
-                                      '"(dataset already exists)')
+                                      ""(dataset already exists)")
             np.save(self.data_filename, result)
 
     def __getitem__(self, args):
@@ -579,7 +586,7 @@ class Dataset(Object):
 
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError('Cannot write data to file in read only ("r") mode')
+            raise IOError("Cannot write data to file in read only ("r") mode")
         if self._data is None:
             self[:]
         self._data[args] = value
