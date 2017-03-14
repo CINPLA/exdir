@@ -210,8 +210,7 @@ class Attribute:
             meta_data = meta_data[i]
         return meta_data.keys()
 
-    @property
-    def dict(self):
+    def to_dict(self):
         meta_data = self._open_or_create()
         for i in self.path: # TODO check if this is necesary
             meta_data = meta_data[i]
