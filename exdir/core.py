@@ -95,10 +95,11 @@ def _assert_valid_name(name, strict=True):
         raise NameError("Name cannot be empty.")
 
     if strict:
-        valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_")
+        valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
         for char in name:
             if char not in valid_characters:
-                raise NameError("Name contains invalid character "" + char + "".")
+                raise NameError("Name contains invalid character '" + char + "'.\n"
+                                + "Valid characters are:\n" + valid_characters)
 
 
     dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
@@ -426,8 +427,8 @@ class Group(Object):
             raise KeyError("No such object: "" + name + """)
 
         if not _is_valid_object_directory(directory):
-            raise IOError("Directory "" + directory +
-                          "" is not a valid exdir object.")
+            raise IOError("Directory '" + directory +
+                          "' is not a valid exdir object.")
 
         meta_filename = os.path.join(self.directory, name, META_FILENAME)
         with open(meta_filename, "r") as meta_file:
@@ -497,12 +498,12 @@ class File(Group):
         already_exists = os.path.exists(directory)
         if already_exists:
             if not _is_valid_object_directory(directory):
-                raise FileExistsError("Path "" + directory +
-                                      "" already exists, but is not a valid " +
+                raise FileExistsError("Path '" + directory +
+                                      "' already exists, but is not a valid " +
                                       "exdir file.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
-                raise FileExistsError("Path "" + directory +
-                                      "" already exists, but is not a valid " +
+                raise FileExistsError("Path '" + directory +
+                                      "' already exists, but is not a valid " +
                                       "exdir file.")
 
         should_create_directory = False
@@ -519,7 +520,7 @@ class File(Group):
                     shutil.rmtree(directory)
                 else:
                     raise FileExistsError(
-                        "File " + directory + " already exists. We won"t delete the entire tree" +
+                        "File " + directory + " already exists. We won't delete the entire tree" +
                         " by default. Add allow_remove=True to override."
                     )
             should_create_directory = True
@@ -569,9 +570,9 @@ class Dataset(Object):
             result = data
         if result is not None:
             if os.path.exists(self.data_filename):
-                raise FileExistsError("Unable to create dataset "" +
+                raise FileExistsError("Unable to create dataset '" +
                                       self.data_filename +
-                                      ""(dataset already exists)")
+                                      "'(dataset already exists)")
             np.save(self.data_filename, result)
 
     def __getitem__(self, args):
