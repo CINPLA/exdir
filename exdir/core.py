@@ -164,7 +164,7 @@ def _is_valid_object_directory(directory):
     return True
 
 
-class Attribute:
+class Attribute(object)::
     """
     Attribute class.
     """
@@ -269,7 +269,7 @@ class Attribute:
         return len(self.keys())
 
 
-class Object():
+class Object(object)::
     """
     Parent class for exdir Group and exdir dataset objects
     """
@@ -353,6 +353,9 @@ class Group(Object):
         return dataset
 
     def create_group(self, name):
+        if "/" in name:
+            raise NotImplementedError("Intermediate groups can not yet be created automatically")
+
         _assert_valid_name(name)
         group_directory = os.path.join(self.directory, name)
         _create_object_directory(group_directory, GROUP_TYPENAME)
@@ -368,7 +371,7 @@ class Group(Object):
             if isinstance(current_object, Group):
                 return current_object
             else:
-                raise TypeError("An object with name "" + name + "" already " +
+                raise TypeError("An object with name '" + name + "' already " +
                                 "exists, but it is not a Group.")
         elif os.path.exists(group_directory):
             raise IOError("Directory " + group_directory + " already exists," +

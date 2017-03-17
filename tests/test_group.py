@@ -19,43 +19,57 @@ def test_group_init(setup_teardown_folder):
 
 # New groups can be created via .create_group method
 
-def test_create(setup_teardown_file):
+def test_create_group(setup_teardown_file):
     """ Simple .create_group call """
     f = setup_teardown_file
 
     grp = f.create_group('foo')
-    assert(grp == Group)
+    assert(isinstance(grp, Group))
 
+
+# TODO update this test when it is implemented
 def test_create_intermediate(setup_teardown_file):
     """ Intermediate groups can be created automatically """
     f = setup_teardown_file
 
-    grp = f.create_group('foo/bar/baz')
-    assert(grp.name == '/foo/bar/baz')
+    with pytest.raises(NotImplementedError):
+        grp = f.create_group('foo/bar/baz')
+
+    # assert(grp.name == '/foo/bar/baz')
 
 def test_create_exception(setup_teardown_file):
-    """ Name conflict causes group creation to fail with ValueError """
+    """ Name conflict causes group creation to fail with IOError """
     f = setup_teardown_file
 
     f.create_group('foo')
-    with pytest.raises(ValueError):
+    with pytest.raises(IOError):
         f.create_group('foo')
 
-def test_unicode(setup_teardown_file):
-    """ Unicode names are correctly stored """
+
+"""
+  Feature: Groups can be auto-created, or opened via .require_group
+"""
+
+def test_open_existing(setup_teardown_file):
+    """ Existing group is opened and returned """
     f = setup_teardown_file
 
-    name = six.u("/Name") + six.unichr(0x4500)
-    group = f.create_group(name)
-    assert(group.name == name)
+    grp = f.create_group('foo')
+    grp2 = f.require_group('foo')
+    assert(grp == grp2)
 
+def test_create(setup_teardown_file):
+    """ Group is created if it doesn't exist """
+    f = setup_teardown_file
 
-# def test_unicode_default(setup_teardown_file):
-#     """
-#     Unicode names convertible to ASCII are stored as ASCII (issue 239)
-#     """
+    grp = f.require_group('foo')
+    assert(isinstance(grp, Group))
+    assert(grp.name == '/foo')
+
+# def test_require_exception(setup_teardown_file):
+#     """ Opening conflicting object results in TypeError """
 #     f = setup_teardown_file
+#     f.create_dataset('foo', (1,), 'f')
 #
-#     name = six.u("/Hello, this is a name")
-#     group = f.create_group(name)
-#     assert(group.name == name)
+#     with pytest.raises(TypeError):
+#         f.require_group('foo')

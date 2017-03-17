@@ -129,6 +129,34 @@ def test_assert_valid_name():
     with pytest.raises(NameError):
         _assert_valid_name(RAW_FOLDER_NAME)
 
+def test_assert_valid_name_no_strict():
+    valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
+
+    _assert_valid_name(valid_name, strict=False)
+
+    invalid_name = " "
+    _assert_valid_name(invalid_name, strict=False)
+
+    invalid_name = "A"
+    _assert_valid_name(invalid_name, strict=False)
+
+    invalid_name = "\n"
+    _assert_valid_name(invalid_name, strict=False)
+
+
+    invalid_name = six.unichr(0x4500)
+    _assert_valid_name(invalid_name, strict=False)
+
+
+    with pytest.raises(NameError):
+        _assert_valid_name(META_FILENAME, strict=False)
+
+    with pytest.raises(NameError):
+        _assert_valid_name(ATTRIBUTES_FILENAME, strict=False)
+
+    with pytest.raises(NameError):
+        _assert_valid_name(RAW_FOLDER_NAME, strict=False)
+
 
 
 def test_create_object_directory(setup_teardown_folder):
