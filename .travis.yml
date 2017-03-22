@@ -12,11 +12,11 @@ script:
 deploy:
   - provider: script
     skip_cleanup: true
-    script: bash -ex libs/travis-conda-scripts/scripts/upload.sh cinpla
+    script: bash -ex libs/travis-conda-scripts/scripts/upload.sh cinpla main
     on:
       tags: true
   - provider: script
     skip_cleanup: true
-    script: bash -ex libs/travis-conda-scripts/scripts/upload.sh cinpla #-unstable
+    script: bash -ex libs/travis-conda-scripts/scripts/upload.sh cinpla dev
     on:
       branch: dev
