@@ -139,6 +139,62 @@ def _is_valid_object_directory(directory):
     return True
 
 
+def root_directory(path):
+    """
+    Iterates upwards until a exdir.File object is found.
+    
+    returns: path to exdir.File or None if not found.
+    """
+    path = os.path.abspath(path)
+    found = False
+    while not found:
+        if os.path.dirname(path) == path:  # parent is self
+            return None
+        valid = _is_valid_object_directory(path)
+        if not valid:
+            path = os.path.dirname(os.path.abspath(path))
+            continue
+            
+        meta_filename = _metafile_from_directory(path)
+        with open(meta_filename, "r") as meta_file:
+            meta_data = yaml.load(meta_file)
+        if EXDIR_METANAME not in meta_data:
+            path = os.path.dirname(os.path.abspath(path))
+            continue
+        exdir_meta = meta_data[EXDIR_METANAME]
+        if TYPE_METANAME not in exdir_meta:
+            path = os.path.dirname(os.path.abspath(path))
+            continue
+        if FILE_TYPENAME != exdir_meta[TYPE_METANAME]:
+            path = os.path.dirname(os.path.abspath(path))
+            continue
+        found = True
+    return path
+
+
+def is_inside_exdir(path):
+    path = os.path.abspath(path)
+    return root_directory(path) is not None
+
+
+def assert_inside_exdir(path):
+    path = os.path.abspath(path)
+    if not is_inside_exdir(path):
+        raise FileNotFoundError("Path " + path + " is not inside an Exdir repository.")
+
+
+def open_object(path):
+    path = os.path.abspath(path)
+    assert_inside_exdir(path)
+    root_dir = root_directory(path)
+    object_name = os.path.relpath(path, root_dir)
+    object_name = object_name.replace(os.sep, "/")
+    exdir_file = File(root_dir)
+    if object_name == ".":
+        return exdir_file
+    return exdir_file[object_name]
+
+
 class OpenMode(Enum):
     read_write = 1
     read_only = 2
@@ -228,6 +284,7 @@ class Attribute:
                       default_flow_style=False,
                       allow_unicode=True)
 
+    # TODO only needs filename, make into free function
     def _open_or_create(self):
         meta_data = {}
         if os.path.exists(self.filename):
@@ -396,6 +453,8 @@ class Group(Object):
         if "/" in name:
             if name[0] == '/':
                 if isinstance(self, File):
+                    if name == "/":
+                        return self
                     name = name[1:]
                 else:
                     raise KeyError('To begin tree structure with "/" is only' +
@@ -427,8 +486,8 @@ class Group(Object):
                          parent_path=self.relative_path, object_name=name,
                          io_mode=self.io_mode)
         else:
-            print("Data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
-            raise NotImplementedError("Only dataset implemented")
+            print("Object", name, "has data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
+            raise NotImplementedError("Cannot open objects of this type")
 
     def __setitem__(self, name, value):
         if name not in self:
