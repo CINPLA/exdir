@@ -1,3 +1,4 @@
+ # -*- coding: utf-8 -*-
 """
 .. module:: exdir.core
 .. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød
@@ -202,7 +203,7 @@ class OpenMode(Enum):
 
 class Attribute:
     '''
-    Attribute class. 
+    Attribute class.
     '''
     class Mode(Enum):
         attributes = 1
@@ -229,19 +230,19 @@ class Attribute:
 
     def __setitem__(self, name, value):
         meta_data = self._open_or_create()
-            
+
         if isinstance(name, np.integer):
             key = int(name)
         else:
             key = name
-        
+
         sub_meta_data = meta_data
         for i in self.path:
             sub_meta_data = sub_meta_data[i]
         sub_meta_data[key] = value
-        
+
         self._set_data(meta_data)
-    
+
     def __contains__(self, name):
         meta_data = self._open_or_create()
         for i in self.path:
@@ -291,7 +292,7 @@ class Attribute:
             with open(self.filename, "r") as meta_file:
                 meta_data = yaml.load(meta_file)
         return meta_data
-        
+
     def __iter__(self):
         for key in self.keys():
             yield key
@@ -302,7 +303,7 @@ class Attribute:
             return self.parent.meta_filename
         else:
             return self.parent.attributes_filename
-            
+
     def __len__(self):
         return len(self.keys())
 
@@ -352,7 +353,7 @@ class Object(object):
     @property
     def meta_filename(self):
         return _metafile_from_directory(self.directory)
-        
+
     def create_raw(self, name):
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
@@ -360,7 +361,7 @@ class Object(object):
                           " already exists.")
         os.mkdir(directory_name)
         return directory_name
-        
+
     def require_raw(self, name):
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
@@ -371,9 +372,9 @@ class Object(object):
 
 class Group(Object):
     '''
-    Container of other groups and datasets. 
+    Container of other groups and datasets.
     '''
-        
+
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Group, self).__init__(root_directory=root_directory,
                                     parent_path=parent_path,
@@ -387,7 +388,7 @@ class Group(Object):
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
-        dataset = Dataset(root_directory=self.root_directory, 
+        dataset = Dataset(root_directory=self.root_directory,
                           parent_path=self.relative_path, object_name=name,
                           io_mode=self.io_mode)
         if data is not None:
@@ -465,13 +466,13 @@ class Group(Object):
                 return item[name_split[1]]
             else:
                 return self[name_split[0]]
-                
+
         directory = os.path.join(self.directory, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
 
         if not _is_valid_object_directory(directory):
-            raise IOError("Directory '" + directory + 
+            raise IOError("Directory '" + directory +
                           "' is not a valid exdir object.")
 
         meta_filename = os.path.join(self.directory, name, META_FILENAME)
@@ -546,7 +547,7 @@ class File(Group):
                                       "' already exists, but is not a valid " +
                                       "exdir object.")
             if self.meta[EXDIR_METANAME][TYPE_METANAME] != FILE_TYPENAME:
-                raise FileExistsError("Path '" + directory + 
+                raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
 
@@ -587,7 +588,7 @@ class File(Group):
 class Dataset(Object):
     """
     Dataset class
-    
+
     Warning: MODIFIES VIEW!!!!!!! different from h5py
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
@@ -639,11 +640,11 @@ class Dataset(Object):
     @property
     def data(self):
         return self[:]
-        
+
     @data.setter
     def data(self, value):
         self.set_data(value)
-    
+
     @property
     def shape(self):
         return self[:].shape
