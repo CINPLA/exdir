@@ -1,9 +1,9 @@
 package:
   name: exdir
-  version: {{ environ.get("GIT_DESCRIBE", "0.0.0_custom")|replace("v", "")|replace("-", "_") }}
+  version: {{ environ.get("GIT_TAG", "0.0.0_custom")|replace("v", "")|replace("-", "_") }}
   
 source:
-  path: .
+  git_url: ..
  
 build:
   # noarch: python  # TODO Add back noarch when it works properly on Windows,
