@@ -164,7 +164,7 @@ def _is_valid_object_directory(directory):
     return True
 
 
-class Attribute(object)::
+class Attribute(object):
     """
     Attribute class.
     """
