@@ -4,7 +4,7 @@ import six
 
 from exdir.core import *
 from exdir.core import _assert_valid_name, _create_object_directory
-from exdir.core import _metafile_from_directory, _is_valid_object_directory
+from exdir.core import _metafile_from_directory, _is_nonraw_object_directory
 
 from conftest import remove
 
@@ -99,26 +99,17 @@ def test_convert_back_quantities():
 
 
 def test_assert_valid_name():
-    valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
-
-    _assert_valid_name(valid_name)
-
-    invalid_name = ""
+    _assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-")
     with pytest.raises(NameError):
-        _assert_valid_name(invalid_name)
+        _assert_valid_name("")
 
-    invalid_name = "A"
+    _assert_valid_name("A")
+
     with pytest.raises(NameError):
-        _assert_valid_name(invalid_name)
+        _assert_valid_name("\n")
 
-    invalid_name = "\n"
     with pytest.raises(NameError):
-        _assert_valid_name(invalid_name)
-
-
-    invalid_name = six.unichr(0x4500)
-    with pytest.raises(NameError):
-        _assert_valid_name(invalid_name)
+        _assert_valid_name(six.unichr(0x4500))
 
     with pytest.raises(NameError):
         _assert_valid_name(META_FILENAME)
@@ -132,30 +123,30 @@ def test_assert_valid_name():
 def test_assert_valid_name_no_strict():
     valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
-    _assert_valid_name(valid_name, strict=False)
+    _assert_valid_name(valid_name, "none")
 
     invalid_name = " "
-    _assert_valid_name(invalid_name, strict=False)
+    _assert_valid_name(invalid_name, "none")
 
     invalid_name = "A"
-    _assert_valid_name(invalid_name, strict=False)
+    _assert_valid_name(invalid_name, "none")
 
     invalid_name = "\n"
-    _assert_valid_name(invalid_name, strict=False)
+    _assert_valid_name(invalid_name, "none")
 
 
     invalid_name = six.unichr(0x4500)
-    _assert_valid_name(invalid_name, strict=False)
+    _assert_valid_name(invalid_name, "none")
 
 
     with pytest.raises(NameError):
-        _assert_valid_name(META_FILENAME, strict=False)
+        _assert_valid_name(META_FILENAME, "none")
 
     with pytest.raises(NameError):
-        _assert_valid_name(ATTRIBUTES_FILENAME, strict=False)
+        _assert_valid_name(ATTRIBUTES_FILENAME, "none")
 
     with pytest.raises(NameError):
-        _assert_valid_name(RAW_FOLDER_NAME, strict=False)
+        _assert_valid_name(RAW_FOLDER_NAME, "none")
 
 
 
@@ -196,17 +187,17 @@ def test_metafile_from_directory(setup_teardown_folder):
     assert(metafile == compare_metafile)
 
 
-def test_is_valid_object_directory(setup_teardown_folder):
+def test_is_nonraw_object_directory(setup_teardown_folder):
     os.makedirs(pytest.TESTDIR)
 
-    result = _is_valid_object_directory(pytest.TESTDIR)
+    result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert(result is False)
 
     compare_metafile = os.path.join(pytest.TESTDIR, META_FILENAME)
     with open(compare_metafile, "w") as f:
         pass
 
-    result = _is_valid_object_directory(pytest.TESTDIR)
+    result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert(result is False)
 
 
@@ -221,7 +212,7 @@ def test_is_valid_object_directory(setup_teardown_folder):
                        default_flow_style=False,
                        allow_unicode=True)
 
-    result = _is_valid_object_directory(pytest.TESTDIR)
+    result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert(result is False)
 
 
@@ -237,7 +228,7 @@ def test_is_valid_object_directory(setup_teardown_folder):
                        default_flow_style=False,
                        allow_unicode=True)
 
-    result = _is_valid_object_directory(pytest.TESTDIR)
+    result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert(result is False)
 
     remove(pytest.TESTFILE)
@@ -252,11 +243,11 @@ def test_is_valid_object_directory(setup_teardown_folder):
                        default_flow_style=False,
                        allow_unicode=True)
 
-    result = _is_valid_object_directory(pytest.TESTDIR)
+    result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert(result is True)
 
     remove(pytest.TESTDIR)
 
     _create_object_directory(pytest.TESTDIR, DATASET_TYPENAME)
-    result = _is_valid_object_directory(pytest.TESTDIR)
+    result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert(result is True)
