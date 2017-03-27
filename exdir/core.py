@@ -134,7 +134,7 @@ def _assert_valid_name(name, mode='simple'):
 def _create_object_directory(directory, typename):
     """
     Create object directory and meta file if directory
-    don"t already exist
+    don't already exist
     """
     if os.path.exists(directory):
         raise IOError("The directory '" + directory + "' already exists")
@@ -159,7 +159,11 @@ def _metafile_from_directory(directory):
     return os.path.join(directory, META_FILENAME)
 
 
-def _is_valid_object_directory(directory):
+def _is_raw_object_directory(directory):
+    return os.path.isdir(directory) and not _is_nonraw_object_directory(directory)
+
+
+def _is_nonraw_object_directory(directory):
     meta_filename = os.path.join(directory, META_FILENAME)
     if not os.path.exists(meta_filename):
         return False
@@ -190,7 +194,7 @@ def root_directory(path):
     while not found:
         if os.path.dirname(path) == path:  # parent is self
             return None
-        valid = _is_valid_object_directory(path)
+        valid = _is_nonraw_object_directory(path)
         if not valid:
             path = os.path.dirname(os.path.abspath(path))
             continue
@@ -399,6 +403,18 @@ class Object(object):
             return self.create_raw(name)
 
 
+class Raw(Object):
+    """
+    Raw objects are simple folders with any content.
+    
+    Raw objects currently have no features apart from showing their path.
+    """
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
+        super(Raw, self).__init__(root_directory=root_directory,
+                                  parent_path=parent_path,
+                                  object_name=object_name, io_mode=io_mode)
+
+
 class Group(Object):
     """
     Container of other groups and datasets.
@@ -477,7 +493,9 @@ class Group(Object):
         if len(name) < 1:
             return False
         directory = os.path.join(self.directory, name)
-        if _is_valid_object_directory(directory):
+        if _is_nonraw_object_directory(directory):
+            return True
+        elif _is_raw_object_directory(directory):
             return True
         else:
             return False
@@ -502,8 +520,14 @@ class Group(Object):
         directory = os.path.join(self.directory, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
+        
+        if _is_raw_object_directory(directory):
+            return Raw(root_directory=self.root_directory,
+                       parent_path=self.relative_path, 
+                       object_name=name,
+                       io_mode=self.io_mode)
 
-        if not _is_valid_object_directory(directory):
+        if not _is_nonraw_object_directory(directory):
             raise IOError("Directory '" + directory +
                           "' is not a valid exdir object.")
 
@@ -512,11 +536,13 @@ class Group(Object):
             meta_data = yaml.safe_load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
             return Dataset(root_directory=self.root_directory,
-                           parent_path=self.relative_path, object_name=name,
+                           parent_path=self.relative_path, 
+                           object_name=name,
                            io_mode=self.io_mode)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
             return Group(root_directory=self.root_directory,
-                         parent_path=self.relative_path, object_name=name,
+                         parent_path=self.relative_path, 
+                         object_name=name,
                          io_mode=self.io_mode)
         else:
             print("Object", name, "has data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
@@ -534,17 +560,17 @@ class Group(Object):
                 raise NotImplementedError("Only dataset writing implemented")
 
     def keys(self):
-        for name in sorted(os.listdir(self.directory)):
+        for name in self:
             if name in self:
                 yield name
 
     def items(self):
-        for name in sorted(os.listdir(self.directory)):
+        for name in self:
             if name in self:
                 yield name, self[name]
 
     def values(self):
-        for name in sorted(os.listdir(self.directory)):
+        for name in self:
             if name in self:
                 yield self[name]
 
@@ -574,7 +600,7 @@ class File(Group):
 
         already_exists = os.path.exists(directory)
         if already_exists:
-            if not _is_valid_object_directory(directory):
+            if not _is_nonraw_object_directory(directory):
                 raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
@@ -661,7 +687,7 @@ class Dataset(Object):
 
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ("r") mode")
+            raise IOError('Cannot write data to file in read only ("r") mode')
         if self._data is None:
             self[:]
         self._data[args] = value
