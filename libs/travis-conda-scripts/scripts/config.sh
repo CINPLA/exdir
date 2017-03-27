@@ -6,10 +6,10 @@ export TAG_AND_TRAVIS_BUILD=${GIT_TAG}_b${TRAVIS_BUILD_NUMBER}
 export TAG_TRAVIS_BUILD_AND_COMMIT=${TAG_AND_TRAVIS_BUILD}_g${TRAVIS_COMMIT}
 export CONDA_BLD_PATH=/tmp/conda-bld
 export PACKAGE=$(conda build . --output --python "$TRAVIS_PYTHON_VERSION")
-export CONDA_CHANNELS="-c defaults -c conda-forge -c cinpla"
+export EXTRA_CONDA_CHANNELS="-c defaults -c conda-forge -c cinpla"
 if [ -z $TRAVIS_TAG ]; then
     echo "INFO: No TRAVIS_TAG found, adding dev channel"
-    export CONDA_CHANNELS="$EXTRA_CONDA_CHANNELS -c cinpla/label/dev"
+    export EXTRA_CONDA_CHANNELS="$EXTRA_CONDA_CHANNELS -c cinpla/label/dev"
 fi
 echo PATH $PATH
 echo GIT_DESCRIBE $GIT_DESCRIBE
