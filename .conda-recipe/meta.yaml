@@ -30,6 +30,8 @@ requirements:
     - pyyaml
 
 test:
+  requires:
+    - pytest
   source_files:
     - tests
   imports:
