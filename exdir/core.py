@@ -87,19 +87,34 @@ def convert_quantities(value):
     return result
 
 
-def _assert_valid_name(name, strict=True):
+def _assert_valid_name(name, mode='simple'):
     """
     Check if name (dataset or group) is valid
     """
+    valid_modes = ['strict', 'simple', 'thorough', 'none']
+    valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
+    if mode not in valid_modes:
+        raise NameError('mode is not valid, valid modes are "' +
+                        valid_modes + '"')
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
-    if strict:
-        valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
+    if mode == 'thorough':
+        raise NotImplementedError
+
+    if mode == 'strict':
         for char in name:
             if char not in valid_characters:
                 raise NameError("Name contains invalid character '" + char + "'.\n"
                                 + "Valid characters are:\n" + valid_characters)
+
+    if mode == 'simple':
+        for char in name:
+            if char.lower() not in valid_characters:
+                raise NameError("Name contains invalid character '" + char + "'.\n"
+                                + "Valid characters are:\n" + valid_characters)
+        print('Warning: name consistency check is not implemented')
+        # TODO check if name.lower() == any name in Group/File
 
 
     dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
