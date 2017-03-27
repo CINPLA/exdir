@@ -19,6 +19,7 @@ requirements:
     - quantities
     - pyyaml
     - pytest
+    - six
 
   run:
     - python
@@ -28,6 +29,7 @@ requirements:
     - scipy
     - quantities
     - pyyaml
+    - six
 
 test:
   requires:
