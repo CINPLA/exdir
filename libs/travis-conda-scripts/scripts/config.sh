@@ -9,7 +9,7 @@ export PACKAGE=$(conda build . --output --python "$TRAVIS_PYTHON_VERSION")
 export CONDA_CHANNELS="-c defaults -c conda-forge -c cinpla"
 if [ -z $TRAVIS_TAG ]; then
     echo "INFO: No TRAVIS_TAG found, adding dev channel"
-    export CONDA_CHANNELS="$CONDA_CHANNELS -c cinpla/label/dev"
+    export CONDA_CHANNELS="$EXTRA_CONDA_CHANNELS -c cinpla/label/dev"
 fi
 echo PATH $PATH
 echo GIT_DESCRIBE $GIT_DESCRIBE
@@ -18,4 +18,4 @@ echo GIT_TAG $GIT_TAG
 echo TAG_AND_TRAVIS_BUILD $TAG_AND_TRAVIS_BUILD
 echo TAG_TRAVIS_BUILD_AND_COMMIT $TAG_TRAVIS_BUILD_AND_COMMIT
 echo PACKAGE $PACKAGE
-echo CONDA_CHANNELS $CONDA_CHANNELS
+echo CONDA_CHANNELS $EXTRA_CONDA_CHANNELS
