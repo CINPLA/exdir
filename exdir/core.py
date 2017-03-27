@@ -505,6 +505,12 @@ class Group(Object):
         directory = os.path.join(self.directory, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
+        
+        if _is_raw_object_directory(directory):
+            return Raw(root_directory=self.root_directory,
+                       parent_path=self.relative_path, 
+                       object_name=name,
+                       io_mode=self.io_mode)
 
         if not _is_nonraw_object_directory(directory):
             raise IOError("Directory '" + directory +
@@ -515,11 +521,13 @@ class Group(Object):
             meta_data = yaml.safe_load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
             return Dataset(root_directory=self.root_directory,
-                           parent_path=self.relative_path, object_name=name,
+                           parent_path=self.relative_path, 
+                           object_name=name,
                            io_mode=self.io_mode)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
             return Group(root_directory=self.root_directory,
-                         parent_path=self.relative_path, object_name=name,
+                         parent_path=self.relative_path, 
+                         object_name=name,
                          io_mode=self.io_mode)
         else:
             print("Object", name, "has data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
