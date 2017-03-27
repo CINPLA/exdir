@@ -11,6 +11,7 @@ import yaml
 import numpy as np
 import shutil
 import quantities as pq
+import re
 from enum import Enum
 
 # metadata
@@ -27,6 +28,16 @@ RAW_FOLDER_NAME = "__raw__"
 DATASET_TYPENAME = "dataset"
 GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
+
+
+def natural_sort(l): 
+    def convert(text): 
+        return int(text) if text.isdigit() else text.lower()
+    
+    def alphanum_key(key):
+        return [convert(c) for c in re.split('([0-9]+)', key)]
+    
+    return sorted(l, key=alphanum_key)
 
 
 def convert_back_quantities(value):
@@ -159,8 +170,12 @@ def _metafile_from_directory(directory):
     return os.path.join(directory, META_FILENAME)
 
 
-def _is_raw_object_directory(directory):
-    return os.path.isdir(directory) and not _is_nonraw_object_directory(directory)
+def _is_exdir_object(directory):
+    """
+    WARNING: Does not test if inside exdir directory,
+    only if the object can be an exdir object (i.e. a directory).
+    """
+    return os.path.isdir(directory)
 
 
 def _is_nonraw_object_directory(directory):
@@ -182,6 +197,10 @@ def _is_nonraw_object_directory(directory):
             return False
     return True
 
+
+def _is_raw_object_directory(directory):
+    return _is_exdir_object(directory) and not _is_nonraw_object_directory(directory)
+    
 
 def root_directory(path):
     """
@@ -493,12 +512,7 @@ class Group(Object):
         if len(name) < 1:
             return False
         directory = os.path.join(self.directory, name)
-        if _is_nonraw_object_directory(directory):
-            return True
-        elif _is_raw_object_directory(directory):
-            return True
-        else:
-            return False
+        return _is_exdir_object(directory)
 
     def __getitem__(self, name):
         if os.sep in name:
@@ -575,7 +589,7 @@ class Group(Object):
                 yield self[name]
 
     def __iter__(self):
-        for name in sorted(os.listdir(self.directory)):
+        for name in natural_sort(os.listdir(self.directory)):
             if name in self:
                 yield name
 
