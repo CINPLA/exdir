@@ -34,6 +34,7 @@ test:
     - exdir
   commands:
     - python -c "import exdir; print(exdir.__version__)"
+    - pytest -s
 
 about:
   home: https://github.com/CINPLA/exdir/
