@@ -11,6 +11,7 @@ from exdir.core import _metafile_from_directory, _is_nonraw_object_directory
 
 from conftest import remove
 
+
 def test_modify_view(setup_teardown_file):
     f = setup_teardown_file
     dataset = f.create_dataset("mydata", data=np.array([1, 2, 3, 4, 5, 6, 7, 8]))
@@ -108,7 +109,7 @@ def test_open_mode(setup_teardown_folder):
 
     remove(pytest.TESTFILE)
     f = exdir.File(pytest.TESTFILE, 'w')
-    f.close()# dummy close
+    f.close()  # dummy close
     # read write if exist
     f = exdir.File(pytest.TESTFILE, "r+")
     f.require_group('mygroup')
@@ -123,8 +124,8 @@ def test_open_mode(setup_teardown_folder):
         f.attrs['can_not_write'] = 42
         f.create_group('mygroup')
 
-# tests for File class
 
+# tests for File class
 def test_file_init(setup_teardown_folder):
     no_exdir = os.path.join(pytest.TESTPATH, "no_exdir")
 
@@ -165,7 +166,6 @@ def test_file_init(setup_teardown_folder):
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="r+")
 
-
     _create_object_directory(pytest.TESTFILE, FILE_TYPENAME)
 
     with pytest.raises(FileExistsError):
@@ -184,7 +184,6 @@ def test_file_init(setup_teardown_folder):
 
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="x")
-
 
 
 def test_file_close(setup_teardown_folder):
@@ -208,11 +207,7 @@ def test_attr_init():
 #     _create_object_directory(attr_file, GROUP_TYPENAME)
 #     attribute = Attribute("", Attribute.Mode.ATTRIBUTES, "io_mode")
 
-
-
 # tests for Group class
-
-
 def test_group_init(setup_teardown_folder):
     group = Group(pytest.TESTDIR, "", "test_object", io_mode=None)
 

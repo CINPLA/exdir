@@ -87,7 +87,6 @@ def test_object_create_raw(setup_teardown_folder):
 def test_object_require_raw(setup_teardown_folder):
     obj = Object(pytest.TESTDIR, "", "test_object", io_mode=None)
 
-
     _create_object_directory(pytest.TESTDIR, DATASET_TYPENAME)
     _create_object_directory(os.path.join(pytest.TESTDIR, "test_object"),
                              GROUP_TYPENAME)

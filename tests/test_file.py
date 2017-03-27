@@ -49,7 +49,6 @@ def test_file_init(setup_teardown_folder):
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="r+")
 
-
     _create_object_directory(pytest.TESTFILE, FILE_TYPENAME)
 
     with pytest.raises(FileExistsError):
@@ -68,7 +67,6 @@ def test_file_init(setup_teardown_folder):
 
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="x")
-
 
 
 def test_file_close(setup_teardown_folder):
