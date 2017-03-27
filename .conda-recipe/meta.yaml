@@ -14,12 +14,6 @@ requirements:
   build:
     - python
     - setuptools
-    - pip
-    - numpy
-    - quantities
-    - pyyaml
-    - pytest
-    - six
 
   run:
     - python
@@ -29,11 +23,11 @@ requirements:
     - scipy
     - quantities
     - pyyaml
-    - six
 
 test:
   requires:
     - pytest
+    - six
   source_files:
     - tests
   imports:
