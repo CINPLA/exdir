@@ -30,6 +30,8 @@ requirements:
     - pyyaml
 
 test:
+  source_files:
+    - tests
   imports:
     - exdir
   commands:
