@@ -220,11 +220,6 @@ def open_object(path):
     return exdir_file[object_name]
 
 
-class OpenMode(Enum):
-    read_write = 1
-    read_only = 2
-
-
 class Attribute(object):
     """
     Attribute class.
@@ -402,7 +397,7 @@ class Group(Object):
     def create_dataset(self, name, data=None):
         _assert_valid_name(name)
         if name in self:
-            raise IOError("An object with name "" + name + "" already exists.")
+            raise IOError("An object with name '" + name + "' already exists.")
 
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
@@ -458,7 +453,7 @@ class Group(Object):
             elif isinstance(current_object, Dataset) and data is None:
                 return current_object
             else:
-                raise TypeError("An object with name "" + name + "" already "
+                raise TypeError("An object with name '" + name + "' already "
                                 "exists, but it is not a Group.")
         else:
             return self.create_dataset(name, data=data)
@@ -480,7 +475,7 @@ class Group(Object):
                         return self
                     name = name[1:]
                 else:
-                    raise KeyError("To begin the tree structure with "" + os.sep + "" is only" +
+                    raise KeyError("To begin the tree structure with '" + os.sep + "' is only" +
                                    " allowed for get item from root object")
             name_split = name.split(os.sep, 1)
             if len(name_split) == 2:
@@ -491,7 +486,7 @@ class Group(Object):
 
         directory = os.path.join(self.directory, name)
         if name not in self:
-            raise KeyError("No such object: "" + name + """)
+            raise KeyError("No such object: '" + name + "'")
 
         if not _is_valid_object_directory(directory):
             raise IOError("Directory '" + directory +
@@ -612,6 +607,7 @@ class Dataset(Object):
     Dataset class
 
     Warning: MODIFIES VIEW!!!!!!! different from h5py
+    Warning: Possible to overwrite existing dataset. This differs from the h5py API. However, it should only cause issues with existing code if said code expects this to fail."
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Dataset, self).__init__(root_directory=root_directory,
@@ -636,10 +632,6 @@ class Dataset(Object):
         else:
             result = data
         if result is not None:
-            if os.path.exists(self.data_filename):
-                raise FileExistsError("Unable to create dataset '" +
-                                      self.data_filename +
-                                      "'(dataset already exists)")
             np.save(self.data_filename, result)
 
     def __getitem__(self, args):

@@ -113,9 +113,6 @@ def test_open_mode(setup_teardown_folder):
     f = exdir.File(pytest.TESTFILE, "r+")
     f.require_group('mygroup')
     f.require_dataset('dset', np.arange(10))
-    # can never overwrite dataset
-    with pytest.raises(FileExistsError):
-        f.require_dataset('dset', np.arange(10))
     f.attrs['can_overwrite'] = 42
     f.attrs['can_overwrite'] = 14
 
@@ -125,21 +122,6 @@ def test_open_mode(setup_teardown_folder):
         f.require_dataset('dset', np.arange(10))
         f.attrs['can_not_write'] = 42
         f.create_group('mygroup')
-
-    # can never overwrite dataset
-    for mode in ["a", "w", "w-"]:
-        remove(pytest.TESTFILE)
-        f = exdir.File(pytest.TESTFILE, mode)
-        f.require_dataset('dset', np.arange(10))
-        with pytest.raises(FileExistsError):
-            f.require_dataset('dset', np.arange(10))
-
-
-
-
-
-
-
 
 # tests for File class
 
