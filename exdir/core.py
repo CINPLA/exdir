@@ -19,8 +19,8 @@ TYPE_METANAME = "type"
 VERSION_METANAME = "version"
 
 # filenames
-META_FILENAME = "meta.yml"
-ATTRIBUTES_FILENAME = "attributes.yml"
+META_FILENAME = "exdir.yaml"
+ATTRIBUTES_FILENAME = "attributes.yaml"
 RAW_FOLDER_NAME = "__raw__"
 
 # typenames
