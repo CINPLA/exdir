@@ -7,7 +7,7 @@ import quantities as pq
 
 from exdir.core import *
 from exdir.core import _assert_valid_name, _create_object_directory
-from exdir.core import _metafile_from_directory, _is_valid_object_directory
+from exdir.core import _metafile_from_directory, _is_nonraw_object_directory
 
 from conftest import remove
 
@@ -130,22 +130,22 @@ def test_file_init(setup_teardown_folder):
 
     f = File(no_exdir, mode="w")
     f.close()
-    assert(_is_valid_object_directory(no_exdir + ".exdir"))
+    assert(_is_nonraw_object_directory(no_exdir + ".exdir"))
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="w")
     f.close()
-    assert(_is_valid_object_directory(pytest.TESTFILE))
+    assert(_is_nonraw_object_directory(pytest.TESTFILE))
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_valid_object_directory(pytest.TESTFILE))
+    assert(_is_nonraw_object_directory(pytest.TESTFILE))
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_valid_object_directory(pytest.TESTFILE))
+    assert(_is_nonraw_object_directory(pytest.TESTFILE))
     remove(pytest.TESTFILE)
 
     os.makedirs(pytest.TESTFILE)
