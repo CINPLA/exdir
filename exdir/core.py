@@ -47,11 +47,17 @@ def convert_back_quantities(value):
     result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value and "uncertainty" in value:
-            result = pq.UncertainQuantity(value["value"],
-                                          value["unit"],
-                                          value["uncertainty"])
+            try:
+                result = pq.UncertainQuantity(value["value"],
+                                              value["unit"],
+                                              value["uncertainty"])
+            except Exception:
+                pass
         elif "unit" in value and "value" in value:
-            result = pq.Quantity(value["value"], value["unit"])
+            try:
+                result = pq.Quantity(value["value"], value["unit"])
+            except Exception:
+                pass
         else:
             try:
                 for key, value in result.items():
