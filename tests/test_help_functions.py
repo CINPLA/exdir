@@ -1,6 +1,7 @@
 import pytest
 import os
 import six
+import exdir
 
 from exdir.core import *
 from exdir.core import _assert_valid_name, _create_object_directory
@@ -83,54 +84,56 @@ def test_convert_back_quantities():
     assert(result == {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")})
 
 
-def test_assert_valid_name():
-    _assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-")
+def test_assert_valid_name_simple(setup_teardown_folder):
+    f = exdir.File(pytest.TESTFILE, naming_rule='simple')
+    _assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-", f)
     with pytest.raises(NameError):
-        _assert_valid_name("")
+        _assert_valid_name("", f)
 
-    _assert_valid_name("A")
-
-    with pytest.raises(NameError):
-        _assert_valid_name("\n")
+    _assert_valid_name("A", f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(six.unichr(0x4500))
+        _assert_valid_name("\n", f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(META_FILENAME)
+        _assert_valid_name(six.unichr(0x4500), f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(ATTRIBUTES_FILENAME)
+        _assert_valid_name(META_FILENAME, f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(RAW_FOLDER_NAME)
+        _assert_valid_name(ATTRIBUTES_FILENAME, f)
+
+    with pytest.raises(NameError):
+        _assert_valid_name(RAW_FOLDER_NAME, f)
 
 
-def test_assert_valid_name_no_strict():
+def test_assert_valid_name_none(setup_teardown_folder):
+    f = exdir.File(pytest.TESTFILE, naming_rule='none')
     valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
-    _assert_valid_name(valid_name, "none")
+    _assert_valid_name(valid_name, f)
 
     invalid_name = " "
-    _assert_valid_name(invalid_name, "none")
+    _assert_valid_name(invalid_name, f)
 
     invalid_name = "A"
-    _assert_valid_name(invalid_name, "none")
+    _assert_valid_name(invalid_name, f)
 
     invalid_name = "\n"
-    _assert_valid_name(invalid_name, "none")
+    _assert_valid_name(invalid_name, f)
 
     invalid_name = six.unichr(0x4500)
-    _assert_valid_name(invalid_name, "none")
+    _assert_valid_name(invalid_name, f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(META_FILENAME, "none")
+        _assert_valid_name(META_FILENAME, f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(ATTRIBUTES_FILENAME, "none")
+        _assert_valid_name(ATTRIBUTES_FILENAME, f)
 
     with pytest.raises(NameError):
-        _assert_valid_name(RAW_FOLDER_NAME, "none")
+        _assert_valid_name(RAW_FOLDER_NAME, f)
 
 
 def test_create_object_directory(setup_teardown_folder):

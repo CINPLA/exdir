@@ -93,6 +93,22 @@ def test_open_file(setup_teardown_folder):
     assert(os.path.exists(pytest.TESTFILE))
 
 
+def test_naming_rule_simple(setup_teardown_folder):
+    f = exdir.File(pytest.TESTFILE, naming_rule='simple')
+    grp = f.require_group('sdf')
+    with pytest.raises(NameError):
+        grp1 = f.require_group('Sdf')
+    grp2 = grp.require_group('Abs')
+    with pytest.raises(NameError):
+        grp3 = grp.require_group('abs')
+    d = f.require_dataset('sdff')
+    with pytest.raises(NameError):
+        d1 = f.require_dataset('Sdff')
+    d2 = grp.require_dataset('Abss')
+    with pytest.raises(NameError):
+        d3 = grp.require_dataset('abss')
+
+
 def test_open_mode(setup_teardown_folder):
     # must exist
     for mode in ["r+", "r"]:

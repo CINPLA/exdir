@@ -30,13 +30,13 @@ GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
 
 
-def natural_sort(l): 
-    def convert(text): 
+def natural_sort(l):
+    def convert(text):
         return int(text) if text.isdigit() else text.lower()
-    
+
     def alphanum_key(key):
         return [convert(c) for c in re.split('([0-9]+)', key)]
-    
+
     return sorted(l, key=alphanum_key)
 
 
@@ -104,34 +104,32 @@ def convert_quantities(value):
     return result
 
 
-def _assert_valid_name(name, mode='simple'):
+def _assert_valid_name(name, container):
     """
     Check if name (dataset or group) is valid
     """
-    valid_modes = ['strict', 'simple', 'thorough', 'none']
     valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
-    if mode not in valid_modes:
-        raise NameError('mode is not valid, valid modes are "' +
-                        valid_modes + '"')
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
-    if mode == 'thorough':
+    if container.naming_rule == Object.NamingRule.THOROUGH:
         raise NotImplementedError
 
-    if mode == 'strict':
+    if container.naming_rule == Object.NamingRule.STRICT:
         for char in name:
             if char not in valid_characters:
                 raise NameError("Name contains invalid character '" + char + "'.\n"
                                 + "Valid characters are:\n" + valid_characters)
 
-    if mode == 'simple':
+    if container.naming_rule == Object.NamingRule.SIMPLE:
         for char in name:
             if char.lower() not in valid_characters:
                 raise NameError("Name contains invalid character '" + char + "'.\n"
                                 + "Valid characters are:\n" + valid_characters)
-        print('Warning: name consistency check is not implemented')
-        # TODO check if name.lower() == any name in Group/File
+        if name.lower() in [nm.lower() for nm in container]:
+            raise NameError("An object with name (case independent) '" + name +
+                            "' already exists and cannot be made according " +
+                            "to the naming rule 'simple'.")
 
 
     dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
@@ -206,7 +204,7 @@ def _is_nonraw_object_directory(directory):
 
 def _is_raw_object_directory(directory):
     return _is_exdir_object(directory) and not _is_nonraw_object_directory(directory)
-    
+
 
 def root_directory(path):
     """
@@ -378,13 +376,21 @@ class Object(object):
         READ_WRITE = 1
         READ_ONLY = 2
 
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
+    class NamingRule(Enum):
+        SIMPLE = 1
+        STRICT = 2
+        THOROUGH = 3
+        NONE = 4
+
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None,
+                 naming_rule=None):
         self.root_directory = root_directory
         self.object_name = object_name
         self.parent_path = parent_path
         self.relative_path = os.path.join(self.parent_path, self.object_name)
         self.name = os.sep + self.relative_path
         self.io_mode = io_mode
+        self.naming_rule = naming_rule
 
     @property
     def attrs(self):
@@ -431,7 +437,7 @@ class Object(object):
 class Raw(Object):
     """
     Raw objects are simple folders with any content.
-    
+
     Raw objects currently have no features apart from showing their path.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
@@ -445,22 +451,22 @@ class Group(Object):
     Container of other groups and datasets.
     """
 
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None,
+                 naming_rule=None):
         super(Group, self).__init__(root_directory=root_directory,
                                     parent_path=parent_path,
-                                    object_name=object_name, io_mode=io_mode)
+                                    object_name=object_name, io_mode=io_mode,
+                                    naming_rule=naming_rule)
 
     def create_dataset(self, name, data=None):
-        _assert_valid_name(name)
-        if name in self:
-            raise IOError("An object with name '" + name + "' already exists.")
-
+        _assert_valid_name(name, self)
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
         dataset = Dataset(root_directory=self.root_directory,
                           parent_path=self.relative_path, object_name=name,
-                          io_mode=self.io_mode)
+                          io_mode=self.io_mode,
+                          naming_rule=self.naming_rule)
         if data is not None:
             dataset.set_data(data)
         return dataset
@@ -469,12 +475,13 @@ class Group(Object):
         if "/" in name:
             raise NotImplementedError("Intermediate groups can not yet be created automatically")
 
-        _assert_valid_name(name)
+        _assert_valid_name(name, self)
         group_directory = os.path.join(self.directory, name)
         _create_object_directory(group_directory, GROUP_TYPENAME)
         group = Group(root_directory=self.root_directory,
                       parent_path=self.relative_path, object_name=name,
-                      io_mode=self.io_mode)
+                      io_mode=self.io_mode,
+                      naming_rule=self.naming_rule)
         return group
 
     def require_group(self, name):
@@ -498,7 +505,8 @@ class Group(Object):
         parent_parent = os.sep.join(self.parent_path.split(os.sep)[:-1])
         return Group(root_directory=self.root_directory,
                      parent_path=parent_parent, object_name=parent,
-                     io_mode=self.io_mode)
+                     io_mode=self.io_mode,
+                     naming_rule=self.naming_rule)
 
     def require_dataset(self, name, data=None):
         if name in self:
@@ -510,7 +518,7 @@ class Group(Object):
                 return current_object
             else:
                 raise TypeError("An object with name '" + name + "' already "
-                                "exists, but it is not a Group.")
+                                "exists, but it is not a Dataset.")
         else:
             return self.create_dataset(name, data=data)
 
@@ -540,10 +548,10 @@ class Group(Object):
         directory = os.path.join(self.directory, name)
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
-        
+
         if _is_raw_object_directory(directory):
             return Raw(root_directory=self.root_directory,
-                       parent_path=self.relative_path, 
+                       parent_path=self.relative_path,
                        object_name=name,
                        io_mode=self.io_mode)
 
@@ -556,14 +564,16 @@ class Group(Object):
             meta_data = yaml.safe_load(meta_file)
         if meta_data[EXDIR_METANAME][TYPE_METANAME] == DATASET_TYPENAME:
             return Dataset(root_directory=self.root_directory,
-                           parent_path=self.relative_path, 
+                           parent_path=self.relative_path,
                            object_name=name,
-                           io_mode=self.io_mode)
+                           io_mode=self.io_mode,
+                           naming_rule=self.naming_rule)
         elif meta_data[EXDIR_METANAME][TYPE_METANAME] == GROUP_TYPENAME:
             return Group(root_directory=self.root_directory,
-                         parent_path=self.relative_path, 
+                         parent_path=self.relative_path,
                          object_name=name,
-                         io_mode=self.io_mode)
+                         io_mode=self.io_mode,
+                         naming_rule=self.naming_rule)
         else:
             print("Object", name, "has data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Cannot open objects of this type")
@@ -605,18 +615,38 @@ class File(Group):
     Exdir file object
     """
 
-    def __init__(self, directory, mode=None, allow_remove=False):
+    def __init__(self, directory, mode=None, allow_remove=False,
+                 naming_rule=None):
         if not directory.endswith(".exdir"):
             directory = directory + ".exdir"
-        if mode is None:
-            mode = "a"
+        mode = mode or 'a'
+        recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
+        if mode not in recognized_modes:
+            raise IOError('IO mode "' + mode + '" not recognized,' +
+                          'mode must be one of {}'.format(recognized_modes))
         if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY
         else:
             self.io_mode = self.OpenMode.READ_WRITE
+
+        naming_rule = naming_rule or 'simple'
+        if naming_rule == 'simple':
+            self.naming_rule = self.NamingRule.SIMPLE
+        elif naming_rule == 'strict':
+            self.naming_rule = self.NamingRule.STRICT
+        elif naming_rule == 'thorough':
+            self.naming_rule = self.NamingRule.THOROUGH
+        elif naming_rule == 'none':
+            self.naming_rule = self.NamingRule.NONE
+        else:
+            raise IOError('IO name rule "' + naming_rule + '" not recognized,' +
+                          'name rule must be one of "strict", "simple", ' +
+                          '"thorough", "none"')
+
         super(File, self).__init__(root_directory=directory,
                                    parent_path="", object_name="",
-                                   io_mode=self.io_mode)
+                                   io_mode=self.io_mode,
+                                   naming_rule=self.naming_rule)
 
         already_exists = os.path.exists(directory)
         if already_exists:
@@ -670,11 +700,13 @@ class Dataset(Object):
     Warning: MODIFIES VIEW!!!!!!! different from h5py
     Warning: Possible to overwrite existing dataset. This differs from the h5py API. However, it should only cause issues with existing code if said code expects this to fail."
     """
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None):
+    def __init__(self, root_directory, parent_path, object_name, io_mode=None,
+                 naming_rule=None):
         super(Dataset, self).__init__(root_directory=root_directory,
                                       parent_path=parent_path,
                                       object_name=object_name,
-                                      io_mode=io_mode)
+                                      io_mode=io_mode,
+                                      naming_rule=naming_rule)
         self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
         if self.io_mode == self.OpenMode.READ_ONLY:

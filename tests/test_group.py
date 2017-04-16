@@ -42,7 +42,7 @@ def test_create_exception(setup_teardown_file):
     f = setup_teardown_file
 
     f.create_group('foo')
-    with pytest.raises(IOError):
+    with pytest.raises(NameError):
         f.create_group('foo')
 
 
