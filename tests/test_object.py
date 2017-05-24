@@ -4,7 +4,7 @@ import yaml
 
 from exdir.core import Object, Attribute
 from exdir.core import DATASET_TYPENAME, GROUP_TYPENAME, ATTRIBUTES_FILENAME, META_FILENAME
-from exdir.core import _create_object_directory, _is_valid_object_directory
+from exdir.core import _create_object_directory, _is_nonraw_object_directory
 
 
 # tests for Object class
@@ -31,7 +31,7 @@ def test_object_attrs(setup_teardown_folder):
     assert(obj.attrs.mode.value == 1)
     obj.attrs = "test value"
 
-    assert(_is_valid_object_directory(os.path.join(pytest.TESTDIR, "test_object")))
+    assert(_is_nonraw_object_directory(os.path.join(pytest.TESTDIR, "test_object")))
 
     with open(os.path.join(pytest.TESTDIR, "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
@@ -86,7 +86,6 @@ def test_object_create_raw(setup_teardown_folder):
 
 def test_object_require_raw(setup_teardown_folder):
     obj = Object(pytest.TESTDIR, "", "test_object", io_mode=None)
-
 
     _create_object_directory(pytest.TESTDIR, DATASET_TYPENAME)
     _create_object_directory(os.path.join(pytest.TESTDIR, "test_object"),

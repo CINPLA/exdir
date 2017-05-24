@@ -14,11 +14,6 @@ requirements:
   build:
     - python
     - setuptools
-    - pip
-    - numpy
-    - quantities
-    - pyyaml
-    - pytest
 
   run:
     - python
@@ -30,10 +25,16 @@ requirements:
     - pyyaml
 
 test:
+  requires:
+    - pytest
+    - six
+  source_files:
+    - tests
   imports:
     - exdir
   commands:
     - python -c "import exdir; print(exdir.__version__)"
+    - pytest -s
 
 about:
   home: https://github.com/CINPLA/exdir/

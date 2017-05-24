@@ -131,13 +131,13 @@ HDF5view that allows simple data exploration similar to this.
 
 ## Principles ##
 
-- exdir should be based on existing open standards where suitable to avoid
-  solving problems that have already been solved, such as storing binary
-  data. 
+- Exdir should be based on existing open standards
+- Exdir should not solve problems that have already been solved, such as storing binary data
+- Exdir should be lightweight
 
 ## Background ##
 
-The exdir was designed due to a need at the Centre for Integrative
+Exdir was designed due to a need at the Centre for Integrative
 Neuroplasticity (CINPLA) at the University of Oslo for a format that would
 fit the experimental pipeline.
 While researching the different options, we found that the neuroscience
@@ -162,7 +162,7 @@ with the acquisition data.
 
 ## Alternative formats ##
 
-HDF5 is often compared in the above text.
+HDF5 is an obvious alternative and mentioned several times in the above text.
 There are also other formats that we have investigated.
 Currently, we have only listed ASDF, but other formats will be discussed.
 

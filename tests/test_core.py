@@ -7,9 +7,10 @@ import quantities as pq
 
 from exdir.core import *
 from exdir.core import _assert_valid_name, _create_object_directory
-from exdir.core import _metafile_from_directory, _is_valid_object_directory
+from exdir.core import _metafile_from_directory, _is_nonraw_object_directory
 
 from conftest import remove
+
 
 def test_modify_view(setup_teardown_file):
     f = setup_teardown_file
@@ -92,6 +93,22 @@ def test_open_file(setup_teardown_folder):
     assert(os.path.exists(pytest.TESTFILE))
 
 
+def test_naming_rule_simple(setup_teardown_folder):
+    f = exdir.File(pytest.TESTFILE, naming_rule='simple')
+    grp = f.require_group('sdf')
+    with pytest.raises(NameError):
+        grp1 = f.require_group('Sdf')
+    grp2 = grp.require_group('Abs')
+    with pytest.raises(NameError):
+        grp3 = grp.require_group('abs')
+    d = f.require_dataset('sdff')
+    with pytest.raises(NameError):
+        d1 = f.require_dataset('Sdff')
+    d2 = grp.require_dataset('Abss')
+    with pytest.raises(NameError):
+        d3 = grp.require_dataset('abss')
+
+
 def test_open_mode(setup_teardown_folder):
     # must exist
     for mode in ["r+", "r"]:
@@ -108,14 +125,11 @@ def test_open_mode(setup_teardown_folder):
 
     remove(pytest.TESTFILE)
     f = exdir.File(pytest.TESTFILE, 'w')
-    f.close()# dummy close
+    f.close()  # dummy close
     # read write if exist
     f = exdir.File(pytest.TESTFILE, "r+")
     f.require_group('mygroup')
     f.require_dataset('dset', np.arange(10))
-    # can never overwrite dataset
-    with pytest.raises(FileExistsError):
-        f.require_dataset('dset', np.arange(10))
     f.attrs['can_overwrite'] = 42
     f.attrs['can_overwrite'] = 14
 
@@ -126,44 +140,29 @@ def test_open_mode(setup_teardown_folder):
         f.attrs['can_not_write'] = 42
         f.create_group('mygroup')
 
-    # can never overwrite dataset
-    for mode in ["a", "w", "w-"]:
-        remove(pytest.TESTFILE)
-        f = exdir.File(pytest.TESTFILE, mode)
-        f.require_dataset('dset', np.arange(10))
-        with pytest.raises(FileExistsError):
-            f.require_dataset('dset', np.arange(10))
-
-
-
-
-
-
-
 
 # tests for File class
-
 def test_file_init(setup_teardown_folder):
     no_exdir = os.path.join(pytest.TESTPATH, "no_exdir")
 
     f = File(no_exdir, mode="w")
     f.close()
-    assert(_is_valid_object_directory(no_exdir + ".exdir"))
+    assert(_is_nonraw_object_directory(no_exdir + ".exdir"))
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="w")
     f.close()
-    assert(_is_valid_object_directory(pytest.TESTFILE))
+    assert(_is_nonraw_object_directory(pytest.TESTFILE))
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_valid_object_directory(pytest.TESTFILE))
+    assert(_is_nonraw_object_directory(pytest.TESTFILE))
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_valid_object_directory(pytest.TESTFILE))
+    assert(_is_nonraw_object_directory(pytest.TESTFILE))
     remove(pytest.TESTFILE)
 
     os.makedirs(pytest.TESTFILE)
@@ -183,7 +182,6 @@ def test_file_init(setup_teardown_folder):
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="r+")
 
-
     _create_object_directory(pytest.TESTFILE, FILE_TYPENAME)
 
     with pytest.raises(FileExistsError):
@@ -202,7 +200,6 @@ def test_file_init(setup_teardown_folder):
 
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="x")
-
 
 
 def test_file_close(setup_teardown_folder):
@@ -226,11 +223,7 @@ def test_attr_init():
 #     _create_object_directory(attr_file, GROUP_TYPENAME)
 #     attribute = Attribute("", Attribute.Mode.ATTRIBUTES, "io_mode")
 
-
-
 # tests for Group class
-
-
 def test_group_init(setup_teardown_folder):
     group = Group(pytest.TESTDIR, "", "test_object", io_mode=None)
 
