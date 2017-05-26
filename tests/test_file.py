@@ -75,8 +75,10 @@ def test_file_close(setup_teardown_folder):
 
 
 
-# def test_root(setup_teardown_file):
-#     """Root group (by itself) is contained."""
-#     f = setup_teardown_file
+def test_root(setup_teardown_file):
+    """Root group (by itself) is contained."""
+    f = setup_teardown_file
+    grp = f.create_group("test")
 
-#     assert "/" in  f
+    assert "/" in  f
+

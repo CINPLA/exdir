@@ -539,7 +539,7 @@ class Group(Object):
             return False
 
         if name.startswith("/"):
-            raise NotImplementedError("Testing if name in a group in the absolute directory " +
+            raise NotImplementedError("Testing if name in a group in the root directory " +
                                       "from a subgroup is currently not supported " +
                                       "and is unlikely to be implemented.")
 
@@ -553,6 +553,19 @@ class Group(Object):
     def __getitem__(self, name):
         if name.endswith("/"):
             name = name.rstrip("/")
+
+        if name.startswith("/"):
+            raise NotImplementedError("Getting a group in the root directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if "/" in name:
+            name_split = name.split("/", 1)
+            if len(name_split) == 2:
+                item = self[name_split[0]]
+                return item[name_split[1]]
+            else:
+                return self[name_split[0]]
 
         directory = os.path.join(self.directory, name)
         if name not in self:
@@ -586,6 +599,7 @@ class Group(Object):
         else:
             print("Object", name, "has data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Cannot open objects of this type")
+
 
     def __setitem__(self, name, value):
         if name not in self:
@@ -717,14 +731,11 @@ class File(Group):
 
     def __getitem__(self, name):
         if "/" in name:
-            if name[0] == "/":
-                if isinstance(self, File):
-                    if name == "/":
-                        return self
-                    name = name[1:]
-                else:
-                    raise KeyError("To begin the tree structure with '/' is only" +
-                                   " allowed for get item from root object")
+            if name.startswith("/"):
+               if name == "/":
+                    return self
+               name = name[1:]
+
             name_split = name.split("/", 1)
             if len(name_split) == 2:
                 item = self[name_split[0]]
@@ -733,6 +744,15 @@ class File(Group):
                 return self[name_split[0]]
 
         return super().__getitem__(name)
+
+
+    def __contains__(self, name):
+        if name.startswith("/"):
+            if name == "/":
+                return True
+            name = name[1:]
+
+        return super().__contains__(name)
 
 
 class Dataset(Object):

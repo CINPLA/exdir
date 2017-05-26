@@ -148,6 +148,19 @@ def test_open(setup_teardown_file):
     assert grp2 == grp4
 
 
+def test_open_deep(setup_teardown_file):
+    """Simple obj[name] opening."""
+    f = setup_teardown_file
+    grp = f.create_group("test")
+    grp2 = grp.create_group("a")
+    grp3 = grp2.create_group("b")
+
+    grp4 = grp["a/b"]
+
+    assert grp3 == grp4
+
+
+
 def test_nonexistent(setup_teardown_file):
     """Opening missing objects raises KeyError."""
     f = setup_teardown_file
@@ -160,8 +173,8 @@ def test_nonexistent(setup_teardown_file):
 def test_contains(setup_teardown_file):
     """'in' builtin works for containership."""
     f = setup_teardown_file
-
     grp = f.create_group("test")
+
     grp.create_group("b")
 
     assert "b" in grp
@@ -169,6 +182,18 @@ def test_contains(setup_teardown_file):
 
     with pytest.raises(NotImplementedError):
         assert "/b" in  grp
+
+
+def test_contains_deep(setup_teardown_file):
+    """'in' builtin works for containership."""
+    f = setup_teardown_file
+    grp = f.create_group("test")
+
+    grp2 = grp.create_group("a")
+    grp3 = grp2.create_group("b")
+
+    assert "a/b" in grp
+
 
 # TODO uncomment this when close is implemented
 # def test_exc(setup_teardown_file):
