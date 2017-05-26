@@ -2,7 +2,7 @@ import pytest
 import os
 
 
-from exdir.core import File
+from exdir.core import File, Group
 from exdir.core import DATASET_TYPENAME, FILE_TYPENAME
 from exdir.core import _create_object_directory, _is_nonraw_object_directory
 
@@ -75,12 +75,19 @@ def test_file_close(setup_teardown_folder):
 
 
 
-def test_root(setup_teardown_file):
+def test_root_in(setup_teardown_file):
     """Root group (by itself) is contained."""
     f = setup_teardown_file
-    grp = f.create_group("test")
+    f.create_group("test")
 
     assert "/" in  f
+
+def test_root_create(setup_teardown_file):
+    """Root group (by itself) is contained."""
+    f = setup_teardown_file
+    grp = f.create_group("/test")
+
+    assert isinstance(grp, Group)
 
 # TODO uncomment when enter and exit has been implemented
 # # Feature: File objects can be used as context managers
