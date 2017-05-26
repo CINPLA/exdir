@@ -1,4 +1,5 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+
 """
 .. module:: exdir.core
 .. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød
@@ -41,9 +42,7 @@ def natural_sort(l):
 
 
 def convert_back_quantities(value):
-    """
-    Converts quantities back from dictionary
-    """
+    """Convert quantities back from dictionary."""
     result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value and "uncertainty" in value:
@@ -69,9 +68,8 @@ def convert_back_quantities(value):
 
 
 def convert_quantities(value):
-    """
-    Converts quantities to dictionary
-    """
+    """Convert quantities to dictionary."""
+
     result = value
     if isinstance(value, pq.Quantity):
         result = {
@@ -79,7 +77,7 @@ def convert_quantities(value):
             "unit": value.dimensionality.string
         }
         if isinstance(value, pq.UncertainQuantity):
-            assert(value.dimensionality == value.uncertainty.dimensionality)
+            assert value.dimensionality == value.uncertainty.dimensionality
             result["uncertainty"] = value.uncertainty.magnitude.tolist()
     elif isinstance(value, np.ndarray):
         result = value.tolist()
@@ -105,9 +103,7 @@ def convert_quantities(value):
 
 
 def _assert_valid_name(name, container):
-    """
-    Check if name (dataset or group) is valid
-    """
+    """Check if name (dataset or group) is valid."""
     valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
@@ -149,7 +145,7 @@ def _assert_valid_name(name, container):
 def _create_object_directory(directory, typename):
     """
     Create object directory and meta file if directory
-    don't already exist
+    don't already exist.
     """
     if os.path.exists(directory):
         raise IOError("The directory '" + directory + "' already exists")
@@ -263,9 +259,8 @@ def open_object(path):
 
 
 class Attribute(object):
-    """
-    Attribute class.
-    """
+    """Attribute class."""
+
     class Mode(Enum):
         ATTRIBUTES = 1
         METADATA = 2
@@ -388,7 +383,7 @@ class Object(object):
         self.object_name = object_name
         self.parent_path = parent_path
         self.relative_path = os.path.join(self.parent_path, self.object_name)
-        self.name = os.sep + self.relative_path
+        self.name = "/" + self.relative_path
         self.io_mode = io_mode
         self.naming_rule = naming_rule
 
@@ -472,8 +467,18 @@ class Group(Object):
         return dataset
 
     def create_group(self, name):
+        if name.startswith("/"):
+            if isinstance(self, File):
+                name = name.strip("/")
+
+            else:
+                raise NotImplementedError("Creating a group in the absolute directory " +
+                                          "from a subgroup is currently not supported " +
+                                          "and is unlikely to be implemented.")
+
         if "/" in name:
-            raise NotImplementedError("Intermediate groups can not yet be created automatically")
+            raise NotImplementedError("Intermediate groups can not yet be " +
+                                      "created automatically.")
 
         _assert_valid_name(name, self)
         group_directory = os.path.join(self.directory, name)
@@ -525,20 +530,24 @@ class Group(Object):
     def __contains__(self, name):
         if len(name) < 1:
             return False
+        print("===========")
+        print(name)
+        print(self.directory)
         directory = os.path.join(self.directory, name)
+        print(directory)
         return _is_exdir_object(directory)
 
     def __getitem__(self, name):
-        if os.sep in name:
-            if name[0] == os.sep:
+        if "/" in name:
+            if name[0] == "/":
                 if isinstance(self, File):
                     if name == "/":
                         return self
                     name = name[1:]
                 else:
-                    raise KeyError("To begin the tree structure with '" + os.sep + "' is only" +
+                    raise KeyError("To begin the tree structure with '/' is only" +
                                    " allowed for get item from root object")
-            name_split = name.split(os.sep, 1)
+            name_split = name.split("/", 1)
             if len(name_split) == 2:
                 item = self[name_split[0]]
                 return item[name_split[1]]

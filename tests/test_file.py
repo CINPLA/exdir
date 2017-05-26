@@ -14,22 +14,22 @@ def test_file_init(setup_teardown_folder):
 
     f = File(no_exdir, mode="w")
     f.close()
-    assert(_is_nonraw_object_directory(no_exdir + ".exdir"))
+    assert _is_nonraw_object_directory(no_exdir + ".exdir")
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="w")
     f.close()
-    assert(_is_nonraw_object_directory(pytest.TESTFILE))
+    assert _is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_nonraw_object_directory(pytest.TESTFILE))
+    assert _is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_nonraw_object_directory(pytest.TESTFILE))
+    assert _is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     os.makedirs(pytest.TESTFILE)

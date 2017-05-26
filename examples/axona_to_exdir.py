@@ -55,7 +55,7 @@ def parse_header_and_leave_cursor(file_handle):
 
 def assert_end_of_data(file_handle):
     remaining_data = str(file_handle.read(), 'latin1')
-    assert(remaining_data.strip() == "data_end")
+    assert remaining_data.strip() == "data_end"
 
 
 def scale_analog_signal(value, gain, adc_fullscale_mv, bytes_per_sample):
@@ -224,7 +224,7 @@ class AxonaFile:
             # print(params)
 
             sample_rate_split = params["sample_rate"].split(" ")
-            assert(sample_rate_split[1] == "hz")
+            assert sample_rate_split[1] == "hz"
             sample_rate = float(sample_rate_split[0]) * pq.Hz  # sample_rate 50.0 hz
 
             eeg_samples_per_position = float(params["EEG_samples_per_position"])  # TODO remove?
@@ -300,7 +300,7 @@ class AxonaFile:
 
                 sample_rate_split = params["sample_rate"].split(" ")
                 bytes_per_sample = params["bytes_per_sample"]
-                assert(sample_rate_split[1].lower() == "hz")
+                assert sample_rate_split[1].lower() == "hz"
                 sample_rate = float(sample_rate_split[0]) * pq.Hz  # sample_rate 250.0 hz
 
                 if lazy:

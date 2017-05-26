@@ -16,10 +16,10 @@ def test_modify_view(setup_teardown_file):
     f = setup_teardown_file
     dataset = f.create_dataset("mydata", data=np.array([1, 2, 3, 4, 5, 6, 7, 8]))
     dataset[3:5] = np.array([8, 9])
-    assert(np.array_equal(f["mydata"][3:5], np.array([8, 9])))
+    assert np.array_equal(f["mydata"][3:5], np.array([8, 9]))
     view = dataset[3:5]
     view[0] = 10
-    assert(f["mydata"][3] == 10)
+    assert f["mydata"][3] == 10
 
 
 def test_dataset(setup_teardown_file):
@@ -29,8 +29,8 @@ def test_dataset(setup_teardown_file):
     dset = f.require_dataset("mydata", data=a)
 
     dset[1:3] = 8.0
-    assert(np.array_equal(f["mydata"].data, np.array([1, 8, 8, 4, 5])))
-    assert(f["mydata"][2] == 8)
+    assert np.array_equal(f["mydata"].data, np.array([1, 8, 8, 4, 5]))
+    assert f["mydata"][2] == 8
 
     group = f.require_group("mygroup")
     b = np.array([[1, 2, 3], [4, 5, 6]])
@@ -38,35 +38,35 @@ def test_dataset(setup_teardown_file):
     c = np.zeros((2, 3, 4))
     group.require_dataset("some_data2", c)
 
-    assert(c.shape == (2, 3, 4))
-    assert(group["some_data"][()].shape == (2, 3))
+    assert c.shape == (2, 3, 4)
+    assert group["some_data"][()].shape == (2, 3)
 
 
 def test_attrs(setup_teardown_file):
     f = setup_teardown_file
 
     f.attrs["temperature"] = 99.0
-    assert(f.attrs["temperature"] == 99.0)
+    assert f.attrs["temperature"] == 99.0
     f.attrs["temperature"] = 99.0 * pq.deg
-    assert(f.attrs["temperature"] == 99.0 * pq.deg)
+    assert f.attrs["temperature"] == 99.0 * pq.deg
 
     attrs = f.attrs
-    assert(type(attrs) is exdir.core.Attribute)
+    assert type(attrs) is exdir.core.Attribute
 
     attrs["test"] = {
         "name": "temp",
         "value": 19
     }
-    assert("test" in f.attrs)
-    assert(type(f.attrs["test"]) is exdir.core.Attribute)
-    assert(dict(f.attrs["test"]) == {"name": "temp", "value": 19})
+    assert "test" in f.attrs
+    assert type(f.attrs["test"]) is exdir.core.Attribute
+    assert dict(f.attrs["test"]) == {"name": "temp", "value": 19}
 
 
 def test_open_file(setup_teardown_folder):
     for mode in ["a", "r", "r+"]:
         f = exdir.File(pytest.TESTFILE, mode)
         f.close()
-        assert(os.path.exists(pytest.TESTFILE))
+        assert os.path.exists(pytest.TESTFILE)
 
     # invalid file
     dummy_file = "/tmp/dummy.exdir"
@@ -79,18 +79,18 @@ def test_open_file(setup_teardown_folder):
     # truncate
     f = exdir.File(pytest.TESTFILE)
     f.create_group("test_group")
-    assert("test_group" in f)
+    assert "test_group" in f
     f.close()
     f = exdir.File(pytest.TESTFILE, "w", allow_remove=True)
-    assert("test_group" not in f)
+    assert "test_group" not in f
     f.close()
-    assert(os.path.exists(pytest.TESTFILE))
+    assert os.path.exists(pytest.TESTFILE)
 
     # assume doesn't exist
     remove(pytest.TESTFILE)
     f = exdir.File(pytest.TESTFILE, "w-")
     f.close()
-    assert(os.path.exists(pytest.TESTFILE))
+    assert os.path.exists(pytest.TESTFILE)
 
 
 def test_naming_rule_simple(setup_teardown_folder):
@@ -147,22 +147,22 @@ def test_file_init(setup_teardown_folder):
 
     f = File(no_exdir, mode="w")
     f.close()
-    assert(_is_nonraw_object_directory(no_exdir + ".exdir"))
+    assert _is_nonraw_object_directory(no_exdir + ".exdir")
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="w")
     f.close()
-    assert(_is_nonraw_object_directory(pytest.TESTFILE))
+    assert _is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_nonraw_object_directory(pytest.TESTFILE))
+    assert _is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert(_is_nonraw_object_directory(pytest.TESTFILE))
+    assert _is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     os.makedirs(pytest.TESTFILE)
@@ -212,10 +212,10 @@ def test_file_close(setup_teardown_folder):
 def test_attr_init():
     attribute = Attribute("parent", "mode", "io_mode")
 
-    assert(attribute.parent == "parent")
-    assert(attribute.mode == "mode")
-    assert(attribute.io_mode == "io_mode")
-    assert(attribute.path == [])
+    assert attribute.parent == "parent"
+    assert attribute.mode == "mode"
+    assert attribute.io_mode == "io_mode"
+    assert attribute.path == []
 
 
 # def test_attr_getitem():
@@ -227,9 +227,9 @@ def test_attr_init():
 def test_group_init(setup_teardown_folder):
     group = Group(pytest.TESTDIR, "", "test_object", io_mode=None)
 
-    assert(group.root_directory == pytest.TESTDIR)
-    assert(group.object_name == "test_object")
-    assert(group.parent_path == "")
-    assert(group.io_mode is None)
-    assert(group.relative_path == os.path.join("", "test_object"))
-    assert(group.name == os.sep + os.path.join("", "test_object"))
+    assert group.root_directory == pytest.TESTDIR
+    assert group.object_name == "test_object"
+    assert group.parent_path == ""
+    assert group.io_mode is None
+    assert group.relative_path == os.path.join("", "test_object")
+    assert group.name == os.sep + os.path.join("", "test_object")

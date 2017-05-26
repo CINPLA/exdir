@@ -23,7 +23,7 @@ def pytest_namespace():
 def remove(name):
     if os.path.exists(name):
         shutil.rmtree(name)
-    assert(not os.path.exists(name))
+    assert not os.path.exists(name)
 
 
 @pytest.fixture
