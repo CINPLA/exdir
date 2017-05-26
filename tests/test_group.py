@@ -15,26 +15,26 @@ from exdir.core import Group, File
 #     assert group.name == "/" + os.path.join("", "test_object")
 
 
-# New groups can be created via .create_group method
+# # New groups can be created via .create_group method
 
-def test_create_group(setup_teardown_file):
-    """Simple .create_group call."""
+# def test_create_group(setup_teardown_file):
+#     """Simple .create_group call."""
 
-    f = setup_teardown_file
+#     f = setup_teardown_file
 
-    grp = f.create_group("foo")
-    assert isinstance(grp, Group)
+#     grp = f.create_group("foo")
+#     assert isinstance(grp, Group)
 
 
-def test_create_group_absolute(setup_teardown_file):
-    """Starting .create_group argument with /."""
+# def test_create_group_absolute(setup_teardown_file):
+#     """Starting .create_group argument with /."""
 
-    f = setup_teardown_file
+#     f = setup_teardown_file
 
-    grp = f.create_group("/a")
+#     grp = f.create_group("/a")
 
-    with pytest.raises(NotImplementedError):
-        grp.create_group("/b")
+#     with pytest.raises(NotImplementedError):
+#         grp.create_group("/b")
 
 
 # # TODO update this test when it is implemented
@@ -135,15 +135,15 @@ def test_create_group_absolute(setup_teardown_file):
 #         f["foo"]
 
 
-# # Feature: The Python "in" builtin tests for containership
-# def test_contains(setup_teardown_file):
-#     """'in' builtin works for containership (byte and Unicode)."""
-#     f = setup_teardown_file
+# Feature: The Python "in" builtin tests for containership
+def test_contains(setup_teardown_file):
+    """'in' builtin works for containership (byte and Unicode)."""
+    f = setup_teardown_file
 
-#     f.create_group("a")
-#     # assert "a" in  f
-#     assert "a" in  f
-#     # assert not "b" in f
+    f.create_group("a")
+    # assert "a" in  f
+    assert "a" in  f
+    # assert not "b" in f
 
 # def test_exc(setup_teardown_file):
 #     """'in' on closed group returns False."""
