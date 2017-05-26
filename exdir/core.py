@@ -640,9 +640,7 @@ class Group(Object):
 
 
 class File(Group):
-    """
-    Exdir file object
-    """
+    """Exdir file object."""
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  naming_rule=None):

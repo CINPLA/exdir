@@ -82,3 +82,14 @@ def test_root(setup_teardown_file):
 
     assert "/" in  f
 
+# TODO uncomment when enter and exit has been implemented
+# # Feature: File objects can be used as context managers
+# def test_context_manager(setup_teardown_folder):
+#     """File objects can be used in with statements."""
+
+#     no_exdir = os.path.join(pytest.TESTPATH, "no_exdir")
+
+#     with File(no_exdir, mode="w") as f:
+#         assert f
+
+#     assert not f
