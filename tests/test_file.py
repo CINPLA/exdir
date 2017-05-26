@@ -72,3 +72,11 @@ def test_file_init(setup_teardown_folder):
 def test_file_close(setup_teardown_folder):
     f = File(pytest.TESTFILE, mode="w")
     f.close()
+
+
+
+# def test_root(setup_teardown_file):
+#     """Root group (by itself) is contained."""
+#     f = setup_teardown_file
+
+#     assert "/" in  f

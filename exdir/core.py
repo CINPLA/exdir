@@ -362,7 +362,6 @@ class Attribute(object):
     def __len__(self):
         return len(self.keys())
 
-
 class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
@@ -446,6 +445,7 @@ class Group(Object):
     Container of other groups and datasets.
     """
 
+
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  naming_rule=None):
         super(Group, self).__init__(root_directory=root_directory,
@@ -468,13 +468,12 @@ class Group(Object):
 
     def create_group(self, name):
         if name.startswith("/"):
-            if isinstance(self, File):
-                name = name.strip("/")
+            raise NotImplementedError("Creating a group in the absolute directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
 
-            else:
-                raise NotImplementedError("Creating a group in the absolute directory " +
-                                          "from a subgroup is currently not supported " +
-                                          "and is unlikely to be implemented.")
+        if name.endswith("/"):
+            name = name.rstrip("/")
 
         if "/" in name:
             raise NotImplementedError("Intermediate groups can not yet be " +
@@ -490,6 +489,14 @@ class Group(Object):
         return group
 
     def require_group(self, name):
+        if name.startswith("/"):
+            raise NotImplementedError("Requiring a group in the absolute directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if name.endswith("/"):
+            name = name.rstrip("/")
+
         group_directory = os.path.join(self.directory, name)
         if name in self:
             current_object = self[name]
@@ -530,29 +537,22 @@ class Group(Object):
     def __contains__(self, name):
         if len(name) < 1:
             return False
-        print("===========")
-        print(name)
-        print(self.directory)
+
+        if name.startswith("/"):
+            raise NotImplementedError("Testing if name in a group in the absolute directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if name.endswith("/"):
+            name = name.rstrip("/")
+
         directory = os.path.join(self.directory, name)
-        print(directory)
+
         return _is_exdir_object(directory)
 
     def __getitem__(self, name):
-        if "/" in name:
-            if name[0] == "/":
-                if isinstance(self, File):
-                    if name == "/":
-                        return self
-                    name = name[1:]
-                else:
-                    raise KeyError("To begin the tree structure with '/' is only" +
-                                   " allowed for get item from root object")
-            name_split = name.split("/", 1)
-            if len(name_split) == 2:
-                item = self[name_split[0]]
-                return item[name_split[1]]
-            else:
-                return self[name_split[0]]
+        if name.endswith("/"):
+            name = name.rstrip("/")
 
         directory = os.path.join(self.directory, name)
         if name not in self:
@@ -622,6 +622,7 @@ class Group(Object):
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
         return False
+
 
 
 class File(Group):
@@ -707,12 +708,42 @@ class File(Group):
         pass
 
 
+    def create_group(self, name):
+        if name.startswith("/"):
+            name = name[1:]
+
+        return super().create_group(name)
+
+
+    def __getitem__(self, name):
+        if "/" in name:
+            if name[0] == "/":
+                if isinstance(self, File):
+                    if name == "/":
+                        return self
+                    name = name[1:]
+                else:
+                    raise KeyError("To begin the tree structure with '/' is only" +
+                                   " allowed for get item from root object")
+            name_split = name.split("/", 1)
+            if len(name_split) == 2:
+                item = self[name_split[0]]
+                return item[name_split[1]]
+            else:
+                return self[name_split[0]]
+
+        return super().__getitem__(name)
+
+
 class Dataset(Object):
     """
     Dataset class
 
     Warning: MODIFIES VIEW!!!!!!! different from h5py
-    Warning: Possible to overwrite existing dataset. This differs from the h5py API. However, it should only cause issues with existing code if said code expects this to fail."
+    Warning: Possible to overwrite existing dataset.
+             This differs from the h5py API. However,
+             it should only cause issues with existing
+             code if said code expects this to fail."
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  naming_rule=None):
