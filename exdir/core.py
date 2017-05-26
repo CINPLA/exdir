@@ -726,20 +726,18 @@ class File(Group):
 
         return super().create_group(name)
 
+    def require_group(self, name):
+        if name.startswith("/"):
+            name = name[1:]
+
+        return super().require_group(name)
 
     def __getitem__(self, name):
-        if "/" in name:
-            if name.startswith("/"):
-               if name == "/":
-                    return self
-               name = name[1:]
-
-            name_split = name.split("/", 1)
-            if len(name_split) == 2:
-                item = self[name_split[0]]
-                return item[name_split[1]]
+        if name.startswith("/"):
+            if name == "/":
+                return self
             else:
-                return self[name_split[0]]
+                name = name[1:]
 
         return super().__getitem__(name)
 
