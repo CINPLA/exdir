@@ -120,80 +120,80 @@ def test_open(setup_teardown_file):
 # TODO test naming rules, strict and so on
 
 # TODO Creating these tests
-def test_create(self):
-    """ Mode 'w' opens file in overwrite mode """
-    fname = self.mktemp()
-    fid = File(fname, 'w')
-    self.assertTrue(fid)
-    fid.create_group('foo')
-    fid.close()
-    fid = File(fname, 'w')
-    self.assertNotIn('foo', fid)
-    fid.close()
+# def test_create(self):
+#     """ Mode 'w' opens file in overwrite mode """
+#     fname = self.mktemp()
+#     fid = File(fname, 'w')
+#     self.assertTrue(fid)
+#     fid.create_group('foo')
+#     fid.close()
+#     fid = File(fname, 'w')
+#     self.assertNotIn('foo', fid)
+#     fid.close()
 
-def test_create_exclusive(self):
-    """ Mode 'w-' opens file in exclusive mode """
-    fname = self.mktemp()
-    fid = File(fname, 'w-')
-    self.assert_(fid)
-    fid.close()
-    with self.assertRaises(IOError):
-        File(fname, 'w-')
+# def test_create_exclusive(self):
+#     """ Mode 'w-' opens file in exclusive mode """
+#     fname = self.mktemp()
+#     fid = File(fname, 'w-')
+#     self.assert_(fid)
+#     fid.close()
+#     with self.assertRaises(IOError):
+#         File(fname, 'w-')
 
-def test_append(self):
-    """ Mode 'a' opens file in append/readwrite mode, creating if necessary """
-    fname = self.mktemp()
-    fid = File(fname, 'a')
-    try:
-        self.assert_(fid)
-        fid.create_group('foo')
-        self.assert_('foo' in fid)
-    finally:
-        fid.close()
-    fid = File(fname, 'a')
-    try:
-        self.assert_('foo' in fid)
-        fid.create_group('bar')
-        self.assert_('bar' in fid)
-    finally:
-        fid.close()
+# def test_append(self):
+#     """ Mode 'a' opens file in append/readwrite mode, creating if necessary """
+#     fname = self.mktemp()
+#     fid = File(fname, 'a')
+#     try:
+#         self.assert_(fid)
+#         fid.create_group('foo')
+#         self.assert_('foo' in fid)
+#     finally:
+#         fid.close()
+#     fid = File(fname, 'a')
+#     try:
+#         self.assert_('foo' in fid)
+#         fid.create_group('bar')
+#         self.assert_('bar' in fid)
+#     finally:
+#         fid.close()
 
-def test_readonly(self):
-    """ Mode 'r' opens file in readonly mode """
-    fname = self.mktemp()
-    fid = File(fname, 'w')
-    fid.close()
-    self.assert_(not fid)
-    fid = File(fname, 'r')
-    self.assert_(fid)
-    with self.assertRaises(ValueError):
-        fid.create_group('foo')
-    fid.close()
+# def test_readonly(self):
+#     """ Mode 'r' opens file in readonly mode """
+#     fname = self.mktemp()
+#     fid = File(fname, 'w')
+#     fid.close()
+#     self.assert_(not fid)
+#     fid = File(fname, 'r')
+#     self.assert_(fid)
+#     with self.assertRaises(ValueError):
+#         fid.create_group('foo')
+#     fid.close()
 
-def test_readwrite(self):
-    """ Mode 'r+' opens existing file in readwrite mode """
-    fname = self.mktemp()
-    fid = File(fname, 'w')
-    fid.create_group('foo')
-    fid.close()
-    fid = File(fname, 'r+')
-    self.assert_('foo' in fid)
-    fid.create_group('bar')
-    self.assert_('bar' in fid)
-    fid.close()
+# def test_readwrite(self):
+#     """ Mode 'r+' opens existing file in readwrite mode """
+#     fname = self.mktemp()
+#     fid = File(fname, 'w')
+#     fid.create_group('foo')
+#     fid.close()
+#     fid = File(fname, 'r+')
+#     self.assert_('foo' in fid)
+#     fid.create_group('bar')
+#     self.assert_('bar' in fid)
+#     fid.close()
 
-def test_nonexistent_file(self):
-    """ Modes 'r' and 'r+' do not create files """
-    fname = self.mktemp()
-    with self.assertRaises(IOError):
-        File(fname, 'r')
-    with self.assertRaises(IOError):
-        File(fname, 'r+')
+# def test_nonexistent_file(self):
+#     """ Modes 'r' and 'r+' do not create files """
+#     fname = self.mktemp()
+#     with self.assertRaises(IOError):
+#         File(fname, 'r')
+#     with self.assertRaises(IOError):
+#         File(fname, 'r+')
 
-def test_invalid_mode(self):
-    """ Invalid modes raise ValueError """
-    with self.assertRaises(ValueError):
-File(self.mktemp(), 'mongoose')
+# def test_invalid_mode(self):
+#     """ Invalid modes raise ValueError """
+#     with self.assertRaises(ValueError):
+# File(self.mktemp(), 'mongoose')
 
 
 # TODO uncomment when enter and exit has been implemented
