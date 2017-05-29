@@ -12,6 +12,7 @@ import yaml
 import numpy as np
 import shutil
 import quantities as pq
+from collections.abc import KeysView, ValuesView, ItemsView
 import re
 from enum import Enum
 
@@ -613,19 +614,13 @@ class Group(Object):
                 raise NotImplementedError("Only dataset writing implemented")
 
     def keys(self):
-        for name in self:
-            if name in self:
-                yield name
+        return KeysView(self)
 
     def items(self):
-        for name in self:
-            if name in self:
-                yield name, self[name]
+        return ItemsView(self)
 
     def values(self):
-        for name in self:
-            if name in self:
-                yield self[name]
+        return ValuesView(self)
 
     def __iter__(self):
         for name in natural_sort(os.listdir(self.directory)):

@@ -1,6 +1,6 @@
 import os
 import pytest
-from collections import KeysView
+from collections.abc import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
 
@@ -240,9 +240,8 @@ def test_trailing_slash(setup_teardown_file):
 
 
 # Feature: Standard Python 3 .keys, .values, etc. methods are available
-# TODO update these to test if we should return a dict_view
 def test_keys(setup_teardown_file):
-    # """.keys provides a key view."""
+    """.keys provides a key view."""
     f = setup_teardown_file
     grp = f.create_group("test")
 
@@ -251,11 +250,11 @@ def test_keys(setup_teardown_file):
     grp.create_group("c")
     grp.create_group("d")
 
+    assert isinstance(grp.keys(), KeysView)
     assert sorted(list(grp.keys())) == ["a", "b", "c", "d"]
 
-# TODO update these to test if we should return a dict_view
 def test_values(setup_teardown_file):
-    # """.values provides a value view."""
+    """.values provides a value view."""
     f = setup_teardown_file
     grp = f.create_group("test")
 
@@ -264,12 +263,11 @@ def test_values(setup_teardown_file):
     grpc = grp.create_group("c")
     grpd = grp.create_group("d")
 
+    assert isinstance(grp.values(), ValuesView)
     assert list(grp.values()) == [grpa, grpb, grpc, grpd]
 
-
-# TODO update these to test if we should return a dict_view
 def test_items(setup_teardown_file):
-    #  """ .items provides an item view """
+    """.items provides an item view."""
     f = setup_teardown_file
     grp = f.create_group("test")
 
@@ -280,6 +278,8 @@ def test_items(setup_teardown_file):
 
     groups = [grpa, grpb, grpc, grpd]
     names = ["a", "b", "c", "d"]
+
+    assert isinstance(grp.items(), ItemsView)
 
     for i, (key, value) in enumerate(grp.items()):
         assert key == names[i]
