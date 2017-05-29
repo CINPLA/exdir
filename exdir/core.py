@@ -714,6 +714,8 @@ class File(Group):
             if not already_exists:
                 should_create_directory = True
 
+
+        _assert_valid_name(directory)
         if should_create_directory:
             _create_object_directory(directory, FILE_TYPENAME)
 
