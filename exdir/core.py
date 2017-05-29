@@ -532,19 +532,41 @@ class Group(Object):
                      io_mode=self.io_mode,
                      naming_rule=self.naming_rule)
 
-    def require_dataset(self, name, data=None):
+    def require_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
         if name in self:
             current_object = self[name]
-            if isinstance(current_object, Dataset) and data is not None:
-                current_object.set_data(data)
-                return current_object
-            elif isinstance(current_object, Dataset) and data is None:
+
+            if not isinstance(current_object, Dataset):
+                msg = "Incompatible object ({}) already exists".format(current_object.__class__.__name__)
+                raise TypeError(msg)
+
+
+            if shape is not None:
+                if not np.array_equal(shape, current_object.shape):
+                    msg = "Shapes do not match (existing {} vs new {})".format(current_object.shape, shape)
+                    raise TypeError(msg)
+
+            if dtype is not None:
+                if dtype != current_object.dtype:
+                    msg = "Datatypes do not exactly match (existing {} vs new {})".format(current_object.dtype, dtype)
+                    raise TypeError(msg)
+
+                # if not numpy.can_cast(dtype, dset.dtype):
+                #     msg = "Datatypes cannot be safely cast (existing {} vs new {})".format(dset.dtype, dtype)
+                #     raise TypeError(msg)
+
+            # TODO is this correct or should we throw a typeerror if data is not similar to data?
+            #      This can potentially overwrite data
+            if data is None:
                 return current_object
             else:
-                raise TypeError("An object with name '" + name + "' already "
-                                "exists, but it is not a Dataset.")
+                current_object.set_data(data)
+                return current_object
+
         else:
-            return self.create_dataset(name, data=data)
+            return self.create_dataset(name, shape=shape, dtype=dtype,
+                                       data=data, fillvalue=fillvalue)
+
 
     def __contains__(self, name):
         if len(name) < 1:
@@ -615,7 +637,7 @@ class Group(Object):
 
     def __setitem__(self, name, value):
         if name not in self:
-            self.create_dataset(name, value)
+            self.create_dataset(name, data=value)
         else:
             current_item = self.__getitem__(name)
             if isinstance(current_item, Dataset):
@@ -817,9 +839,11 @@ class Dataset(Object):
         else:
             self._mmap_mode = "r+"
 
+    # TODO make support for creating a quantities array
     def set_data(self, shape=None, dtype=None, data=None, fillvalue=None):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ('r') mode")
+
 
         if data is not None:
             if isinstance(data, pq.Quantity):
@@ -833,16 +857,23 @@ class Dataset(Object):
             if not isinstance(result, np.ndarray):
                 result = np.asarray(data, order="C", dtype=dtype)
 
+            if shape is not None and result.shape != shape:
+                result = np.reshape(result, shape)
         else:
             if shape is None:
-                raise TypeError("One of data or shape must be specified")
-
-            fillvalue = fillvalue or 0.0
-            result = np.full(shape, fillvalue, dtype=dtype)
-
+                result = None
+            else:
+                fillvalue = fillvalue or 0.0
+                result = np.full(shape, fillvalue, dtype=dtype)
 
         if result is not None:
             np.save(self.data_filename, result)
+
+            # TODO should we have this line?
+            #      Might lead to bugs where we create data, but havent loaded it
+            #      but requires the data always stay in memory
+            # self._data = result
+
 
     def __getitem__(self, args):
         if not os.path.exists(self.data_filename):
@@ -880,3 +911,42 @@ class Dataset(Object):
     @property
     def dtype(self):
         return self[:].dtype
+
+
+    def __eq__(self, other):
+        self[:]
+
+        if isinstance(other, self.__class__):
+            if self.__dict__.keys() != other.__dict__.keys():
+                return False
+
+            for key in self.__dict__:
+                if key == "_data":
+                    if not np.array_equal(self.__dict__["_data"], other.__dict__["_data"]):
+                        return False
+                else:
+                    if self.__dict__[key] != other.__dict__[key]:
+                        print(self.__dict__[key])
+                        print(other.__dict__[key])
+                        return False
+            return True
+        else:
+            return False
+
+    def __len__(self):
+         """ The size of the first axis.  TypeError if scalar."""
+         if len(self.shape) == 0:
+                raise TypeError("Attempt to take len() of scalar dataset")
+         return self.shape[0]
+
+
+    def __iter__(self):
+        """Iterate over the first axis.  TypeError if scalar.
+        WARNING: Modifications to the yielded data are *NOT* written to file.
+        """
+
+        if len(self.shape) == 0:
+            raise TypeError("Can't iterate over a scalar dataset")
+
+        for i in range(self.shape[0]):
+            yield self[i]
