@@ -457,7 +457,7 @@ class Group(Object):
                                     object_name=object_name, io_mode=io_mode,
                                     naming_rule=naming_rule)
 
-    def create_dataset(self, name, data=None):
+    def create_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
         _assert_valid_name(name, self)
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
@@ -466,8 +466,9 @@ class Group(Object):
                           parent_path=self.relative_path, object_name=name,
                           io_mode=self.io_mode,
                           naming_rule=self.naming_rule)
-        if data is not None:
-            dataset.set_data(data)
+
+        dataset.set_data(shape=shape, dtype=dtype, data=data, fillvalue=fillvalue)
+
         return dataset
 
     def create_group(self, name):
@@ -747,8 +748,8 @@ class File(Group):
                                             "to the naming rule 'simple'.")
 
             invalid_names = [META_FILENAME,
-                            ATTRIBUTES_FILENAME,
-                            RAW_FOLDER_NAME]
+                             ATTRIBUTES_FILENAME,
+                             RAW_FOLDER_NAME]
 
             if name in invalid_names:
                 raise NameError("Name cannot be '" + name + "'.")
@@ -829,15 +830,15 @@ class Dataset(Object):
             else:
                 result = data
 
-            if not isinstance(result, np.array):
+            if not isinstance(result, np.ndarray):
                 result = np.asarray(data, order="C", dtype=dtype)
 
         else:
             if shape is None:
                 raise TypeError("One of data or shape must be specified")
 
-            fill_value = fill_value or 0.0
-            result = np.full(shape, fill_value)
+            fillvalue = fillvalue or 0.0
+            result = np.full(shape, fillvalue, dtype=dtype)
 
 
         if result is not None:
@@ -845,7 +846,7 @@ class Dataset(Object):
 
     def __getitem__(self, args):
         if not os.path.exists(self.data_filename):
-            return np.array()
+            return np.array([])
         if self._data is None:
             self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
         if len(self._data.shape) == 0:
@@ -875,3 +876,7 @@ class Dataset(Object):
     @property
     def size(self):
         return self[:].size
+
+    @property
+    def dtype(self):
+        return self[:].dtype
