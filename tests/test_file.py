@@ -1,10 +1,11 @@
 import pytest
 import os
 
-
 from exdir.core import File, Group
 from exdir.core import DATASET_TYPENAME, FILE_TYPENAME
 from exdir.core import _create_object_directory, _is_nonraw_object_directory
+
+import numpy as np
 
 from conftest import remove
 
@@ -158,10 +159,8 @@ def test_naming_rule_simple(setup_teardown_folder):
     f = File(pytest.TESTFILE, naming_rule='simple')
     f.close()
 
-    print("========================")
     with pytest.raises(NameError):
         File(pytest.TESTFILE[:-7]+"T.exdir", naming_rule='simple')
-    print("========================")
 
 
 def test_naming_rule_strict(setup_teardown_folder):
@@ -171,7 +170,6 @@ def test_naming_rule_strict(setup_teardown_folder):
 
     with pytest.raises(NameError):
         File(pytest.TESTFILE+"A" , naming_rule='strict')
-
 
 
 def test_naming_rule_thorough(setup_teardown_folder):
@@ -249,6 +247,37 @@ def test_open(setup_teardown_file):
     assert f == f
 
 
+
+def test_open_mode(setup_teardown_folder):
+    # must exist
+    for mode in ["r+", "r"]:
+        with pytest.raises(IOError):
+            f = File(pytest.TESTFILE, mode)
+    # create if not exist
+    for mode in ["a", "w", "w-"]:
+        remove(pytest.TESTFILE)
+        f = File(pytest.TESTFILE, mode)
+        f.require_dataset('dset', np.arange(10))
+        f.attrs['can_overwrite'] = 42
+        f.attrs['can_overwrite'] = 14
+        f.require_group('mygroup')
+
+    remove(pytest.TESTFILE)
+    f = File(pytest.TESTFILE, 'w')
+    f.close()  # dummy close
+    # read write if exist
+    f = File(pytest.TESTFILE, "r+")
+    f.require_group('mygroup')
+    f.require_dataset('dset', np.arange(10))
+    f.attrs['can_overwrite'] = 42
+    f.attrs['can_overwrite'] = 14
+
+    # read only, can not write
+    f = File(pytest.TESTFILE, 'r')
+    with pytest.raises(IOError):
+        f.require_dataset('dset', np.arange(10))
+        f.attrs['can_not_write'] = 42
+        f.create_group('mygroup')
 
 
 

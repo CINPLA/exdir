@@ -857,3 +857,72 @@ class Dataset(Object):
     @property
     def shape(self):
         return self[:].shape
+
+    @property
+    def size(self):
+        return self[:].size
+
+    def make_new_dset(parent, shape=None, dtype=None, data=None,
+                      fillvalue=None):
+        """ Return a new low-level dataset identifier
+        Only creates anonymous datasets."""
+
+        # Convert data to a C-contiguous ndarray
+        if data is not None and not isinstance(data, Empty):
+            from . import base
+            data = numpy.asarray(data, order="C", dtype=base.guess_dtype(data))
+
+        # Validate shape
+        if shape is None:
+            if data is None:
+                if dtype is None:
+                    raise TypeError("One of data, shape or dtype must be specified")
+                data = Empty(dtype)
+            shape = data.shape
+        else:
+            shape = tuple(shape)
+            if data is not None and (numpy.product(shape) != numpy.product(data.shape)):
+                raise ValueError("Shape tuple is incompatible with data")
+
+        tmp_shape = maxshape if maxshape is not None else shape
+
+        if isinstance(dtype, Datatype):
+            # Named types are used as-is
+            tid = dtype.id
+            dtype = tid.dtype  # Following code needs this
+        else:
+            # Validate dtype
+            if dtype is None and data is None:
+                dtype = numpy.dtype("=f4")
+            elif dtype is None and data is not None:
+                dtype = data.dtype
+            else:
+                dtype = numpy.dtype(dtype)
+            tid = h5t.py_create(dtype, logical=1)
+
+
+
+        if fillvalue is not None:
+            fillvalue = numpy.array(fillvalue)
+            dcpl.set_fill_value(fillvalue)
+
+        if track_times in (True, False):
+            dcpl.set_obj_track_times(track_times)
+        elif track_times is not None:
+            raise TypeError("track_times must be either True or False")
+
+        if maxshape is not None:
+            maxshape = tuple(m if m is not None else h5s.UNLIMITED for m in maxshape)
+
+        if isinstance(data, Empty):
+            sid = h5s.create(h5s.NULL)
+        else:
+            sid = h5s.create_simple(shape, maxshape)
+
+
+        dset_id = h5d.create(parent.id, None, tid, sid, dcpl=dcpl)
+
+        if (data is not None) and (not isinstance(data, Empty)):
+            dset_id.write(h5s.ALL, h5s.ALL, data)
+
+        return dset_id

@@ -256,3 +256,23 @@ def test_unicode_scalar(setup_teardown_file):
     out = f.attrs["x"]
     assert out == six.u("Hello") + six.unichr(0x2340) + six.u("!!")
     assert type(out) == six.text_type
+
+
+def test_attrs(setup_teardown_file):
+    f = setup_teardown_file
+
+    f.attrs["temperature"] = 99.0
+    assert f.attrs["temperature"] == 99.0
+    f.attrs["temperature"] = 99.0 * pq.deg
+    assert f.attrs["temperature"] == 99.0 * pq.deg
+
+    attrs = f.attrs
+    assert type(attrs) is Attribute
+
+    attrs["test"] = {
+        "name": "temp",
+        "value": 19
+    }
+    assert "test" in f.attrs
+    assert type(f.attrs["test"]) is Attribute
+    assert dict(f.attrs["test"]) == {"name": "temp", "value": 19}
