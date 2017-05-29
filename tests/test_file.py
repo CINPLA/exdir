@@ -155,22 +155,22 @@ def test_file_close(setup_teardown_folder):
 
 def test_naming_rule_simple(setup_teardown_folder):
     """Test naming rule simple."""
+    f = File(pytest.TESTFILE, naming_rule='simple')
+    f.close()
 
-    with pytest.raises(ValueError):
-        File(pytest.TESTFILE, naming_rule='w')
-
+    print("========================")
+    with pytest.raises(NameError):
+        File(pytest.TESTFILE[:-7]+"T.exdir", naming_rule='simple')
+    print("========================")
 
 
 def test_naming_rule_strict(setup_teardown_folder):
     """Test naming rule strict."""
-
     f = File(pytest.TESTFILE, naming_rule='strict')
     f.close()
-    File(pytest.TESTFILE+"(" , naming_rule='strict')
 
     with pytest.raises(NameError):
-        print(pytest.TESTFILE+"A")
-        File(pytest.TESTFILE+"(" , naming_rule='strict')
+        File(pytest.TESTFILE+"A" , naming_rule='strict')
 
 
 
@@ -182,11 +182,31 @@ def test_naming_rule_thorough(setup_teardown_folder):
 
 
 
-def test_naming_rule_none(setup_teardown_folder):
-    """Test naming rule none."""
+def test_naming_rule_error(setup_teardown_folder):
+    """Test naming rule with error."""
 
     with pytest.raises(ValueError):
-        File(pytest.TESTFILE, naming_rule='')
+        File(pytest.TESTFILE, naming_rule='Error rule')
+
+
+def test_naming_rule_none(setup_teardown_folder):
+    """Test naming rule with error."""
+
+    File(pytest.TESTFILE+"&()", naming_rule='none')
+
+
+
+def test_opening_with_different_naming_rule(setup_teardown_folder):
+    """Test opening with wrong naming rule."""
+
+    f = File(pytest.TESTFILE, "w", naming_rule='none')
+    f.create_group("AAA")
+    f.close()
+
+    f = File(pytest.TESTFILE, "a", naming_rule='simple')
+    with pytest.raises(NameError):
+        f.create_group("aaa")
+    f.close()
 
 
 

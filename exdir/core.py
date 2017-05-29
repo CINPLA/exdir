@@ -106,6 +106,7 @@ def convert_quantities(value):
 def _assert_valid_name(name, container):
     """Check if name (dataset or group) is valid."""
     valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
+
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
@@ -123,10 +124,11 @@ def _assert_valid_name(name, container):
             if char.lower() not in valid_characters:
                 raise NameError("Name contains invalid character '" + char + "'.\n"
                                 + "Valid characters are:\n" + valid_characters)
-        if name.lower() in [nm.lower() for nm in container]:
-            raise NameError("An object with name (case independent) '" + name +
-                            "' already exists and cannot be made according " +
-                            "to the naming rule 'simple'.")
+
+            if name.lower() in [nm.lower() for nm in container]:
+                raise NameError("An object with name (case independent) '" + name +
+                                "' already exists and cannot be made according " +
+                                "to the naming rule 'simple'.")
 
 
     dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
@@ -141,6 +143,7 @@ def _assert_valid_name(name, container):
 
     if name in invalid_names:
         raise NameError("Name cannot be '" + name + "'.")
+
 
 
 def _create_object_directory(directory, typename):
@@ -688,6 +691,9 @@ class File(Group):
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
 
+
+
+
         should_create_directory = False
 
         if mode == "r":
@@ -715,8 +721,39 @@ class File(Group):
                 should_create_directory = True
 
 
-        _assert_valid_name(directory)
+        valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-.")
         if should_create_directory:
+            path, name = os.path.split(directory)
+
+            if self.naming_rule == Object.NamingRule.THOROUGH:
+                raise NotImplementedError
+
+            elif self.naming_rule == Object.NamingRule.STRICT:
+                for char in name:
+                    if char not in valid_characters:
+                        raise NameError("Name contains invalid character '" + char + "'.\n"
+                                        + "Valid characters are:\n" + valid_characters)
+
+            elif self.naming_rule == Object.NamingRule.SIMPLE:
+                for char in name:
+                    if char.lower() not in valid_characters:
+                        raise FileExistsError("Name contains invalid character '" + char + "'.\n"
+                                              + "Valid characters are:\n" + valid_characters)
+
+                    for item in os.listdir(path):
+                        if name.lower() == item.lower():
+                            raise NameError("A directory with name (case independent) '" + name +
+                                            "' already exists and cannot be made according " +
+                                            "to the naming rule 'simple'.")
+
+            invalid_names = [META_FILENAME,
+                            ATTRIBUTES_FILENAME,
+                            RAW_FOLDER_NAME]
+
+            if name in invalid_names:
+                raise NameError("Name cannot be '" + name + "'.")
+
+
             _create_object_directory(directory, FILE_TYPENAME)
 
     def close(self):

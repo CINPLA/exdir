@@ -3,6 +3,7 @@ import pytest
 from collections.abc import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
+from conftest import remove
 
 # tests for Group class
 def test_group_init(setup_teardown_folder):
@@ -322,3 +323,59 @@ def test_eq(setup_teardown_file):
 
     assert grp2 == grp2
     assert grp != grp2
+
+
+# Feature: Test different naming rules
+
+
+def test_naming_rule_simple(setup_teardown_folder):
+    """Test naming rule simple."""
+    f = File(pytest.TESTFILE, naming_rule='simple')
+    grp = f.create_group("test")
+
+    grp.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
+
+    with pytest.raises(NameError):
+        grp.create_group("()")
+
+    f.close()
+    remove(pytest.TESTFILE)
+
+    f = File(pytest.TESTFILE, naming_rule='simple')
+    grp = f.create_group("test")
+    grp.create_group("aa")
+
+    with pytest.raises(NameError):
+        grp.create_group("AA")
+
+
+
+
+def test_naming_rule_strict(setup_teardown_folder):
+    """Test naming rule strict."""
+    f = File(pytest.TESTFILE, naming_rule='strict')
+    f.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
+
+    with pytest.raises(NameError):
+        f.create_group("A")
+
+    f.close()
+
+
+
+# TODO update this when naming rule thorough is implemented
+def test_naming_rule_thorough(setup_teardown_folder):
+    """Test naming rule thorough."""
+
+    with pytest.raises(NotImplementedError):
+        File(pytest.TESTFILE, naming_rule='thorough')
+
+
+
+def test_naming_rule_none(setup_teardown_folder):
+    """Test naming rule with error."""
+    f = File(pytest.TESTFILE, naming_rule='none')
+    f.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
+    f.create_group("ABNCUIY&z()(d()&")
+
+    f.close()
