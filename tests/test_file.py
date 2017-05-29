@@ -68,15 +68,127 @@ def test_file_init(setup_teardown_folder):
     with pytest.raises(IOError):
         f = File(pytest.TESTFILE, mode="x")
 
-    with pytest.raises(IOError):
+    with pytest.raises(ValueError):
         f = File(pytest.TESTFILE, mode="not existing")
 
 
+def test_create(setup_teardown_folder):
+    """Mode 'w' opens file in overwrite mode."""
+    f = File(pytest.TESTFILE, 'w')
+    assert f
+    f.create_group('foo')
+    f.close()
 
+    f = File(pytest.TESTFILE, 'w', allow_remove=True)
+    assert 'foo' not in f
+    f.close()
+    with pytest.raises(FileExistsError):
+        f = File(pytest.TESTFILE, 'w')
+
+
+def test_create_exclusive(setup_teardown_folder):
+    """Mode 'w-' opens file in exclusive mode."""
+
+    f = File(pytest.TESTFILE, 'w-')
+    assert f
+    f.close()
+    with pytest.raises(IOError):
+        File(pytest.TESTFILE, 'w-')
+
+def test_append(setup_teardown_folder):
+    """Mode 'a' opens file in append/readwrite mode, creating if necessary."""
+
+    f = File(pytest.TESTFILE, 'a')
+    assert f
+    f.create_group('foo')
+    assert 'foo' in f
+
+    f = File(pytest.TESTFILE, 'a')
+    assert 'foo' in f
+    f.create_group('bar')
+    assert 'bar' in f
+
+
+def test_readonly(setup_teardown_folder):
+    """Mode 'r' opens file in readonly mode."""
+
+    f = File(pytest.TESTFILE, 'w')
+    f.close()
+    # TODO comment in when close is implemented
+    # assert not f
+    f = File(pytest.TESTFILE, 'r')
+    assert f
+    with pytest.raises(IOError):
+        f.create_group('foo')
+    f.close()
+
+def test_readwrite(setup_teardown_folder):
+    """Mode 'r+' opens existing file in readwrite mode."""
+
+    f = File(pytest.TESTFILE, 'w')
+    f.create_group('foo')
+    f.close()
+    f = File(pytest.TESTFILE, 'r+')
+    assert 'foo' in f
+    f.create_group('bar')
+    assert 'bar' in f
+    f.close()
+
+def test_nonexistent_file(setup_teardown_folder):
+    """Modes 'r' and 'r+' do not create files."""
+
+    with pytest.raises(IOError):
+        File(pytest.TESTFILE, 'r')
+    with pytest.raises(IOError):
+        File(pytest.TESTFILE, 'r+')
+
+def test_invalid_mode(setup_teardown_folder):
+    """Invalid modes raise ValueError."""
+    with pytest.raises(ValueError):
+        File(pytest.TESTFILE, 'Error mode')
 
 def test_file_close(setup_teardown_folder):
+    """Closing a file."""
     f = File(pytest.TESTFILE, mode="w")
     f.close()
+
+
+def test_naming_rule_simple(setup_teardown_folder):
+    """Test naming rule simple."""
+
+    with pytest.raises(ValueError):
+        File(pytest.TESTFILE, naming_rule='w')
+
+
+
+def test_naming_rule_strict(setup_teardown_folder):
+    """Test naming rule strict."""
+
+    f = File(pytest.TESTFILE, naming_rule='strict')
+    f.close()
+    File(pytest.TESTFILE+"(" , naming_rule='strict')
+
+    with pytest.raises(NameError):
+        print(pytest.TESTFILE+"A")
+        File(pytest.TESTFILE+"(" , naming_rule='strict')
+
+
+
+def test_naming_rule_thorough(setup_teardown_folder):
+    """Test naming rule thorough."""
+
+    with pytest.raises(NotImplementedError):
+        File(pytest.TESTFILE, naming_rule='thorough')
+
+
+
+def test_naming_rule_none(setup_teardown_folder):
+    """Test naming rule none."""
+
+    with pytest.raises(ValueError):
+        File(pytest.TESTFILE, naming_rule='')
+
+
 
 
 def test_contains(setup_teardown_file):
@@ -110,90 +222,14 @@ def test_open(setup_teardown_file):
 
     grp2 = f["foo"]
     grp3 = f["/foo"]
-    fid = f["/"]
+    f = f["/"]
 
     assert grp == grp2
     assert grp2 == grp3
-    assert f == fid
+    assert f == f
 
 
-# TODO test naming rules, strict and so on
 
-# TODO Creating these tests
-# def test_create(self):
-#     """ Mode 'w' opens file in overwrite mode """
-#     fname = self.mktemp()
-#     fid = File(fname, 'w')
-#     self.assertTrue(fid)
-#     fid.create_group('foo')
-#     fid.close()
-#     fid = File(fname, 'w')
-#     self.assertNotIn('foo', fid)
-#     fid.close()
-
-# def test_create_exclusive(self):
-#     """ Mode 'w-' opens file in exclusive mode """
-#     fname = self.mktemp()
-#     fid = File(fname, 'w-')
-#     self.assert_(fid)
-#     fid.close()
-#     with self.assertRaises(IOError):
-#         File(fname, 'w-')
-
-# def test_append(self):
-#     """ Mode 'a' opens file in append/readwrite mode, creating if necessary """
-#     fname = self.mktemp()
-#     fid = File(fname, 'a')
-#     try:
-#         self.assert_(fid)
-#         fid.create_group('foo')
-#         self.assert_('foo' in fid)
-#     finally:
-#         fid.close()
-#     fid = File(fname, 'a')
-#     try:
-#         self.assert_('foo' in fid)
-#         fid.create_group('bar')
-#         self.assert_('bar' in fid)
-#     finally:
-#         fid.close()
-
-# def test_readonly(self):
-#     """ Mode 'r' opens file in readonly mode """
-#     fname = self.mktemp()
-#     fid = File(fname, 'w')
-#     fid.close()
-#     self.assert_(not fid)
-#     fid = File(fname, 'r')
-#     self.assert_(fid)
-#     with self.assertRaises(ValueError):
-#         fid.create_group('foo')
-#     fid.close()
-
-# def test_readwrite(self):
-#     """ Mode 'r+' opens existing file in readwrite mode """
-#     fname = self.mktemp()
-#     fid = File(fname, 'w')
-#     fid.create_group('foo')
-#     fid.close()
-#     fid = File(fname, 'r+')
-#     self.assert_('foo' in fid)
-#     fid.create_group('bar')
-#     self.assert_('bar' in fid)
-#     fid.close()
-
-# def test_nonexistent_file(self):
-#     """ Modes 'r' and 'r+' do not create files """
-#     fname = self.mktemp()
-#     with self.assertRaises(IOError):
-#         File(fname, 'r')
-#     with self.assertRaises(IOError):
-#         File(fname, 'r+')
-
-# def test_invalid_mode(self):
-#     """ Invalid modes raise ValueError """
-#     with self.assertRaises(ValueError):
-# File(self.mktemp(), 'mongoose')
 
 
 # TODO uncomment when enter and exit has been implemented

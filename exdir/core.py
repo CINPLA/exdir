@@ -468,6 +468,9 @@ class Group(Object):
         return dataset
 
     def create_group(self, name):
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            raise IOError("Cannot write data to file in read only ("r") mode")
+
         if name.startswith("/"):
             raise NotImplementedError("Creating a group in the absolute directory " +
                                       "from a subgroup is currently not supported " +
@@ -479,6 +482,10 @@ class Group(Object):
         if "/" in name:
             raise NotImplementedError("Intermediate groups can not yet be " +
                                       "created automatically.")
+
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            raise IOError("Cannot write data to file in read only ("r") mode")
+
 
         _assert_valid_name(name, self)
         group_directory = os.path.join(self.directory, name)
@@ -644,8 +651,8 @@ class File(Group):
         mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
-            raise IOError('IO mode "' + mode + '" not recognized,' +
-                          'mode must be one of {}'.format(recognized_modes))
+            raise ValueError('IO mode "' + mode + '" not recognized,' +
+                             'mode must be one of {}'.format(recognized_modes))
         if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY
         else:
@@ -661,9 +668,9 @@ class File(Group):
         elif naming_rule == 'none':
             self.naming_rule = self.NamingRule.NONE
         else:
-            raise IOError('IO name rule "' + naming_rule + '" not recognized,' +
-                          'name rule must be one of "strict", "simple", ' +
-                          '"thorough", "none"')
+            raise ValueError('IO name rule "' + naming_rule + '" not recognized,' +
+                             'name rule must be one of "strict", "simple", ' +
+                             '"thorough", "none"')
 
         super(File, self).__init__(root_directory=directory,
                                    parent_path="", object_name="",

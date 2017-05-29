@@ -8,7 +8,7 @@ from exdir.core import File
 filepath = os.path.abspath(__file__)
 filedir = os.path.dirname(filepath)
 
-testmaindir = ".expipe_test_dir_Aegoh4ahlaechohV5ooG9vew1yahDe2d"
+testmaindir = ".expipe_test_dir_aegoh4ahlaechohv5oog9vew1yahde2d"
 TESTPATH = os.path.join(filedir, testmaindir)
 TESTDIR = os.path.join(TESTPATH, "exdir_dir")
 TESTFILE = os.path.join(TESTPATH, "test.exdir")
