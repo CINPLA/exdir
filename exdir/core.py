@@ -504,10 +504,6 @@ class Group(Object):
             raise NotImplementedError("Intermediate groups can not yet be " +
                                       "created automatically.")
 
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ("r") mode")
-
-
         _assert_valid_name(name, self)
         group_directory = os.path.join(self.directory, name)
         _create_object_directory(group_directory, GROUP_TYPENAME)
