@@ -121,6 +121,7 @@ def test_readonly(setup_teardown_folder):
     assert f
     with pytest.raises(IOError):
         f.create_group('foo')
+        f.create_dataset("bar", (2))
     f.close()
 
 def test_readwrite(setup_teardown_folder):
