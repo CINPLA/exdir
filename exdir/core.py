@@ -277,7 +277,7 @@ class Attribute(object):
 
     def __getitem__(self, name=None):
         meta_data = self._open_or_create()
-        convert_back_quantities(meta_data)
+        meta_data = convert_back_quantities(meta_data)
         for i in self.path:
             meta_data = meta_data[i]
         if name is not None:
@@ -367,6 +367,8 @@ class Attribute(object):
     def __len__(self):
         return len(self.keys())
 
+
+
 class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
@@ -418,12 +420,16 @@ class Object(object):
         return _metafile_from_directory(self.directory)
 
     def create_raw(self, name):
+        _assert_valid_name(name, self)
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
             raise IOError("Raw directory " + directory_name +
                           " already exists.")
         os.mkdir(directory_name)
-        return directory_name
+        return Raw(self.root_directory,
+                   self.parent_path,
+                   name,
+                   io_mode=self.io_mode)
 
     def require_raw(self, name):
         directory_name = os.path.join(self.directory, name)
@@ -442,7 +448,16 @@ class Raw(Object):
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Raw, self).__init__(root_directory=root_directory,
                                   parent_path=parent_path,
-                                  object_name=object_name, io_mode=io_mode)
+                                  object_name=object_name,
+                                  io_mode=io_mode)
+
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+
+        return False
+
 
 
 class Group(Object):
@@ -458,7 +473,8 @@ class Group(Object):
                                     object_name=object_name, io_mode=io_mode,
                                     naming_rule=naming_rule)
 
-    def create_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
+    def create_dataset(self, name, shape=None, dtype=None,
+                       data=None, fillvalue=None):
         _assert_valid_name(name, self)
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
@@ -640,12 +656,16 @@ class Group(Object):
         if name not in self:
             self.create_dataset(name, data=value)
         else:
-            current_item = self.__getitem__(name)
-            if isinstance(current_item, Dataset):
-                print("Is dataset")
-            else:
-                print("Data type")
-                raise NotImplementedError("Only dataset writing implemented")
+            # TODO overwrite or not?
+            raise RuntimeError("Unable to assign value, {} already exists".format(name))
+
+            # current_item = self.__getitem__(name)
+            # if isinstance(current_item, Dataset):
+            #     current_item.set_data(data=value)
+            # else:
+            #     print("Data type")
+            #     raise NotImplementedError("Only dataset writing implemented")
+
 
     def keys(self):
         return KeysView(self)
@@ -881,12 +901,24 @@ class Dataset(Object):
     def __getitem__(self, args):
         if not os.path.exists(self.data_filename):
             return np.array([])
+
         if self._data is None:
             self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+
         if len(self._data.shape) == 0:
-            return self._data
+            values = self._data
         else:
-            return self._data[args]
+            values = self._data[args]
+
+        if "unit" in self.attrs:
+            item_dict = {"value": values,
+                         "unit": self.attrs["unit"]}
+            if "uncertainty" in self.attrs:
+                item_dict["uncertainty"] = self.attrs["uncertainty"]
+
+            values = convert_back_quantities(item_dict)
+
+        return values
 
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:

@@ -234,3 +234,54 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
     _create_object_directory(pytest.TESTDIR, DATASET_TYPENAME)
     result = _is_nonraw_object_directory(pytest.TESTDIR)
     assert result is True
+
+
+def test_root_directory(setup_teardown_file):
+    f = setup_teardown_file
+    grp = f.create_group("foo")
+    grp.create_group("bar")
+
+    assert not root_directory(pytest.TESTDIR)
+
+    path = os.path.join(pytest.TESTFILE, "foo", "bar")
+    assert pytest.TESTFILE == root_directory(path)
+
+
+def test_is_inside_exdir(setup_teardown_file):
+    f = setup_teardown_file
+
+    grp = f.create_group("foo")
+    grp.create_group("bar")
+
+    path = os.path.join(pytest.TESTFILE, "foo", "bar")
+    assert is_inside_exdir(path)
+    assert not is_inside_exdir(pytest.TESTDIR)
+
+
+def test_assert_inside_exdir(setup_teardown_file):
+    f = setup_teardown_file
+
+    grp = f.create_group("foo")
+    grp.create_group("bar")
+
+
+    path = os.path.join(pytest.TESTFILE, "foo", "bar")
+    assert assert_inside_exdir(path) is None
+    with pytest.raises(FileNotFoundError):
+        assert_inside_exdir(pytest.TESTDIR)
+
+
+def test_open_object(setup_teardown_file):
+    f = setup_teardown_file
+
+    grp = f.create_group("foo")
+    grp2 = grp.create_group("bar")
+
+    path = os.path.join(pytest.TESTFILE, "foo", "bar")
+    loaded_grp = open_object(path)
+
+    assert grp2 == loaded_grp
+
+    with pytest.raises(FileNotFoundError):
+        open_object(pytest.TESTDIR)
+

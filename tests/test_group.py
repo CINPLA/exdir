@@ -148,6 +148,8 @@ def test_open(setup_teardown_file):
     assert grp2 == grp3
     assert grp2 == grp4
 
+    with pytest.raises(NotImplementedError):
+        grp["/test"]
 
 def test_open_deep(setup_teardown_file):
     """Simple obj[name] opening."""
@@ -288,6 +290,7 @@ def test_items(setup_teardown_file):
 
 
 
+
 # Feature: You can iterate over group members via "for x in y", etc.
 
 def test_iter(setup_teardown_file):
@@ -323,6 +326,22 @@ def test_eq(setup_teardown_file):
 
     assert grp2 == grp2
     assert grp != grp2
+
+
+# Feature: Parent
+def test_eq(setup_teardown_file):
+    """Test equal."""
+    f = setup_teardown_file
+    grp = f.create_group("test")
+
+    grp2 = grp.create_group("a")
+
+    grp_parent = grp2.parent
+
+    assert grp == grp_parent
+
+
+
 
 
 # Feature: Test different naming rules
@@ -379,3 +398,5 @@ def test_naming_rule_none(setup_teardown_folder):
     f.create_group("ABNCUIY&z()(d()&")
 
     f.close()
+
+

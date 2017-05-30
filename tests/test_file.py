@@ -161,6 +161,7 @@ def test_naming_rule_simple(setup_teardown_folder):
 
     with pytest.raises(NameError):
         File(pytest.TESTFILE[:-7]+"T.exdir", naming_rule='simple')
+        File(pytest.TESTFILE[:-7]+"#.exdir", naming_rule='simple')
 
 
 def test_naming_rule_strict(setup_teardown_folder):
