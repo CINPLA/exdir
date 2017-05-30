@@ -291,10 +291,11 @@ class Attribute(object):
     def __setitem__(self, name, value):
         meta_data = self._open_or_create()
 
-        if isinstance(name, np.integer):
-            key = int(name)
-        else:
-            key = name
+        # if isinstance(name, np.integer):
+        #     key = int(name)
+        # else:
+        #     key = name
+        key = name
 
         sub_meta_data = meta_data
         for i in self.path:
@@ -747,6 +748,8 @@ class File(Group):
         valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-.")
         if should_create_directory:
             path, name = os.path.split(directory)
+            if path == "":
+                path = "."
 
             if self.naming_rule == Object.NamingRule.THOROUGH:
                 raise NotImplementedError
@@ -926,8 +929,6 @@ class Dataset(Object):
                         return False
                 else:
                     if self.__dict__[key] != other.__dict__[key]:
-                        print(self.__dict__[key])
-                        print(other.__dict__[key])
                         return False
             return True
         else:

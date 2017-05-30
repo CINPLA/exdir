@@ -276,3 +276,127 @@ def test_attrs(setup_teardown_file):
     assert "test" in f.attrs
     assert type(f.attrs["test"]) is Attribute
     assert dict(f.attrs["test"]) == {"name": "temp", "value": 19}
+
+
+
+
+# TODO uncomment and use these tests if we allows for all attribute information
+#      to be saved
+# # Feature: Scalar types map correctly to array scalars
+
+# def test_int(setup_teardown_file):
+#     """Integers are read as correct NumPy type."""
+#     f = setup_teardown_file
+
+#     f.attrs['x'] = np.array(1, dtype=np.int8)
+#     out = f.attrs['x']
+#     print (out)
+#     assert isinstance(out, np.int8)
+
+# def test_compound(setup_teardown_file):
+#     """Compound scalars are read as numpy.void."""
+#     f = setup_teardown_file
+
+#     dt = np.dtype([('a', 'i'), ('b', 'f')])
+#     data = np.array((1, 4.2), dtype=dt)
+#     f.attrs['x'] = data
+#     out = f.attrs['x']
+#     assert isinstance(out, np.void)
+#     assert out == data
+#     assert out['b'] == data['b']
+
+# # Feature: Non-scalar types are correctly retrieved as ndarrays
+
+# def test_single_array(setup_teardown_file):
+#     """Single-element arrays are correctly recovered."""
+#     f = setup_teardown_file
+
+#     data = np.ndarray((1,), dtype='f')
+#     f.attrs['x'] = data
+#     out = f.attrs['x']
+#     assert isinstance(out, np.ndarray)
+#     assert out.shape == (1,)
+
+# def test_multi_array(setup_teardown_file):
+#     """Rank-1 arrays are correctly recovered."""
+#     f = setup_teardown_file
+
+#     data = np.ndarray((42,), dtype='f')
+#     data[:] = 42.0
+#     data[10:35] = -47.0
+#     f.attrs['x'] = data
+#     out = f.attrs['x']
+#     assert isinstance(out, np.ndarray)
+#     assert out.shape == (42,)
+#     assert np.array_equal(out, data)
+
+
+# # Feature: All supported types can be stored in attributes
+
+# def test_int_all(setup_teardown_file):
+#     """Storage of integer types."""
+#     f = setup_teardown_file
+
+#     dtypes = (np.int8, np.int16, np.int32, np.int64,
+#               np.uint8, np.uint16, np.uint32, np.uint64)
+#     for dt in dtypes:
+#         data = np.ndarray((1,), dtype=dt)
+#         data[...] = 42
+#         f.attrs['x'] = data
+#         out = f.attrs['x']
+#         assert out.dtype == dt
+#         assert np.array_equal(out, data)
+
+# def test_float(setup_teardown_file):
+#     """Storage of floating point types."""
+#     f = setup_teardown_file
+
+#     dtypes = tuple(np.dtype(x) for x in ('<f4', '>f4', '<f8', '>f8'))
+
+#     for dt in dtypes:
+#         data = np.ndarray((1,), dtype=dt)
+#         data[...] = 42.3
+#         f.attrs['x'] = data
+#         out = f.attrs['x']
+#         assert out.dtype == dt
+#         assert np.array_equal(out, data)
+
+# def test_complex(setup_teardown_file):
+#     """Storage of complex types."""
+#     f = setup_teardown_file
+
+#     dtypes = tuple(np.dtype(x) for x in ('<c8', '>c8', '<c16', '>c16'))
+
+#     for dt in dtypes:
+#         data = np.ndarray((1,), dtype=dt)
+#         data[...] = -4.2j+35.9
+#         f.attrs['x'] = data
+#         out = f.attrs['x']
+#         assert out.dtype == dt
+#         assert np.array_equal(out, data)
+
+# def test_string(setup_teardown_file):
+#     """Storage of fixed-length strings."""
+#     f = setup_teardown_file
+
+#     dtypes = tuple(np.dtype(x) for x in ('|S1', '|S10'))
+
+#     for dt in dtypes:
+#         data = np.ndarray((1,), dtype=dt)
+#         data[...] = 'h'
+#         f.attrs['x'] = data
+#         out = f.attrs['x']
+#         assert out.dtype == dt
+#         assert out[0] == data[0]
+
+# def test_bool(setup_teardown_file):
+#     """Storage of NumPy booleans."""
+#     f = setup_teardown_file
+
+#     data = np.ndarray((2,), dtype=np.bool_)
+#     data[...] = True, False
+#     f.attrs['x'] = data
+#     out = f.attrs['x']
+#     assert out.dtype == data.dtype
+#     assert out[0] == data[0]
+#     assert out[1] == data[1]
