@@ -164,7 +164,9 @@ def test_require_quantities(setup_teardown_file):
     dset2 = grp.require_dataset('data')
 
     assert dset == dset2
-
+    assert np.all(dset[:] == testdata)
+    assert np.all(dset2[:] == testdata)
+    assert isinstance(dset[:], pq.Quantity)
 
 def test_shape_conflict(setup_teardown_file):
     """require_dataset with shape conflict yields TypeError."""
