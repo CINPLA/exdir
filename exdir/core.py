@@ -947,7 +947,9 @@ class Dataset(Object):
     def __eq__(self, other):
         self[:]
 
+
         if isinstance(other, self.__class__):
+            other[:]
             if self.__dict__.keys() != other.__dict__.keys():
                 return False
 

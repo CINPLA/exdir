@@ -124,6 +124,7 @@ def test_readonly(setup_teardown_folder):
         f.create_dataset("bar", (2))
     f.close()
 
+
 def test_readwrite(setup_teardown_folder):
     """Mode 'r+' opens existing file in readwrite mode."""
 

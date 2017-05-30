@@ -153,6 +153,19 @@ def test_create_existing(setup_teardown_file):
 
     assert dset == dset2
 
+
+def test_require_quantities(setup_teardown_file):
+    f = setup_teardown_file
+    grp = f.create_group("test")
+
+    testdata = np.array([1, 2, 3]) * pq.J
+    dset = grp.create_dataset('data', data=testdata)
+
+    dset2 = grp.require_dataset('data')
+
+    assert dset == dset2
+
+
 def test_shape_conflict(setup_teardown_file):
     """require_dataset with shape conflict yields TypeError."""
     f = setup_teardown_file
