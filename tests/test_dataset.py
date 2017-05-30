@@ -410,6 +410,22 @@ def test_mmap(setup_teardown_file):
     assert tmp_file[1, 1] == 100
 
 
+def test_mmap_quantities(setup_teardown_file):
+    f = setup_teardown_file
+    grp = f.create_group("test")
+
+    testdata = np.array([1, 2, 3]) * pq.J
+    dset = grp.create_dataset('data', data=testdata)
+
+    dset[1] = 100
+
+    tmp_file = np.load(os.path.join(pytest.TESTFILE, "test", "data", "data.npy"))
+
+    assert dset.data[1] == 100
+    assert tmp_file[1] == 100
+
+
+
 def test_modify_view(setup_teardown_file):
     f = setup_teardown_file
     dataset = f.create_dataset("mydata", data=np.array([1, 2, 3, 4, 5, 6, 7, 8]))
