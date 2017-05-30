@@ -22,3 +22,16 @@ def test_create_raw(setup_teardown_file):
     raw2 = f["test"]
 
     assert raw == raw2
+
+def test_require_raw(setup_teardown_file):
+    """Raw is created if it doesn"t exist."""
+    f = setup_teardown_file
+    grp = f.create_group("test")
+
+    raw = grp.require_group("foo")
+    raw2 = grp.require_group("foo")
+
+    raw3 = grp["foo"]
+
+    assert raw == raw2
+    assert raw == raw3
