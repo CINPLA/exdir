@@ -283,6 +283,13 @@ def test_open_mode(setup_teardown_folder):
         f.create_group('mygroup')
 
 
+def test_open_two_attrs(setup_teardown_file):
+    f = setup_teardown_file
+
+    f.attrs['can_overwrite'] = 42
+    f.attrs['another_atribute'] = 14
+
+
 
 # TODO uncomment when enter and exit has been implemented
 # # Feature: File objects can be used as context managers
