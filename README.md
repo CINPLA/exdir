@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/CINPLA/exdir.svg?branch=dev)](https://travis-ci.org/CINPLA/exdir)
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![Anaconda-Server Badge](https://anaconda.org/cinpla/exdir/badges/installer/conda.svg)](https://conda.anaconda.org/cinpla)
+[![Coverage Status](https://coveralls.io/repos/github/CINPLA/exdir/badge.svg?branch=dev)](https://coveralls.io/github/CINPLA/exdir?branch=dev)
 
 *Important*: The implementations contained in this repository are intended for
 feedback and as a basis for future reference implementations.
