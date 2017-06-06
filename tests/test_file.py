@@ -72,3 +72,9 @@ def test_file_init(setup_teardown_folder):
 def test_file_close(setup_teardown_folder):
     f = File(pytest.TESTFILE, mode="w")
     f.close()
+
+def test_open_two_attrs(setup_teardown_file):
+    f = setup_teardown_file
+
+    f.attrs['can_overwrite'] = 42
+    f.attrs['another_atribute'] = 14
