@@ -12,7 +12,7 @@ before_script:
   - python setup.py install
 script:
   - coverage run --source exdir -m py.test -s --doctest-glob='*.rst'
-  - coverage report --include exdir/core.py
+  - coverage report
   - source libs/travis-conda-scripts/scripts/config.sh
   - bash -ex libs/travis-conda-scripts/scripts/build.sh
 after_success:
