@@ -1,4 +1,5 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
+
 """
 .. module:: exdir.core
 .. moduleauthor:: Svenn-Arne Dragly, Milad H. Mobarhan, Mikkel E. Lepperød
@@ -11,6 +12,7 @@ import yaml
 import numpy as np
 import shutil
 import quantities as pq
+from collections.abc import KeysView, ValuesView, ItemsView
 import re
 from enum import Enum
 
@@ -41,9 +43,7 @@ def natural_sort(l):
 
 
 def convert_back_quantities(value):
-    """
-    Converts quantities back from dictionary
-    """
+    """Convert quantities back from dictionary."""
     result = value
     if isinstance(value, dict):
         if "unit" in value and "value" in value and "uncertainty" in value:
@@ -69,9 +69,8 @@ def convert_back_quantities(value):
 
 
 def convert_quantities(value):
-    """
-    Converts quantities to dictionary
-    """
+    """Convert quantities to dictionary."""
+
     result = value
     if isinstance(value, pq.Quantity):
         result = {
@@ -79,7 +78,7 @@ def convert_quantities(value):
             "unit": value.dimensionality.string
         }
         if isinstance(value, pq.UncertainQuantity):
-            assert(value.dimensionality == value.uncertainty.dimensionality)
+            assert value.dimensionality == value.uncertainty.dimensionality
             result["uncertainty"] = value.uncertainty.magnitude.tolist()
     elif isinstance(value, np.ndarray):
         result = value.tolist()
@@ -105,10 +104,9 @@ def convert_quantities(value):
 
 
 def _assert_valid_name(name, container):
-    """
-    Check if name (dataset or group) is valid
-    """
+    """Check if name (dataset or group) is valid."""
     valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
+
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
@@ -126,10 +124,11 @@ def _assert_valid_name(name, container):
             if char.lower() not in valid_characters:
                 raise NameError("Name contains invalid character '" + char + "'.\n"
                                 + "Valid characters are:\n" + valid_characters)
-        if name.lower() in [nm.lower() for nm in container]:
-            raise NameError("An object with name (case independent) '" + name +
-                            "' already exists and cannot be made according " +
-                            "to the naming rule 'simple'.")
+
+            if name.lower() in [nm.lower() for nm in container]:
+                raise NameError("An object with name (case independent) '" + name +
+                                "' already exists and cannot be made according " +
+                                "to the naming rule 'simple'.")
 
 
     dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
@@ -146,10 +145,11 @@ def _assert_valid_name(name, container):
         raise NameError("Name cannot be '" + name + "'.")
 
 
+
 def _create_object_directory(directory, typename):
     """
     Create object directory and meta file if directory
-    don't already exist
+    don't already exist.
     """
     if os.path.exists(directory):
         raise IOError("The directory '" + directory + "' already exists")
@@ -263,9 +263,8 @@ def open_object(path):
 
 
 class Attribute(object):
-    """
-    Attribute class.
-    """
+    """Attribute class."""
+
     class Mode(Enum):
         ATTRIBUTES = 1
         METADATA = 2
@@ -278,7 +277,7 @@ class Attribute(object):
 
     def __getitem__(self, name=None):
         meta_data = self._open_or_create()
-        convert_back_quantities(meta_data)
+        meta_data = convert_back_quantities(meta_data)
         for i in self.path:
             meta_data = meta_data[i]
         if name is not None:
@@ -292,10 +291,11 @@ class Attribute(object):
     def __setitem__(self, name, value):
         meta_data = self._open_or_create()
 
-        if isinstance(name, np.integer):
-            key = int(name)
-        else:
-            key = name
+        # if isinstance(name, np.integer):
+        #     key = int(name)
+        # else:
+        #     key = name
+        key = name
 
         sub_meta_data = meta_data
         for i in self.path:
@@ -368,6 +368,7 @@ class Attribute(object):
         return len(self.keys())
 
 
+
 class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
@@ -388,7 +389,7 @@ class Object(object):
         self.object_name = object_name
         self.parent_path = parent_path
         self.relative_path = os.path.join(self.parent_path, self.object_name)
-        self.name = os.sep + self.relative_path
+        self.name = "/" + self.relative_path
         self.io_mode = io_mode
         self.naming_rule = naming_rule
 
@@ -419,12 +420,16 @@ class Object(object):
         return _metafile_from_directory(self.directory)
 
     def create_raw(self, name):
+        _assert_valid_name(name, self)
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
             raise IOError("Raw directory " + directory_name +
                           " already exists.")
         os.mkdir(directory_name)
-        return directory_name
+        return Raw(self.root_directory,
+                   self.parent_path,
+                   name,
+                   io_mode=self.io_mode)
 
     def require_raw(self, name):
         directory_name = os.path.join(self.directory, name)
@@ -443,13 +448,23 @@ class Raw(Object):
     def __init__(self, root_directory, parent_path, object_name, io_mode=None):
         super(Raw, self).__init__(root_directory=root_directory,
                                   parent_path=parent_path,
-                                  object_name=object_name, io_mode=io_mode)
+                                  object_name=object_name,
+                                  io_mode=io_mode)
+
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+
+        return False
+
 
 
 class Group(Object):
     """
     Container of other groups and datasets.
     """
+
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  naming_rule=None):
@@ -458,7 +473,8 @@ class Group(Object):
                                     object_name=object_name, io_mode=io_mode,
                                     naming_rule=naming_rule)
 
-    def create_dataset(self, name, data=None):
+    def create_dataset(self, name, shape=None, dtype=None,
+                       data=None, fillvalue=None):
         _assert_valid_name(name, self)
         dataset_directory = os.path.join(self.directory, name)
         _create_object_directory(dataset_directory, DATASET_TYPENAME)
@@ -467,13 +483,26 @@ class Group(Object):
                           parent_path=self.relative_path, object_name=name,
                           io_mode=self.io_mode,
                           naming_rule=self.naming_rule)
-        if data is not None:
-            dataset.set_data(data)
+
+        dataset.set_data(shape=shape, dtype=dtype, data=data, fillvalue=fillvalue)
+
         return dataset
 
     def create_group(self, name):
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            raise IOError("Cannot write data to file in read only ("r") mode")
+
+        if name.startswith("/"):
+            raise NotImplementedError("Creating a group in the absolute directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if name.endswith("/"):
+            name = name.rstrip("/")
+
         if "/" in name:
-            raise NotImplementedError("Intermediate groups can not yet be created automatically")
+            raise NotImplementedError("Intermediate groups can not yet be " +
+                                      "created automatically.")
 
         _assert_valid_name(name, self)
         group_directory = os.path.join(self.directory, name)
@@ -485,6 +514,14 @@ class Group(Object):
         return group
 
     def require_group(self, name):
+        if name.startswith("/"):
+            raise NotImplementedError("Requiring a group in the absolute directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if name.endswith("/"):
+            name = name.rstrip("/")
+
         group_directory = os.path.join(self.directory, name)
         if name in self:
             current_object = self[name]
@@ -508,37 +545,69 @@ class Group(Object):
                      io_mode=self.io_mode,
                      naming_rule=self.naming_rule)
 
-    def require_dataset(self, name, data=None):
+    def require_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
         if name in self:
             current_object = self[name]
-            if isinstance(current_object, Dataset) and data is not None:
-                current_object.set_data(data)
-                return current_object
-            elif isinstance(current_object, Dataset) and data is None:
+
+            if not isinstance(current_object, Dataset):
+                msg = "Incompatible object ({}) already exists".format(current_object.__class__.__name__)
+                raise TypeError(msg)
+
+
+            if shape is not None:
+                if not np.array_equal(shape, current_object.shape):
+                    msg = "Shapes do not match (existing {} vs new {})".format(current_object.shape, shape)
+                    raise TypeError(msg)
+
+            if dtype is not None:
+                if dtype != current_object.dtype:
+                    msg = "Datatypes do not exactly match (existing {} vs new {})".format(current_object.dtype, dtype)
+                    raise TypeError(msg)
+
+                # if not numpy.can_cast(dtype, dset.dtype):
+                #     msg = "Datatypes cannot be safely cast (existing {} vs new {})".format(dset.dtype, dtype)
+                #     raise TypeError(msg)
+
+            # TODO is this correct or should we throw a typeerror if data is not similar to data?
+            #      This can potentially overwrite data
+            if data is None:
                 return current_object
             else:
-                raise TypeError("An object with name '" + name + "' already "
-                                "exists, but it is not a Dataset.")
+                current_object.set_data(data)
+                return current_object
+
         else:
-            return self.create_dataset(name, data=data)
+            return self.create_dataset(name, shape=shape, dtype=dtype,
+                                       data=data, fillvalue=fillvalue)
+
 
     def __contains__(self, name):
         if len(name) < 1:
             return False
+
+        if name.startswith("/"):
+            raise NotImplementedError("Testing if name in a group in the root directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if name.endswith("/"):
+            name = name.rstrip("/")
+
         directory = os.path.join(self.directory, name)
+
         return _is_exdir_object(directory)
 
     def __getitem__(self, name):
-        if os.sep in name:
-            if name[0] == os.sep:
-                if isinstance(self, File):
-                    if name == "/":
-                        return self
-                    name = name[1:]
-                else:
-                    raise KeyError("To begin the tree structure with '" + os.sep + "' is only" +
-                                   " allowed for get item from root object")
-            name_split = name.split(os.sep, 1)
+        if name.endswith("/"):
+            name = name.rstrip("/")
+
+        if name.startswith("/"):
+            raise NotImplementedError("Getting a group in the root directory " +
+                                      "from a subgroup is currently not supported " +
+                                      "and is unlikely to be implemented.")
+
+        if "/" in name:
+            name_split = name.split("/", 1)
             if len(name_split) == 2:
                 item = self[name_split[0]]
                 return item[name_split[1]]
@@ -578,42 +647,45 @@ class Group(Object):
             print("Object", name, "has data type", meta_data[EXDIR_METANAME][TYPE_METANAME])
             raise NotImplementedError("Cannot open objects of this type")
 
+
     def __setitem__(self, name, value):
         if name not in self:
-            self.create_dataset(name, value)
+            self.create_dataset(name, data=value)
         else:
-            current_item = self.__getitem__(name)
-            if isinstance(current_item, Dataset):
-                print("Is dataset")
-            else:
-                print("Data type")
-                raise NotImplementedError("Only dataset writing implemented")
+            # TODO overwrite or not?
+            raise RuntimeError("Unable to assign value, {} already exists".format(name))
+
+            # current_item = self.__getitem__(name)
+            # if isinstance(current_item, Dataset):
+            #     current_item.set_data(data=value)
+            # else:
+            #     print("Data type")
+            #     raise NotImplementedError("Only dataset writing implemented")
+
 
     def keys(self):
-        for name in self:
-            if name in self:
-                yield name
+        return KeysView(self)
 
     def items(self):
-        for name in self:
-            if name in self:
-                yield name, self[name]
+        return ItemsView(self)
 
     def values(self):
-        for name in self:
-            if name in self:
-                yield self[name]
+        return ValuesView(self)
 
     def __iter__(self):
         for name in natural_sort(os.listdir(self.directory)):
             if name in self:
                 yield name
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return False
+
+
 
 class File(Group):
-    """
-    Exdir file object
-    """
+    """Exdir file object."""
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  naming_rule=None):
@@ -622,8 +694,8 @@ class File(Group):
         mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
-            raise IOError('IO mode "' + mode + '" not recognized,' +
-                          'mode must be one of {}'.format(recognized_modes))
+            raise ValueError('IO mode "' + mode + '" not recognized,' +
+                             'mode must be one of {}'.format(recognized_modes))
         if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY
         else:
@@ -639,9 +711,9 @@ class File(Group):
         elif naming_rule == 'none':
             self.naming_rule = self.NamingRule.NONE
         else:
-            raise IOError('IO name rule "' + naming_rule + '" not recognized,' +
-                          'name rule must be one of "strict", "simple", ' +
-                          '"thorough", "none"')
+            raise ValueError('IO name rule "' + naming_rule + '" not recognized,' +
+                             'name rule must be one of "strict", "simple", ' +
+                             '"thorough", "none"')
 
         super(File, self).__init__(root_directory=directory,
                                    parent_path="", object_name="",
@@ -658,6 +730,9 @@ class File(Group):
                 raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
+
+
+
 
         should_create_directory = False
 
@@ -685,7 +760,42 @@ class File(Group):
             if not already_exists:
                 should_create_directory = True
 
+
+        valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-.")
         if should_create_directory:
+            path, name = os.path.split(directory)
+            if path == "":
+                path = "."
+
+            if self.naming_rule == Object.NamingRule.THOROUGH:
+                raise NotImplementedError
+
+            elif self.naming_rule == Object.NamingRule.STRICT:
+                for char in name:
+                    if char not in valid_characters:
+                        raise NameError("Name contains invalid character '" + char + "'.\n"
+                                        + "Valid characters are:\n" + valid_characters)
+
+            elif self.naming_rule == Object.NamingRule.SIMPLE:
+                for char in name:
+                    if char.lower() not in valid_characters:
+                        raise FileExistsError("Name contains invalid character '" + char + "'.\n"
+                                              + "Valid characters are:\n" + valid_characters)
+
+                    for item in os.listdir(path):
+                        if name.lower() == item.lower():
+                            raise NameError("A directory with name (case independent) '" + name +
+                                            "' already exists and cannot be made according " +
+                                            "to the naming rule 'simple'.")
+
+            invalid_names = [META_FILENAME,
+                             ATTRIBUTES_FILENAME,
+                             RAW_FOLDER_NAME]
+
+            if name in invalid_names:
+                raise NameError("Name cannot be '" + name + "'.")
+
+
             _create_object_directory(directory, FILE_TYPENAME)
 
     def close(self):
@@ -693,12 +803,46 @@ class File(Group):
         pass
 
 
+    def create_group(self, name):
+        if name.startswith("/"):
+            name = name[1:]
+
+        return super().create_group(name)
+
+    def require_group(self, name):
+        if name.startswith("/"):
+            name = name[1:]
+
+        return super().require_group(name)
+
+    def __getitem__(self, name):
+        if name.startswith("/"):
+            if name == "/":
+                return self
+            else:
+                name = name[1:]
+
+        return super().__getitem__(name)
+
+
+    def __contains__(self, name):
+        if name.startswith("/"):
+            if name == "/":
+                return True
+            name = name[1:]
+
+        return super().__contains__(name)
+
+
 class Dataset(Object):
     """
     Dataset class
 
     Warning: MODIFIES VIEW!!!!!!! different from h5py
-    Warning: Possible to overwrite existing dataset. This differs from the h5py API. However, it should only cause issues with existing code if said code expects this to fail."
+    Warning: Possible to overwrite existing dataset.
+             This differs from the h5py API. However,
+             it should only cause issues with existing
+             code if said code expects this to fail."
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  naming_rule=None):
@@ -714,28 +858,63 @@ class Dataset(Object):
         else:
             self._mmap_mode = "r+"
 
-    def set_data(self, data):
+    # TODO make support for creating a quantities array
+    def set_data(self, shape=None, dtype=None, data=None, fillvalue=None):
         if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ("r") mode")
-        if isinstance(data, pq.Quantity):
-            result = data.magnitude
-            self.attrs["unit"] = data.dimensionality.string
-            if isinstance(data, pq.UncertainQuantity):
-                self.attrs["uncertainty"] = data.uncertainty
+            raise IOError("Cannot write data to file in read only ('r') mode")
+
+
+        if data is not None:
+            if isinstance(data, pq.Quantity):
+                result = data.magnitude
+                self.attrs["unit"] = data.dimensionality.string
+                if isinstance(data, pq.UncertainQuantity):
+                    self.attrs["uncertainty"] = data.uncertainty
+            else:
+                result = data
+
+            if not isinstance(result, np.ndarray):
+                result = np.asarray(data, order="C", dtype=dtype)
+
+            if shape is not None and result.shape != shape:
+                result = np.reshape(result, shape)
         else:
-            result = data
+            if shape is None:
+                result = None
+            else:
+                fillvalue = fillvalue or 0.0
+                result = np.full(shape, fillvalue, dtype=dtype)
+
         if result is not None:
             np.save(self.data_filename, result)
 
+            # TODO should we have this line?
+            #      Might lead to bugs where we create data, but havent loaded it
+            #      but requires the data always stay in memory
+            # self._data = result
+
+
     def __getitem__(self, args):
         if not os.path.exists(self.data_filename):
-            return np.array()
+            return np.array([])
+
         if self._data is None:
             self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+
         if len(self._data.shape) == 0:
-            return self._data
+            values = self._data
         else:
-            return self._data[args]
+            values = self._data[args]
+
+        if "unit" in self.attrs:
+            item_dict = {"value": values,
+                         "unit": self.attrs["unit"]}
+            if "uncertainty" in self.attrs:
+                item_dict["uncertainty"] = self.attrs["uncertainty"]
+
+            values = convert_back_quantities(item_dict)
+
+        return values
 
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:
@@ -755,3 +934,48 @@ class Dataset(Object):
     @property
     def shape(self):
         return self[:].shape
+
+    @property
+    def size(self):
+        return self[:].size
+
+    @property
+    def dtype(self):
+        return self[:].dtype
+
+
+    def __eq__(self, other):
+        self[:]
+        if isinstance(other, self.__class__):
+            other[:]
+            if self.__dict__.keys() != other.__dict__.keys():
+                return False
+
+            for key in self.__dict__:
+                if key == "_data":
+                    if not np.array_equal(self.__dict__["_data"], other.__dict__["_data"]):
+                        return False
+                else:
+                    if self.__dict__[key] != other.__dict__[key]:
+                        return False
+            return True
+        else:
+            return False
+
+    def __len__(self):
+         """ The size of the first axis.  TypeError if scalar."""
+         if len(self.shape) == 0:
+                raise TypeError("Attempt to take len() of scalar dataset")
+         return self.shape[0]
+
+
+    def __iter__(self):
+        """Iterate over the first axis.  TypeError if scalar.
+        WARNING: Modifications to the yielded data are *NOT* written to file.
+        """
+
+        if len(self.shape) == 0:
+            raise TypeError("Can't iterate over a scalar dataset")
+
+        for i in range(self.shape[0]):
+            yield self[i]
