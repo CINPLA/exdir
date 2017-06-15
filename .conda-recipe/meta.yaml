@@ -1,14 +1,16 @@
 package:
   name: exdir
   version: {{ environ.get("GIT_TAG", "0.0.0_custom")|replace("v", "")|replace("-", "_") }}
-  
+
 source:
   git_url: ..
- 
+
 build:
   # noarch: python  # TODO Add back noarch when it works properly on Windows,
                     # we are converting packages manually now
-  script: python setup.py install
+  script:
+    - pip install git+https://github.com/python-quantities/python-quantities.git
+    - python setup.py install
 
 requirements:
   build:
@@ -21,7 +23,6 @@ requirements:
     - pip
     - numpy
     - scipy
-    - quantities
     - pyyaml
 
 test:
