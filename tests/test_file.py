@@ -15,6 +15,7 @@ import os
 
 from exdir.core import File, Group
 from exdir.core.exdir_object import _create_object_directory, is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
+import exdir.core.filename_validation as fv
 
 import numpy as np
 
@@ -167,55 +168,48 @@ def test_file_close(setup_teardown_folder):
     f.close()
 
 
-def test_naming_rule_simple(setup_teardown_folder):
-    """Test naming rule simple."""
-    f = File(pytest.TESTFILE, naming_rule='simple')
-    f.close()
-
-    with pytest.raises(NameError):
-        File(pytest.TESTFILE[:-7] + "T.exdir", naming_rule='simple')
-        File(pytest.TESTFILE[:-7] + "#.exdir", naming_rule='simple')
-
-
-def test_naming_rule_strict(setup_teardown_folder):
-    """Test naming rule strict."""
-    f = File(pytest.TESTFILE, naming_rule='strict')
-    f.close()
-
-    with pytest.raises(NameError):
-        File(pytest.TESTFILE+"A" , naming_rule='strict')
-
-
-def test_naming_rule_thorough(setup_teardown_folder):
+def test_validate_name_thorough(setup_teardown_folder):
     """Test naming rule thorough."""
+    f = File(pytest.TESTFILE, validate_name=fv.thorough)
+    f.close()
 
-    with pytest.raises(NotImplementedError):
-        File(pytest.TESTFILE, naming_rule='thorough')
+    with pytest.raises(NameError):
+        File(pytest.TESTFILE[:-7] + "T.exdir", validate_name=fv.thorough)
+        File(pytest.TESTFILE[:-7] + "#.exdir", validate_name=fv.thorough)
+
+
+def test_validate_name_strict(setup_teardown_folder):
+    """Test naming rule strict."""
+    f = File(pytest.TESTFILE, validate_name=fv.strict)
+    f.close()
+
+    with pytest.raises(NameError):
+        File(pytest.TESTFILE+"A" , validate_name=fv.strict)
 
 
 
-def test_naming_rule_error(setup_teardown_folder):
+def test_validate_name_error(setup_teardown_folder):
     """Test naming rule with error."""
 
     with pytest.raises(ValueError):
-        File(pytest.TESTFILE, naming_rule='Error rule')
+        File(pytest.TESTFILE, validate_name='Error rule')
 
 
-def test_naming_rule_none(setup_teardown_folder):
+def test_validate_name_none(setup_teardown_folder):
     """Test naming rule with error."""
 
-    File(pytest.TESTFILE+"&()", naming_rule='none')
+    File(pytest.TESTFILE+"&()", validate_name=fv.none)
 
 
 
-def test_opening_with_different_naming_rule(setup_teardown_folder):
+def test_opening_with_different_validate_name(setup_teardown_folder):
     """Test opening with wrong naming rule."""
 
-    f = File(pytest.TESTFILE, "w", naming_rule='none')
+    f = File(pytest.TESTFILE, "w", validate_name=fv.none)
     f.create_group("AAA")
     f.close()
 
-    f = File(pytest.TESTFILE, "a", naming_rule='simple')
+    f = File(pytest.TESTFILE, "a", validate_name=fv.thorough)
     with pytest.raises(NameError):
         f.create_group("aaa")
     f.close()
@@ -248,7 +242,7 @@ def test_require_group(setup_teardown_file):
 
 
 def test_open(setup_teardown_file):
-    """Simple obj[name] opening."""
+    """thorough obj[name] opening."""
     f = setup_teardown_file
     grp = f.create_group("foo")
 

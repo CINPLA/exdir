@@ -9,6 +9,7 @@ import numpy as np
 import exdir.core
 import exdir.core.exdir_object as exob
 import exdir.core.quantities_conversion as pqc
+from exdir.core import filename_validation as fv
 
 from conftest import remove
 
@@ -88,7 +89,7 @@ def test_convert_back_quantities():
 
 
 def test_assert_valid_name_simple(setup_teardown_folder):
-    f = exdir.File(pytest.TESTFILE, naming_rule='simple')
+    f = exdir.File(pytest.TESTFILE, validate_name=fv.thorough)
     exob._assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-", f)
     with pytest.raises(NameError):
         exob._assert_valid_name("", f)
@@ -112,7 +113,7 @@ def test_assert_valid_name_simple(setup_teardown_folder):
 
 
 def test_assert_valid_name_none(setup_teardown_folder):
-    f = exdir.File(pytest.TESTFILE, naming_rule='none')
+    f = exdir.File(pytest.TESTFILE, validate_name=fv.minimal)
     valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
     exob._assert_valid_name(valid_name, f)

@@ -26,11 +26,11 @@ class Group(Object):
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 naming_rule=None):
+                 validate_name=None):
         super(Group, self).__init__(root_directory=root_directory,
                                     parent_path=parent_path,
                                     object_name=object_name, io_mode=io_mode,
-                                    naming_rule=naming_rule)
+                                    validate_name=validate_name)
 
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
@@ -41,7 +41,7 @@ class Group(Object):
         dataset = Dataset(root_directory=self.root_directory,
                           parent_path=self.relative_path, object_name=name,
                           io_mode=self.io_mode,
-                          naming_rule=self.naming_rule)
+                          validate_name=self.validate_name)
 
         dataset.set_data(shape=shape, dtype=dtype, data=data, fillvalue=fillvalue)
 
@@ -69,7 +69,7 @@ class Group(Object):
         group = Group(root_directory=self.root_directory,
                       parent_path=self.relative_path, object_name=name,
                       io_mode=self.io_mode,
-                      naming_rule=self.naming_rule)
+                      validate_name=self.validate_name)
         return group
 
     def require_group(self, name):
@@ -102,7 +102,7 @@ class Group(Object):
         return Group(root_directory=self.root_directory,
                      parent_path=parent_parent, object_name=parent,
                      io_mode=self.io_mode,
-                     naming_rule=self.naming_rule)
+                     validate_name=self.validate_name)
 
     def require_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
         if name in self:
@@ -193,13 +193,13 @@ class Group(Object):
                            parent_path=self.relative_path,
                            object_name=name,
                            io_mode=self.io_mode,
-                           naming_rule=self.naming_rule)
+                           validate_name=self.validate_name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return Group(root_directory=self.root_directory,
                          parent_path=self.relative_path,
                          object_name=name,
                          io_mode=self.io_mode,
-                         naming_rule=self.naming_rule)
+                         validate_name=self.validate_name)
         else:
             print("Object", name, "has data type", meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME])
             raise NotImplementedError("Cannot open objects of this type")

@@ -11,7 +11,7 @@ class File(Group):
     """Exdir file object."""
 
     def __init__(self, directory, mode=None, allow_remove=False,
-                 naming_rule=None):
+                 validate_name=None):
         if not directory.endswith(".exdir"):
             directory = directory + ".exdir"
         mode = mode or 'a'
@@ -27,7 +27,7 @@ class File(Group):
         super(File, self).__init__(root_directory=directory,
                                    parent_path="", object_name="",
                                    io_mode=self.io_mode,
-                                   naming_rule=naming_rule)
+                                   validate_name=validate_name)
 
         already_exists = os.path.exists(directory)
         if already_exists:
@@ -71,7 +71,7 @@ class File(Group):
             if path == "":
                 path = "."
 
-            self.naming_rule(path, name)
+            self.validate_name(path, name)
 
             exob._create_object_directory(directory, exob.FILE_TYPENAME)
 

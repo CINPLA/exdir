@@ -25,7 +25,7 @@ FILE_TYPENAME = "file"
 
 def _assert_valid_name(name, container):
     """Check if name (dataset or group) is valid."""
-    container.naming_rule(container.directory, name)
+    container.validate_name(container.directory, name)
 
 
 def _create_object_directory(directory, typename):
@@ -151,8 +151,8 @@ class Object(abstract_object.AbstractObject):
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 naming_rule=None):
-        super().__init__(root_directory, parent_path, object_name, io_mode, naming_rule)
+                 validate_name=None):
+        super().__init__(root_directory, parent_path, object_name, io_mode, validate_name)
 
     @property
     def attrs(self):

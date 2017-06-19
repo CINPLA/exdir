@@ -15,6 +15,7 @@ import pytest
 from collections.abc import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
+import exdir.core.filename_validation as fv
 from conftest import remove
 
 # tests for Group class
@@ -353,15 +354,10 @@ def test_eq(setup_teardown_file):
     assert grp == grp_parent
 
 
-
-
-
 # Feature: Test different naming rules
-
-
-def test_naming_rule_simple(setup_teardown_folder):
+def test_validate_name_simple(setup_teardown_folder):
     """Test naming rule simple."""
-    f = File(pytest.TESTFILE, naming_rule='simple')
+    f = File(pytest.TESTFILE, validate_name=fv.thorough)
     grp = f.create_group("test")
 
     grp.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
@@ -372,7 +368,7 @@ def test_naming_rule_simple(setup_teardown_folder):
     f.close()
     remove(pytest.TESTFILE)
 
-    f = File(pytest.TESTFILE, naming_rule='simple')
+    f = File(pytest.TESTFILE, validate_name=fv.thorough)
     grp = f.create_group("test")
     grp.create_group("aa")
 
@@ -380,11 +376,9 @@ def test_naming_rule_simple(setup_teardown_folder):
         grp.create_group("AA")
 
 
-
-
-def test_naming_rule_strict(setup_teardown_folder):
+def test_validate_name_strict(setup_teardown_folder):
     """Test naming rule strict."""
-    f = File(pytest.TESTFILE, naming_rule='strict')
+    f = File(pytest.TESTFILE, validate_name=fv.strict)
     f.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
     with pytest.raises(NameError):
@@ -393,19 +387,9 @@ def test_naming_rule_strict(setup_teardown_folder):
     f.close()
 
 
-
-# TODO update this when naming rule thorough is implemented
-def test_naming_rule_thorough(setup_teardown_folder):
-    """Test naming rule thorough."""
-
-    with pytest.raises(NotImplementedError):
-        File(pytest.TESTFILE, naming_rule='thorough')
-
-
-
-def test_naming_rule_none(setup_teardown_folder):
+def test_validate_name_none(setup_teardown_folder):
     """Test naming rule with error."""
-    f = File(pytest.TESTFILE, naming_rule='none')
+    f = File(pytest.TESTFILE, validate_name=fv.none)
     f.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
     f.create_group("ABNCUIY&z()(d()&")
 

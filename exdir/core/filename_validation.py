@@ -11,7 +11,7 @@ class NamingRule(Enum):
     NONE = 4
 
 
-def common(path, name):
+def minimal(path, name):
     if len(name) < 1:
         raise NameError("Name cannot be empty.")
 
@@ -35,7 +35,7 @@ def common(path, name):
 
 
 def strict(path, name):
-    common(path, name)
+    minimal(path, name)
 
     for char in name:
         if char not in VALID_CHARACTERS:
@@ -43,8 +43,8 @@ def strict(path, name):
                             "Valid characters are:\n" + VALID_CHARACTERS)
 
 
-def simple(path, name):
-    common(path, name)
+def thorough(path, name):
+    minimal(path, name)
 
     for char in name:
         if char.lower() not in VALID_CHARACTERS:
@@ -58,12 +58,5 @@ def simple(path, name):
                                 "to the naming rule 'simple'.")
 
 
-def thorough(path, name):
-    common(path, name)
-
-    raise NotImplementedError
-
-
 def none(path, name):
-    common(path, name)
     pass

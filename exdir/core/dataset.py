@@ -18,12 +18,12 @@ class Dataset(exdir_object.Object):
              code if said code expects this to fail."
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 naming_rule=None):
+                 validate_name=None):
         super(Dataset, self).__init__(root_directory=root_directory,
                                       parent_path=parent_path,
                                       object_name=object_name,
                                       io_mode=io_mode,
-                                      naming_rule=naming_rule)
+                                      validate_name=validate_name)
         self.data_filename = os.path.join(self.directory, "data.npy")
         self._data = None
         if self.io_mode == self.OpenMode.READ_ONLY:

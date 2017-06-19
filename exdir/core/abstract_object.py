@@ -14,7 +14,7 @@ class AbstractObject(object):
         READ_ONLY = 2
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 naming_rule=None):
+                 validate_name=None):
         self.root_directory = root_directory
         self.object_name = object_name
         self.parent_path = parent_path
@@ -22,29 +22,27 @@ class AbstractObject(object):
         self.name = "/" + self.relative_path
         self.io_mode = io_mode
 
-        naming_rule = naming_rule or filename_validation.simple
+        validate_name = validate_name or filename_validation.thorough
 
-        if isinstance(naming_rule, str):
-            if naming_rule == 'simple':
-                naming_rule = filename_validation.simple
-            elif naming_rule == 'strict':
-                naming_rule = filename_validation.strict
-            elif naming_rule == 'thorough':
-                naming_rule = filename_validation.thorough
-            elif naming_rule == 'none':
-                naming_rule = filename_validation.none
+        if isinstance(validate_name, str):
+            if validate_name == 'simple':
+                validate_name = filename_validation.thorough
+            elif validate_name == 'strict':
+                validate_name = filename_validation.strict
+            elif validate_name == 'none':
+                validate_name = filename_validation.none
             else:
-                raise ValueError('IO name rule "' + naming_rule + '" not recognized,' +
+                raise ValueError('IO name rule "' + validate_name + '" not recognized,' +
                                  'name rule must be one of "strict", "simple", ' +
                                  '"thorough", "none"')
 
-            warnings.warn(DeprecationWarning(
-                "WARNING: naming_rule should be set to one of the functions in "
-                "the filename_validation module. "
-                "Defining naming rule by name is no longer supported."
-            ))
+            warnings.warn(
+                "WARNING: validate_name should be set to one of the functions in " +
+                "the filename_validation module. " +
+                "Defining naming rule by string is no longer supported."
+            )
 
-        self.naming_rule = naming_rule
+        self.validate_name = validate_name
 
     @property
     def directory(self):
