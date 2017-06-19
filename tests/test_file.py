@@ -14,7 +14,7 @@ import pytest
 import os
 
 from exdir.core import File, Group
-from exdir.core.exdir_object import _create_object_directory, _is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
+from exdir.core.exdir_object import _create_object_directory, is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
 
 import numpy as np
 
@@ -26,22 +26,22 @@ def test_file_init(setup_teardown_folder):
 
     f = File(no_exdir, mode="w")
     f.close()
-    assert _is_nonraw_object_directory(no_exdir + ".exdir")
+    assert is_nonraw_object_directory(no_exdir + ".exdir")
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="w")
     f.close()
-    assert _is_nonraw_object_directory(pytest.TESTFILE)
+    assert is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert _is_nonraw_object_directory(pytest.TESTFILE)
+    assert is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     f = File(pytest.TESTFILE, mode="a")
     f.close()
-    assert _is_nonraw_object_directory(pytest.TESTFILE)
+    assert is_nonraw_object_directory(pytest.TESTFILE)
     remove(pytest.TESTFILE)
 
     os.makedirs(pytest.TESTFILE)
@@ -173,8 +173,8 @@ def test_naming_rule_simple(setup_teardown_folder):
     f.close()
 
     with pytest.raises(NameError):
-        File(pytest.TESTFILE[:-7]+"T.exdir", naming_rule='simple')
-        File(pytest.TESTFILE[:-7]+"#.exdir", naming_rule='simple')
+        File(pytest.TESTFILE[:-7] + "T.exdir", naming_rule='simple')
+        File(pytest.TESTFILE[:-7] + "#.exdir", naming_rule='simple')
 
 
 def test_naming_rule_strict(setup_teardown_folder):

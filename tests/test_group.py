@@ -74,7 +74,7 @@ def test_create_exception(setup_teardown_file):
 
     grp.create_group("foo")
 
-    with pytest.raises(NameError):
+    with pytest.raises(FileExistsError):
         grp.create_group("foo")
         grp.create_group("foo/")
 
@@ -410,5 +410,3 @@ def test_naming_rule_none(setup_teardown_folder):
     f.create_group("ABNCUIY&z()(d()&")
 
     f.close()
-
-

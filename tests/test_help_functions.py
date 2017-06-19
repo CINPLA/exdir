@@ -175,17 +175,17 @@ def test_metafile_from_directory(setup_teardown_folder):
     assert metafile == compare_metafile
 
 
-def test_is_nonraw_object_directory(setup_teardown_folder):
+def testis_nonraw_object_directory(setup_teardown_folder):
     os.makedirs(pytest.TESTDIR)
 
-    result = exob._is_nonraw_object_directory(pytest.TESTDIR)
+    result = exob.is_nonraw_object_directory(pytest.TESTDIR)
     assert result is False
 
     compare_metafile = os.path.join(pytest.TESTDIR, exob.META_FILENAME)
     with open(compare_metafile, "w") as f:
         pass
 
-    result = exob._is_nonraw_object_directory(pytest.TESTDIR)
+    result = exob.is_nonraw_object_directory(pytest.TESTDIR)
     assert result is False
 
     remove(pytest.TESTFILE)
@@ -199,7 +199,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
                        default_flow_style=False,
                        allow_unicode=True)
 
-    result = exob._is_nonraw_object_directory(pytest.TESTDIR)
+    result = exob.is_nonraw_object_directory(pytest.TESTDIR)
     assert result is False
 
     remove(pytest.TESTFILE)
@@ -214,7 +214,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
                        default_flow_style=False,
                        allow_unicode=True)
 
-    result = exob._is_nonraw_object_directory(pytest.TESTDIR)
+    result = exob.is_nonraw_object_directory(pytest.TESTDIR)
     assert result is False
 
     remove(pytest.TESTFILE)
@@ -229,13 +229,13 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
                        default_flow_style=False,
                        allow_unicode=True)
 
-    result = exob._is_nonraw_object_directory(pytest.TESTDIR)
+    result = exob.is_nonraw_object_directory(pytest.TESTDIR)
     assert result is True
 
     remove(pytest.TESTDIR)
 
     exob._create_object_directory(pytest.TESTDIR, exob.DATASET_TYPENAME)
-    result = exob._is_nonraw_object_directory(pytest.TESTDIR)
+    result = exob.is_nonraw_object_directory(pytest.TESTDIR)
     assert result is True
 
 

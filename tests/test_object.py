@@ -16,7 +16,7 @@ import yaml
 
 from exdir.core import Object, Attribute
 # TODO Remove this import and use import <> as <> instead
-from exdir.core.exdir_object import DATASET_TYPENAME, GROUP_TYPENAME, ATTRIBUTES_FILENAME, META_FILENAME, _create_object_directory, _is_nonraw_object_directory
+from exdir.core.exdir_object import DATASET_TYPENAME, GROUP_TYPENAME, ATTRIBUTES_FILENAME, META_FILENAME, _create_object_directory, is_nonraw_object_directory
 import exdir.core.exdir_object as exob
 
 
@@ -44,7 +44,7 @@ def test_object_attrs(setup_teardown_folder):
     assert obj.attrs.mode.value == 1
     obj.attrs = "test value"
 
-    assert _is_nonraw_object_directory(os.path.join(pytest.TESTDIR, "test_object"))
+    assert is_nonraw_object_directory(os.path.join(pytest.TESTDIR, "test_object"))
 
     with open(os.path.join(pytest.TESTDIR, "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
@@ -93,7 +93,7 @@ def test_object_create_raw(setup_teardown_folder):
     obj.create_raw("test_raw")
     assert os.path.isdir(os.path.join(pytest.TESTDIR, "test_object", "test_raw"))
 
-    with pytest.raises(IOError):
+    with pytest.raises(FileExistsError):
         obj.create_raw("test_raw")
 
 

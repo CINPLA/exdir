@@ -152,7 +152,7 @@ class Group(Object):
 
         directory = os.path.join(self.directory, name)
 
-        return exob._is_exdir_object(directory)
+        return exob.is_exdir_object(directory)
 
     def __getitem__(self, name):
         if name.endswith("/"):
@@ -175,13 +175,13 @@ class Group(Object):
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
 
-        if exob._is_raw_object_directory(directory):
+        if exob.is_raw_object_directory(directory):
             return raw.Raw(root_directory=self.root_directory,
                        parent_path=self.relative_path,
                        object_name=name,
                        io_mode=self.io_mode)
 
-        if not exob._is_nonraw_object_directory(directory):
+        if not exob.is_nonraw_object_directory(directory):
             raise IOError("Directory '" + directory +
                           "' is not a valid exdir object.")
 

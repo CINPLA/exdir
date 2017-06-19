@@ -3,6 +3,7 @@ import os
 import yaml
 
 from . import abstract_object
+from . import exdir_object
 from . import raw
 from .attribute import Attribute
 
@@ -24,42 +25,7 @@ FILE_TYPENAME = "file"
 
 def _assert_valid_name(name, container):
     """Check if name (dataset or group) is valid."""
-    valid_characters = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
-
-    if len(name) < 1:
-        raise NameError("Name cannot be empty.")
-
-    if container.naming_rule == Object.NamingRule.THOROUGH:
-        raise NotImplementedError
-
-    if container.naming_rule == Object.NamingRule.STRICT:
-        for char in name:
-            if char not in valid_characters:
-                raise NameError("Name contains invalid character '" + char + "'.\n" +
-                                "Valid characters are:\n" + valid_characters)
-
-    if container.naming_rule == Object.NamingRule.SIMPLE:
-        for char in name:
-            if char.lower() not in valid_characters:
-                raise NameError("Name contains invalid character '" + char + "'.\n" +
-                                "Valid characters are:\n" + valid_characters)
-
-            if name.lower() in [nm.lower() for nm in container]:
-                raise NameError("An object with name (case independent) '" + name +
-                                "' already exists and cannot be made according " +
-                                "to the naming rule 'simple'.")
-
-    dosnames = ["CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
-                "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-                "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",
-                "LPT7", "LPT8", "LPT9"]
-
-    invalid_names = [META_FILENAME,
-                     ATTRIBUTES_FILENAME,
-                     RAW_FOLDER_NAME]
-
-    if name in invalid_names:
-        raise NameError("Name cannot be '" + name + "'.")
+    container.naming_rule(container.directory, name)
 
 
 def _create_object_directory(directory, typename):
@@ -90,7 +56,7 @@ def _metafile_from_directory(directory):
     return os.path.join(directory, META_FILENAME)
 
 
-def _is_exdir_object(directory):
+def is_exdir_object(directory):
     """
     WARNING: Does not test if inside exdir directory,
     only if the object can be an exdir object (i.e. a directory).
@@ -98,7 +64,7 @@ def _is_exdir_object(directory):
     return os.path.isdir(directory)
 
 
-def _is_nonraw_object_directory(directory):
+def is_nonraw_object_directory(directory):
     meta_filename = os.path.join(directory, META_FILENAME)
     if not os.path.exists(meta_filename):
         return False
@@ -118,8 +84,8 @@ def _is_nonraw_object_directory(directory):
     return True
 
 
-def _is_raw_object_directory(directory):
-    return _is_exdir_object(directory) and not _is_nonraw_object_directory(directory)
+def is_raw_object_directory(directory):
+    return is_exdir_object(directory) and not is_nonraw_object_directory(directory)
 
 
 def root_directory(path):
@@ -133,7 +99,7 @@ def root_directory(path):
     while not found:
         if os.path.dirname(path) == path:  # parent is self
             return None
-        valid = _is_nonraw_object_directory(path)
+        valid = is_nonraw_object_directory(path)
         if not valid:
             path = os.path.dirname(os.path.abspath(path))
             continue
@@ -218,8 +184,7 @@ class Object(abstract_object.AbstractObject):
         _assert_valid_name(name, self)
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
-            raise IOError("Raw directory " + directory_name +
-                          " already exists.")
+            raise FileExistsError("Raw directory " + directory_name + " already exists.")
         os.mkdir(directory_name)
         return raw.Raw(self.root_directory,
                        self.parent_path,
@@ -229,6 +194,8 @@ class Object(abstract_object.AbstractObject):
     def require_raw(self, name):
         directory_name = os.path.join(self.directory, name)
         if os.path.exists(directory_name):
+            if exdir_object.is_nonraw_object_directory(directory_name):
+                raise FileExistsError("Directory '" + directory_name + "' already exists, but is not raw.")
             return directory_name
-        else:
-            return self.create_raw(name)
+
+        return self.create_raw(name)
