@@ -15,8 +15,9 @@ import os
 import yaml
 
 from exdir.core import Object, Attribute
-from exdir.core import DATASET_TYPENAME, GROUP_TYPENAME, ATTRIBUTES_FILENAME, META_FILENAME
-from exdir.core import _create_object_directory, _is_nonraw_object_directory
+# TODO Remove this import and use import <> as <> instead
+from exdir.core.exdir_object import DATASET_TYPENAME, GROUP_TYPENAME, ATTRIBUTES_FILENAME, META_FILENAME, _create_object_directory, _is_nonraw_object_directory
+import exdir.core.exdir_object as exob
 
 
 # tests for Object class

@@ -14,8 +14,7 @@ import pytest
 import os
 
 from exdir.core import File, Group
-from exdir.core import DATASET_TYPENAME, FILE_TYPENAME
-from exdir.core import _create_object_directory, _is_nonraw_object_directory
+from exdir.core.exdir_object import _create_object_directory, _is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
 
 import numpy as np
 
