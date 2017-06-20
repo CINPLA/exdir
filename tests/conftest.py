@@ -2,7 +2,7 @@ import pytest
 import shutil
 import os
 
-from exdir.core import File
+import exdir
 
 
 def remove(name):
@@ -13,7 +13,7 @@ def remove(name):
 
 @pytest.fixture
 def setup_teardown_folder(tmpdir):
-    testpath = tmpdir.mkdir("test")
+    testpath = str(tmpdir.mkdir("test"))
     testdir = os.path.join(testpath, "exdir_dir")
     testfile = os.path.join(testpath, "test.exdir")
 
@@ -28,7 +28,7 @@ def setup_teardown_folder(tmpdir):
 
 @pytest.fixture
 def setup_teardown_file(tmpdir):
-    testpath = tmpdir.mkdir("test")
+    testpath = str(tmpdir.mkdir("test"))
     testdir = os.path.join(testpath, "exdir_dir")
     testfile = os.path.join(testpath, "test.exdir")
 
@@ -36,10 +36,28 @@ def setup_teardown_file(tmpdir):
 
     os.makedirs(testpath)
 
-    f = File(testfile, mode="w")
+    f = exdir.File(testfile, mode="w")
 
     yield testpath, testfile, testdir, f
 
     f.close()
 
     remove(testpath)
+
+@pytest.fixture
+def exdir_tmpfile(tmpdir):
+    testpath = str(tmpdir.mkdir("test").join("test.exdir"))
+    f = exdir.File(testpath, mode="w")
+    yield f
+    f.close()
+    remove(testpath)
+
+
+@pytest.fixture
+def h5py_tmpfile(tmpdir):
+    import h5py
+    testpath = str(tmpdir.mkdir("test").join("test.h5"))
+    f = h5py.File(testpath, mode="w")
+    yield f
+    f.close()
+    os.remove(testpath)
