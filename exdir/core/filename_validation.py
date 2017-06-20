@@ -4,6 +4,7 @@ from . import exdir_object as exob
 
 VALID_CHARACTERS = ("abcdefghijklmnopqrstuvwxyz1234567890_-.")
 
+
 class NamingRule(Enum):
     SIMPLE = 1
     STRICT = 2

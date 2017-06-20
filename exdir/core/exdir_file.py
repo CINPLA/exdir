@@ -35,7 +35,8 @@ class File(Group):
                 raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
-            if self.meta[exob.EXDIR_METANAME][exob.TYPE_METANAME] != exob.FILE_TYPENAME:  # TODO consider extracting this function to avoid cyclic imports
+            # TODO consider extracting this function to avoid cyclic imports
+            if self.meta[exob.EXDIR_METANAME][exob.TYPE_METANAME] != exob.FILE_TYPENAME:
                 raise FileExistsError("Path '" + directory +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")

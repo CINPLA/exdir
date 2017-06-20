@@ -4,6 +4,8 @@ import yaml
 import warnings
 from . import filename_validation
 
+# NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
+# TODO move this back to Object once circular imports are figured out
 
 class AbstractObject(object):
     """
