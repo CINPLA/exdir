@@ -1,6 +1,7 @@
 import pytest
 import shutil
 import os
+import h5py
 
 import exdir
 
@@ -55,7 +56,6 @@ def exdir_tmpfile(tmpdir):
 
 @pytest.fixture
 def h5py_tmpfile(tmpdir):
-    import h5py
     testpath = str(tmpdir.mkdir("test").join("test.h5"))
     f = h5py.File(testpath, mode="w")
     yield f
