@@ -154,6 +154,13 @@ def test_create(setup_teardown_file):
     assert isinstance(dset, Dataset)
     assert dset.shape == (10, 3)
 
+    dset2 = grp.require_dataset('bar', data=(3, 10))
+    dset3 = grp.require_dataset('bar', data=(4, 11))
+    assert isinstance(dset2, Dataset)
+    assert np.all(dset2[:] == (4, 11))
+    assert np.all(dset3[:] == (4, 11))
+    assert dset2 == dset3
+
 def test_create_existing(setup_teardown_file):
     """require_dataset yields existing dataset."""
     f = setup_teardown_file

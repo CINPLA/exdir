@@ -102,7 +102,7 @@ class Dataset(exdir_object.Object):
 
     @data.setter
     def data(self, value):
-        self.set_data(value)
+        self.set_data(data=value)
 
     @property
     def shape(self):
