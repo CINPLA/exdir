@@ -31,7 +31,7 @@ def test_quantities(setup_teardown_file):
     """
     Test if quantities is saved
     """
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["temperature"] = 99.0
     assert f.attrs["temperature"] == 99.0
@@ -45,14 +45,14 @@ def test_quantities(setup_teardown_file):
 # Attribute creation/retrieval via special methods
 def test_create(setup_teardown_file):
     """Attribute creation by direct assignment."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
     f.attrs["a"] = 4.0
     assert list(f.attrs.keys()) == ["a"]
     assert f.attrs["a"] == 4.0
 
 
 def test_create_dict(setup_teardown_file):
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     dictionary = {"a": 1.0, "b": 2.0, "c": 3.0}
     f.attrs["d"] = dictionary
@@ -63,7 +63,7 @@ def test_create_dict(setup_teardown_file):
 
 
 def test_to_dict(setup_teardown_file):
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     dictionary = {"a": 1.0, "b": 2.0, "c": 3.0}
     f.attrs["d"] = dictionary
@@ -72,14 +72,14 @@ def test_to_dict(setup_teardown_file):
 
 
 def test_number(setup_teardown_file):
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
     f.attrs[2] = 2
     assert f.attrs[2] == 2
 
 
 def test_overwrite(setup_teardown_file):
     """Attributes are silently overwritten."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
     f.attrs["a"] = 4.0
     f.attrs["a"] = 5.0
     assert f.attrs["a"] == 5.0
@@ -87,7 +87,7 @@ def test_overwrite(setup_teardown_file):
 
 def test_rank(setup_teardown_file):
     """Attribute rank is preserved."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
     f.attrs["a"] = (4.0, 5.0)
     assert type(f.attrs["a"]) == list
     assert f.attrs["a"] == [4.0, 5.0]
@@ -95,7 +95,7 @@ def test_rank(setup_teardown_file):
 
 def test_single(setup_teardown_file):
     """Attributes of shape (1,) don"t become scalars."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
     f.attrs["a"] = np.ones((1,))
     out = f.attrs["a"]
     assert type(out) == list
@@ -103,7 +103,7 @@ def test_single(setup_teardown_file):
 
 def test_array(setup_teardown_file):
     """Attributes of shape (1,) don"t become scalars."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
     f.attrs["a"] = np.ones((2, 2))
     out = f.attrs["a"]
     assert type(out) == list
@@ -114,7 +114,7 @@ def test_array(setup_teardown_file):
 
 def test_access_exc(setup_teardown_file):
     """Attempt to access missing item raises KeyError."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     with pytest.raises(KeyError):
         f.attrs["a"]
@@ -122,7 +122,7 @@ def test_access_exc(setup_teardown_file):
 
 def test_in(setup_teardown_file):
     """Test that in (__contains__) works."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["a"] = 4.0
     f.attrs["b"] = 4.0
@@ -135,7 +135,7 @@ def test_in(setup_teardown_file):
 
 def test_keys(setup_teardown_file):
     """Test that in (__contains__) works."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["a"] = 1.0
     f.attrs["b"] = 2.0
@@ -147,7 +147,7 @@ def test_keys(setup_teardown_file):
 
 def test_values(setup_teardown_file):
     """Test that in (__contains__) works."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["a"] = 1.0
     f.attrs["b"] = 2.0
@@ -159,7 +159,7 @@ def test_values(setup_teardown_file):
 
 def test_items(setup_teardown_file):
     """Test that in (__contains__) works."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["a"] = 1.0
     f.attrs["b"] = 2.0
@@ -171,7 +171,7 @@ def test_items(setup_teardown_file):
 
 def test_iter(setup_teardown_file):
     """Test that in (__contains__) works."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["a"] = 1.0
     f.attrs["b"] = 2.0
@@ -185,7 +185,7 @@ def test_iter(setup_teardown_file):
 # Deletion of attributes using __delitem__
 # def test_delete(setup_teardown_file):
 #     """Deletion via "del"."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 #
 #     f.attrs["a"] = 4.0
 #     assert "a" in f.attrs
@@ -195,7 +195,7 @@ def test_iter(setup_teardown_file):
 #
 # def test_delete_exc(setup_teardown_file):
 #     """Attempt to delete missing item raises KeyError."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 #     with pytest.raises(KeyError):
 #         del f.attrs["a"]
 
@@ -206,7 +206,7 @@ def test_iter(setup_teardown_file):
 
 def test_ascii(setup_teardown_file):
     """Access via pure-ASCII byte string."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs[b"ascii"] = 42
     out = f.attrs[b"ascii"]
@@ -214,7 +214,7 @@ def test_ascii(setup_teardown_file):
 
 def test_raw(setup_teardown_file):
     """Access via non-ASCII byte string."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     name = b"non-ascii\xfe"
     f.attrs[name] = 42
@@ -224,7 +224,7 @@ def test_raw(setup_teardown_file):
 
 def test_unicode(setup_teardown_file):
     """Access via Unicode string with non-ascii characters."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     name = six.u("Omega") + six.unichr(0x03A9)
     f.attrs[name] = 42
@@ -250,7 +250,7 @@ def test_validity():
 
 def test_string_scalar(setup_teardown_file):
     """Storage of variable-length byte string scalars (auto-creation)."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["x"] = b"Hello"
     out = f.attrs["x"]
@@ -262,7 +262,7 @@ def test_string_scalar(setup_teardown_file):
 
 def test_unicode_scalar(setup_teardown_file):
     """Storage of variable-length unicode strings (auto-creation)."""
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["x"] = six.u("Hello") + six.unichr(0x2340) + six.u("!!")
     out = f.attrs["x"]
@@ -271,7 +271,7 @@ def test_unicode_scalar(setup_teardown_file):
 
 
 def test_attrs(setup_teardown_file):
-    f = setup_teardown_file
+    f = setup_teardown_file[3]
 
     f.attrs["temperature"] = 99.0
     assert f.attrs["temperature"] == 99.0
@@ -298,7 +298,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_int(setup_teardown_file):
 #     """Integers are read as correct NumPy type."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     f.attrs['x'] = np.array(1, dtype=np.int8)
 #     out = f.attrs['x']
@@ -307,7 +307,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_compound(setup_teardown_file):
 #     """Compound scalars are read as numpy.void."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     dt = np.dtype([('a', 'i'), ('b', 'f')])
 #     data = np.array((1, 4.2), dtype=dt)
@@ -321,7 +321,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_single_array(setup_teardown_file):
 #     """Single-element arrays are correctly recovered."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     data = np.ndarray((1,), dtype='f')
 #     f.attrs['x'] = data
@@ -331,7 +331,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_multi_array(setup_teardown_file):
 #     """Rank-1 arrays are correctly recovered."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     data = np.ndarray((42,), dtype='f')
 #     data[:] = 42.0
@@ -347,7 +347,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_int_all(setup_teardown_file):
 #     """Storage of integer types."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     dtypes = (np.int8, np.int16, np.int32, np.int64,
 #               np.uint8, np.uint16, np.uint32, np.uint64)
@@ -361,7 +361,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_float(setup_teardown_file):
 #     """Storage of floating point types."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     dtypes = tuple(np.dtype(x) for x in ('<f4', '>f4', '<f8', '>f8'))
 
@@ -375,7 +375,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_complex(setup_teardown_file):
 #     """Storage of complex types."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     dtypes = tuple(np.dtype(x) for x in ('<c8', '>c8', '<c16', '>c16'))
 
@@ -389,7 +389,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_string(setup_teardown_file):
 #     """Storage of fixed-length strings."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     dtypes = tuple(np.dtype(x) for x in ('|S1', '|S10'))
 
@@ -403,7 +403,7 @@ def test_attrs(setup_teardown_file):
 
 # def test_bool(setup_teardown_file):
 #     """Storage of NumPy booleans."""
-#     f = setup_teardown_file
+#     f = setup_teardown_file[3]
 
 #     data = np.ndarray((2,), dtype=np.bool_)
 #     data[...] = True, False

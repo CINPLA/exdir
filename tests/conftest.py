@@ -5,21 +5,6 @@ import os
 from exdir.core import File
 
 
-filepath = os.path.abspath(__file__)
-filedir = os.path.dirname(filepath)
-
-testmaindir = ".expipe_test_dir_aegoh4ahlaechohv5oog9vew1yahde2d"
-TESTPATH = os.path.join(filedir, testmaindir)
-TESTDIR = os.path.join(TESTPATH, "exdir_dir")
-TESTFILE = os.path.join(TESTPATH, "test.exdir")
-
-
-def pytest_namespace():
-    return {"TESTPATH": TESTPATH,
-            "TESTDIR": TESTDIR,
-            "TESTFILE": TESTFILE}
-
-
 def remove(name):
     if os.path.exists(name):
         shutil.rmtree(name)
@@ -27,26 +12,34 @@ def remove(name):
 
 
 @pytest.fixture
-def setup_teardown_folder():
-    remove(TESTPATH)
+def setup_teardown_folder(tmpdir):
+    testpath = tmpdir.mkdir("test")
+    testdir = os.path.join(testpath, "exdir_dir")
+    testfile = os.path.join(testpath, "test.exdir")
 
-    os.makedirs(TESTPATH)
+    remove(testpath)
 
-    yield
+    os.makedirs(testpath)
 
-    remove(TESTPATH)
+    yield testpath, testfile, testdir
+
+    remove(testpath)
 
 
 @pytest.fixture
-def setup_teardown_file():
-    remove(TESTPATH)
+def setup_teardown_file(tmpdir):
+    testpath = tmpdir.mkdir("test")
+    testdir = os.path.join(testpath, "exdir_dir")
+    testfile = os.path.join(testpath, "test.exdir")
 
-    os.makedirs(TESTPATH)
+    remove(testpath)
 
-    f = File(TESTFILE, mode="w")
+    os.makedirs(testpath)
 
-    yield f
+    f = File(testfile, mode="w")
+
+    yield testpath, testfile, testdir, f
 
     f.close()
 
-    remove(TESTPATH)
+    remove(testpath)
