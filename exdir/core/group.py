@@ -10,16 +10,6 @@ from .dataset import Dataset
 from . import raw
 
 
-def natural_sort(l):
-    def convert(text):
-        return int(text) if text.isdigit() else text.lower()
-
-    def alphanum_key(key):
-        return [convert(c) for c in re.split('([0-9]+)', key)]
-
-    return sorted(l, key=alphanum_key)
-
-
 class Group(Object):
     """
     Container of other groups and datasets.
@@ -229,9 +219,10 @@ class Group(Object):
         return abc.ValuesView(self)
 
     def __iter__(self):
-        for name in natural_sort(os.listdir(self.directory)):
-            if name in self:
-                yield name
+        # NOTE os.walk is way faster than os.listdir + os.path.isdir
+        directories = next(os.walk(self.directory))[1]
+        for name in sorted(directories):
+            yield name
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
