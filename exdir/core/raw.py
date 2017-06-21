@@ -1,7 +1,7 @@
-from . import abstract_object
+from . import exdir_object as exob
 
 
-class Raw(abstract_object.AbstractObject):
+class Raw(exob.Object):
     """
     Raw objects are simple folders with any content.
 

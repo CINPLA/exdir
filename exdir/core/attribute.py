@@ -2,7 +2,7 @@ from enum import Enum
 import yaml
 import os
 
-from .abstract_object import AbstractObject
+from . import exdir_object as exob
 from .quantities_conversion import convert_quantities, convert_back_quantities
 
 
@@ -80,7 +80,7 @@ class Attribute(object):
         return meta_data.values()
 
     def _set_data(self, meta_data):
-        if self.io_mode == AbstractObject.OpenMode.READ_ONLY:
+        if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
         meta_data = convert_quantities(meta_data)
         with open(self.filename, "w") as meta_file:
