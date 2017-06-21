@@ -7,14 +7,8 @@ install:
   - source libs/travis-conda-scripts/scripts/config.sh
   - bash -ex libs/travis-conda-scripts/scripts/travis_install.sh
 before_script:
-  # this is for running test coverage on travis
-  - pip install numpy
-  - pip install git+https://github.com/python-quantities/python-quantities.git
-  - pip install pytest pyyaml coverage codecov
   - python setup.py install
 script:
-  - coverage run --source exdir -m py.test -s --doctest-glob='*.rst'
-  - coverage report
   - source libs/travis-conda-scripts/scripts/config.sh
   - bash -ex libs/travis-conda-scripts/scripts/build.sh
 after_success:
