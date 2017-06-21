@@ -9,6 +9,7 @@ build:
   # noarch: python  # TODO Add back noarch when it works properly on Windows,
                     # we are converting packages manually now
   script:
+    # TODO remove this and add back quantities as conda package once its updated with the new numpy API
     - pip install git+https://github.com/python-quantities/python-quantities.git
     - python setup.py install
 
