@@ -1,6 +1,7 @@
 import os
 import re
 import yaml
+import pathlib
 import numpy as np
 from collections import abc
 
@@ -8,6 +9,25 @@ from .exdir_object import Object
 from . import exdir_object as exob
 from .dataset import Dataset
 from . import raw
+
+
+def _name_to_path(name):
+    if name.startswith("/"):
+        raise NotImplementedError(
+            "Getting a group in the root directory " +
+            "from a subgroup is currently not supported " +
+            "and is unlikely to be implemented."
+        )
+
+    path = pathlib.PurePosixPath(name)
+
+    if len(path.parts) < 1:
+        raise NotImplementedError(
+            "Getting an item on a group with path '" + name + "' " +
+            "is not supported and unlikely to be implemented."
+        )
+        
+    return path
 
 
 class Group(Object):
@@ -41,20 +61,14 @@ class Group(Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ("r") mode")
 
-        if name.startswith("/"):
-            raise NotImplementedError("Creating a group in the absolute directory " +
-                                      "from a subgroup is currently not supported " +
-                                      "and is unlikely to be implemented.")
+        path = _name_to_path(name)
 
-        if name.endswith("/"):
-            name = name.rstrip("/")
-
-        if "/" in name:
+        if len(path.parts) > 1:
             raise NotImplementedError("Intermediate groups can not yet be " +
                                       "created automatically.")
 
-        exob._assert_valid_name(name, self)
-        group_directory = os.path.join(self.directory, name)
+        exob._assert_valid_name(str(path), self)
+        group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
         group = Group(root_directory=self.root_directory,
                       parent_path=self.relative_path, object_name=name,
@@ -63,15 +77,9 @@ class Group(Object):
         return group
 
     def require_group(self, name):
-        if name.startswith("/"):
-            raise NotImplementedError("Requiring a group in the absolute directory " +
-                                      "from a subgroup is currently not supported " +
-                                      "and is unlikely to be implemented.")
-
-        if name.endswith("/"):
-            name = name.rstrip("/")
-
-        group_directory = os.path.join(self.directory, name)
+        path = _name_to_path(name)
+        group_directory = self.directory / path
+        
         if name in self:
             current_object = self[name]
             if isinstance(current_object, Group):
@@ -84,15 +92,6 @@ class Group(Object):
                           " but is not an Exdir object.")
         else:
             return self.create_group(name)
-
-    @property
-    def parent(self):
-        parent = self.parent_path.split(os.sep)[-1]
-        parent_parent = os.sep.join(self.parent_path.split(os.sep)[:-1])
-        return Group(root_directory=self.root_directory,
-                     parent_path=parent_parent, object_name=parent,
-                     io_mode=self.io_mode,
-                     validate_name=self.validate_name)
 
     def require_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
         if name in self:
@@ -146,53 +145,58 @@ class Group(Object):
         return exob.is_exdir_object(directory)
 
     def __getitem__(self, name):
-        if name.endswith("/"):
-            name = name.rstrip("/")
+        path = _name_to_path(name)
 
-        if name.startswith("/"):
-            raise NotImplementedError("Getting a group in the root directory " +
-                                      "from a subgroup is currently not supported " +
-                                      "and is unlikely to be implemented.")
-
-        if "/" in name:
-            name_split = name.split("/", 1)
-            if len(name_split) == 2:
-                item = self[name_split[0]]
-                return item[name_split[1]]
+        if len(path.parts) > 1:
+            if len(path.parts) == 2:
+                item = self[path.parts[0]]
+                return item[path.parts[1]]
             else:
-                return self[name_split[0]]
-
-        directory = os.path.join(self.directory, name)
+                return self[path.parts[0]]
+                
         if name not in self:
             raise KeyError("No such object: '" + name + "'")
 
+        directory = os.path.join(self.directory, path)
+
         if exob.is_raw_object_directory(directory):
-            return raw.Raw(root_directory=self.root_directory,
-                       parent_path=self.relative_path,
-                       object_name=name,
-                       io_mode=self.io_mode)
+            return raw.Raw(
+                root_directory=self.root_directory,
+                parent_path=self.relative_path,
+                object_name=name,
+                io_mode=self.io_mode # TODO validate name?
+            )
 
         if not exob.is_nonraw_object_directory(directory):
-            raise IOError("Directory '" + directory +
-                          "' is not a valid exdir object.")
+            raise IOError(
+                "Directory '" + directory +
+                "' is not a valid exdir object."
+            )
 
-        meta_filename = os.path.join(self.directory, name, exob.META_FILENAME)
+        meta_filename = os.path.join(self.directory, path, exob.META_FILENAME)
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.safe_load(meta_file)
         if meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.DATASET_TYPENAME:
-            return Dataset(root_directory=self.root_directory,
-                           parent_path=self.relative_path,
-                           object_name=name,
-                           io_mode=self.io_mode,
-                           validate_name=self.validate_name)
+            return Dataset(
+                root_directory=self.root_directory,
+                parent_path=self.relative_path,
+                object_name=name,
+                io_mode=self.io_mode,
+                validate_name=self.validate_name
+            )
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
-            return Group(root_directory=self.root_directory,
-                         parent_path=self.relative_path,
-                         object_name=name,
-                         io_mode=self.io_mode,
-                         validate_name=self.validate_name)
+            return Group(
+                root_directory=self.root_directory,
+                parent_path=self.relative_path,
+                object_name=name,
+                io_mode=self.io_mode,
+                validate_name=self.validate_name
+            )
         else:
-            print("Object", name, "has data type", meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME])
+            print(
+                "Object", name, "has data type",
+                meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
+            )
             raise NotImplementedError("Cannot open objects of this type")
 
     def __setitem__(self, name, value):
@@ -223,8 +227,3 @@ class Group(Object):
         directories = next(os.walk(self.directory))[1]
         for name in sorted(directories):
             yield name
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-        return False

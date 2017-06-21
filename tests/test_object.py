@@ -1,6 +1,6 @@
 # This file is part of Exdir, the Experimental Directory Structure.
 #
-# Copyright 2017 Simen Tennøe
+# Copyright 2017 Simen Tennøe, Svenn-Arne Dragly
 #
 # License: MIT, see "LICENSE" file for the full license terms.
 #
@@ -13,6 +13,7 @@
 import pytest
 import os
 import yaml
+import pathlib
 
 from exdir.core import Object, Attribute
 # TODO Remove this import and use import <> as <> instead
@@ -23,18 +24,18 @@ import exdir.core.exdir_object as exob
 # tests for Object class
 
 def test_object_init(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     assert obj.root_directory == setup_teardown_folder[2]
     assert obj.object_name == "test_object"
-    assert obj.parent_path == ""
+    assert obj.parent_path == pathlib.PurePosixPath("")
     assert obj.io_mode is None
-    assert obj.relative_path == os.path.join("", "test_object")
-    assert obj.name == os.sep + os.path.join("", "test_object")
+    assert obj.relative_path == pathlib.PurePosixPath("test_object")
+    assert obj.name == "/test_object"
 
 
 def test_object_attrs(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
     _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
@@ -53,7 +54,7 @@ def test_object_attrs(setup_teardown_folder):
 
 
 def test_object_meta(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
     _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
@@ -66,25 +67,25 @@ def test_object_meta(setup_teardown_folder):
 
 
 def test_object_directory(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     assert obj.directory == os.path.join(setup_teardown_folder[2], "", "test_object")
 
 
 def test_object_attributes_filename(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     assert obj.attributes_filename == os.path.join(setup_teardown_folder[2], "", "test_object", ATTRIBUTES_FILENAME)
 
 
 def test_object_meta_filename(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     assert obj.meta_filename == os.path.join(setup_teardown_folder[2], "", "test_object", META_FILENAME)
 
 
 def test_object_create_raw(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
     _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
@@ -98,7 +99,7 @@ def test_object_create_raw(setup_teardown_folder):
 
 
 def test_object_require_raw(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
     _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),

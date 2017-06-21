@@ -1,6 +1,7 @@
 import os
 import shutil
 import warnings
+import pathlib
 
 from . import exdir_object as exob
 from .group import Group
@@ -14,6 +15,7 @@ class File(Group):
                  validate_name=None):
         if not directory.endswith(".exdir"):
             directory = directory + ".exdir"
+        directory = pathlib.Path(directory)
         mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
@@ -25,19 +27,20 @@ class File(Group):
             self.io_mode = self.OpenMode.READ_WRITE
 
         super(File, self).__init__(root_directory=directory,
-                                   parent_path="", object_name="",
+                                   parent_path=pathlib.PurePosixPath(""),
+                                   object_name="",
                                    io_mode=self.io_mode,
                                    validate_name=validate_name)
 
         already_exists = os.path.exists(directory)
         if already_exists:
             if not exob.is_nonraw_object_directory(directory):
-                raise FileExistsError("Path '" + directory +
+                raise FileExistsError("Path '" + str(directory) +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
             # TODO consider extracting this function to avoid cyclic imports
             if self.meta[exob.EXDIR_METANAME][exob.TYPE_METANAME] != exob.FILE_TYPENAME:
-                raise FileExistsError("Path '" + directory +
+                raise FileExistsError("Path '" + str(directory) +
                                       "' already exists, but is not a valid " +
                                       "exdir file.")
 
@@ -45,23 +48,23 @@ class File(Group):
 
         if mode == "r":
             if not already_exists:
-                raise IOError("File " + directory + " does not exist.")
+                raise IOError("File " + str(directory) + " does not exist.")
         elif mode == "r+":
             if not already_exists:
-                raise IOError("File " + directory + " does not exist.")
+                raise IOError("File " + str(directory) + " does not exist.")
         elif mode == "w":
             if already_exists:
                 if allow_remove:
                     shutil.rmtree(directory)
                 else:
                     raise FileExistsError(
-                        "File " + directory + " already exists. We won't delete the entire tree" +
+                        "File " + str(directory) + " already exists. We won't delete the entire tree" +
                         " by default. Add allow_remove=True to override."
                     )
             should_create_directory = True
         elif mode == "w-" or mode == "x":
             if already_exists:
-                raise IOError("File " + directory + " already exists.")
+                raise IOError("File " + str(directory) + " already exists.")
             should_create_directory = True
         elif mode == "a":
             if not already_exists:

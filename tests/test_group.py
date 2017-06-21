@@ -12,6 +12,7 @@
 
 import os
 import pytest
+import pathlib
 from collections.abc import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
@@ -20,14 +21,14 @@ from conftest import remove
 
 # tests for Group class
 def test_group_init(setup_teardown_folder):
-    group = Group(setup_teardown_folder[2], "", "test_object", io_mode=None)
+    group = Group(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     assert group.root_directory == setup_teardown_folder[2]
     assert group.object_name == "test_object"
-    assert group.parent_path == ""
+    assert group.parent_path == pathlib.PurePosixPath("")
     assert group.io_mode is None
-    assert group.relative_path == os.path.join("", "test_object")
-    assert group.name == "/" + os.path.join("", "test_object")
+    assert group.relative_path == pathlib.PurePosixPath("test_object")
+    assert group.name == "/test_object"
 
 
 # New groups can be created via .create_group method
@@ -91,6 +92,7 @@ def test_open_existing(setup_teardown_file):
     grp4 = grp.require_group("foo/")
 
     assert grp2 == grp3
+    assert grp2.name == grp4.name
     assert grp2 == grp4
 
 
@@ -159,6 +161,7 @@ def test_open(setup_teardown_file):
     grp4 = grp["foo/"]
 
     assert grp2 == grp3
+    assert grp2.name == grp4.name
     assert grp2 == grp4
 
     with pytest.raises(NotImplementedError):

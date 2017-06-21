@@ -161,8 +161,8 @@ class Object():
         self.root_directory = root_directory
         self.object_name = object_name
         self.parent_path = parent_path
-        self.relative_path = os.path.join(self.parent_path, self.object_name)
-        self.name = "/" + self.relative_path
+        self.relative_path = self.parent_path / self.object_name
+        self.name = "/" + str(self.relative_path)
         self.io_mode = io_mode
 
         validate_name = validate_name or filename_validation.thorough
@@ -233,3 +233,24 @@ class Object():
             return directory_name
 
         return self.create_raw(name)
+
+    @property
+    def parent(self):
+        from .group import Group
+        if len(self.parent_path.parts) < 1:
+            return None
+        parent_name = self.parent_path.name
+        parent_parent_path = self.parent_path.parent
+        return Group(
+            root_directory=self.root_directory,
+            parent_path=parent_parent_path,
+            object_name=parent_name,
+            io_mode=self.io_mode,
+            validate_name=self.validate_name
+        )
+
+    def __eq__(self, other):
+        return (
+            self.relative_path == other.relative_path and
+            self.root_directory == other.root_directory
+        )
