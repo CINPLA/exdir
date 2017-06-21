@@ -169,10 +169,6 @@ class Object(abstract_object.AbstractObject):
                          io_mode=self.io_mode)
 
     @property
-    def directory(self):
-        return os.path.join(self.root_directory, self.relative_path)
-
-    @property
     def attributes_filename(self):
         return os.path.join(self.directory, ATTRIBUTES_FILENAME)
 
