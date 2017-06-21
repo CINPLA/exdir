@@ -5,6 +5,7 @@ import exdir
 import yaml
 import quantities as pq
 import numpy as np
+import pathlib
 
 import exdir.core
 import exdir.core.exdir_object as exob
@@ -248,7 +249,7 @@ def test_root_directory(setup_teardown_file):
     assert not exob.root_directory(setup_teardown_file[2])
 
     path = os.path.join(setup_teardown_file[1], "foo", "bar")
-    assert setup_teardown_file[1] == exob.root_directory(path)
+    assert pathlib.Path(setup_teardown_file[1]) == exob.root_directory(path)
 
 
 def test_is_inside_exdir(setup_teardown_file):

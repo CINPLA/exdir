@@ -2,6 +2,7 @@ from enum import Enum
 import os
 import yaml
 import warnings
+import pathlib
 from . import filename_validation
 
 from . import exdir_object
@@ -94,51 +95,51 @@ def root_directory(path):
 
     returns: path to exdir.File or None if not found.
     """
-    path = os.path.abspath(path)
+    path = pathlib.Path(path)
     found = False
     while not found:
-        if os.path.dirname(path) == path:  # parent is self
+        if path.parent == path:  # parent is self
             return None
         valid = is_nonraw_object_directory(path)
         if not valid:
-            path = os.path.dirname(os.path.abspath(path))
+            path = path.parent
             continue
 
         meta_filename = _metafile_from_directory(path)
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         if EXDIR_METANAME not in meta_data:
-            path = os.path.dirname(os.path.abspath(path))
+            path = path.parent
             continue
         exdir_meta = meta_data[EXDIR_METANAME]
         if TYPE_METANAME not in exdir_meta:
-            path = os.path.dirname(os.path.abspath(path))
+            path = path.parent
             continue
         if FILE_TYPENAME != exdir_meta[TYPE_METANAME]:
-            path = os.path.dirname(os.path.abspath(path))
+            path = path.parent
             continue
         found = True
     return path
 
 
 def is_inside_exdir(path):
-    path = os.path.abspath(path)
+    path = pathlib.Path(path)
     return root_directory(path) is not None
 
 
 def assert_inside_exdir(path):
-    path = os.path.abspath(path)
+    path = pathlib.Path(path)
     if not is_inside_exdir(path):
-        raise FileNotFoundError("Path " + path + " is not inside an Exdir repository.")
+        raise FileNotFoundError("Path " + str(path) + " is not inside an Exdir repository.")
 
 
 def open_object(path):
     from . import exdir_file
-    path = os.path.abspath(path)
+    path = pathlib.Path(path)
     assert_inside_exdir(path)
     root_dir = root_directory(path)
-    object_name = os.path.relpath(path, root_dir)
-    object_name = object_name.replace(os.sep, "/")
+    object_name = path.relative_to(root_dir)
+    object_name = object_name.as_posix()
     exdir_file = exdir_file.File(root_dir)
     if object_name == ".":
         return exdir_file

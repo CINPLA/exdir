@@ -32,6 +32,12 @@ def test_object_init(setup_teardown_folder):
     assert obj.io_mode is None
     assert obj.relative_path == pathlib.PurePosixPath("test_object")
     assert obj.name == "/test_object"
+    
+    
+def test_open_object(exdir_tmpfile):
+    grp = exdir_tmpfile.create_group("test")
+    grp2 = grp.create_group("test2")
+    exob.open_object(grp2.directory)
 
 
 def test_object_attrs(setup_teardown_folder):

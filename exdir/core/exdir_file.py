@@ -13,9 +13,9 @@ class File(Group):
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  validate_name=None):
-        if not directory.endswith(".exdir"):
-            directory = directory + ".exdir"
         directory = pathlib.Path(directory)
+        if directory.suffix != ".exdir":
+            directory = directory.with_suffix(directory.suffix + ".exdir")
         mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
