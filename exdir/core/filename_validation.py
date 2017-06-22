@@ -46,9 +46,6 @@ def strict(parent_path, name):
             raise NameError("Name '" + name_str + "' contains invalid character '" + char + "'.\n" +
                             "Valid characters are:\n" + VALID_CHARACTERS)
 
-    if path.exists():
-        raise FileExistsError("Filename '" + name_str + "' already exsits in '" + str(path) + "'")
-
 
 def thorough(parent_path, name):
     minimal(parent_path, name)
@@ -61,13 +58,10 @@ def thorough(parent_path, name):
                             "Valid characters are:\n" + VALID_CHARACTERS)
 
     for item in parent_path.iterdir():
-        if name_str.lower() == item.name.lower():
+        if name_str != item.name and name_str.lower() == item.name.lower():
             raise FileExistsError("A directory with name (case independent) '" + name_str +
-                            "' already exists and cannot be made according " +
-                            "to the naming rule 'thorough'.")
-
-    if path.exists():
-        raise FileExistsError("Filename '" + name_str + "' already exsits in '" + str(path) + "'")
+                                  "' already exists and cannot be made according " +
+                                  "to the naming rule 'thorough'.")
 
 
 def none(parent_path, name):

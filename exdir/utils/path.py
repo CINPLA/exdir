@@ -1,7 +1,7 @@
 import pathlib
 
 
-def name_to_validated_group_path(name):
+def name_to_asserted_group_path(name):
     path = pathlib.PurePosixPath(name)
     if path.is_absolute():
         raise NotImplementedError(

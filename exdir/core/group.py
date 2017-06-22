@@ -26,6 +26,8 @@ class Group(Object):
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         exob._assert_valid_name(name, self)
+        if name in self:
+            raise FileExistsError("'{}' already exists in '{}'".format(name, self.name))
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
@@ -42,13 +44,16 @@ class Group(Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ("r") mode")
 
-        path = utils.path.name_to_validated_group_path(name)
+        path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
             subgroup.create_group(path.name)
             return
 
         exob._assert_valid_name(path, self)
+
+        if name in self:
+            raise FileExistsError("'{}' already exists in '{}'".format(name, self.name))
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
@@ -62,7 +67,7 @@ class Group(Object):
         return group
 
     def require_group(self, name):
-        path = utils.path.name_to_validated_group_path(name)
+        path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
             return subgroup.require_group(path.name)
@@ -77,8 +82,10 @@ class Group(Object):
                 raise TypeError("An object with name '" + name + "' already " +
                                 "exists, but it is not a Group.")
         elif group_directory.exists():
-            raise IOError("Directory " + group_directory + " already exists," +
-                          " but is not an Exdir object.")
+            raise FileExistsError(
+                "Directory " + group_directory + " already exists, " +
+                "but is not an Exdir object."
+            )
 
         return self.create_group(name)
 
@@ -122,12 +129,12 @@ class Group(Object):
             return True
         if name == "":
             return False
-        path = utils.path.name_to_validated_group_path(name)
+        path = utils.path.name_to_asserted_group_path(name)
         directory = self.directory / path
         return exob.is_exdir_object(directory)
 
     def __getitem__(self, name):
-        path = utils.path.name_to_validated_group_path(name)
+        path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]
             sub_name = pathlib.PurePosixPath(*path.parts[1:])
@@ -179,7 +186,7 @@ class Group(Object):
             raise NotImplementedError("Cannot open objects of this type")
 
     def __setitem__(self, name, value):
-        path = utils.path.name_to_validated_group_path(name)
+        path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
             return

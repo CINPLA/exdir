@@ -58,6 +58,12 @@ def test_create_group_absolute(setup_teardown_file):
         grp.create_group("/b")
 
 
+def test_create_existing_twice(exdir_tmpfile):
+    exdir_tmpfile.create_group("test")
+    with pytest.raises(FileExistsError):
+        exdir_tmpfile.create_group("test")
+
+
 # TODO update this test when it is implemented
 def test_create_intermediate(setup_teardown_file):
     """intermediate groups can be created automatically."""

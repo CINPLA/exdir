@@ -24,6 +24,7 @@ def test_create_raw(setup_teardown_file):
 
     assert raw == raw2
 
+
 def test_require_raw(setup_teardown_file):
     """Raw is created if it doesn"t exist."""
     f = setup_teardown_file[3]
@@ -36,3 +37,9 @@ def test_require_raw(setup_teardown_file):
 
     assert raw == raw2
     assert raw == raw3
+
+
+def test_create_raw_twice(exdir_tmpfile):
+    exdir_tmpfile.create_raw("test")
+    with pytest.raises(FileExistsError):
+        exdir_tmpfile.create_raw("test")

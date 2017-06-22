@@ -212,11 +212,13 @@ class Object():
         return self.directory / META_FILENAME
 
     def create_raw(self, name):
-        from . import raw
+        from .raw import Raw
         _assert_valid_name(name, self)
         directory_name = self.directory / name
+        if directory_name.exists():
+            raise FileExistsError("'{}' already exists in '{}'".format(name, self))
         directory_name.mkdir()
-        return raw.Raw(
+        return Raw(
             self.root_directory,
             self.parent_path,
             name,
