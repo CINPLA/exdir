@@ -180,6 +180,7 @@ def test_validate_name_thorough(setup_teardown_folder):
 
     with pytest.raises(FileExistsError):
         File(setup_teardown_folder[0] / "Test.exdir", validate_name=fv.thorough)
+    with pytest.raises(NameError):
         File(setup_teardown_folder[0] / "tes#.exdir", validate_name=fv.thorough)
 
 
