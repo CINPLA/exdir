@@ -254,7 +254,7 @@ def test_root(setup_teardown_file):
     grp = f.create_group("test")
 
     with pytest.raises(NotImplementedError):
-        assert "/" in  grp
+        assert "/" in grp
 
 def test_trailing_slash(setup_teardown_file):
     """Trailing slashes are unconditionally ignored."""

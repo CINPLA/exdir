@@ -20,5 +20,5 @@ def name_to_validated_group_path(name):
 def remove_root(name):
     path = pathlib.PurePosixPath(name)
     if path.is_absolute():
-        path = path.relative_to("/")
+        path = path.relative_to(path.root)
     return path
