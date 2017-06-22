@@ -118,31 +118,11 @@ class Dataset(exdir_object.Object):
     def dtype(self):
         return self[:].dtype
 
-
-    def __eq__(self, other):
-        self[:]
-        if isinstance(other, self.__class__):
-            other[:]
-            if self.__dict__.keys() != other.__dict__.keys():
-                return False
-
-            for key in self.__dict__:
-                if key == "_data":
-                    if not np.array_equal(self.__dict__["_data"], other.__dict__["_data"]):
-                        return False
-                else:
-                    if self.__dict__[key] != other.__dict__[key]:
-                        return False
-            return True
-        else:
-            return False
-
     def __len__(self):
          """ The size of the first axis.  TypeError if scalar."""
          if len(self.shape) == 0:
                 raise TypeError("Attempt to take len() of scalar dataset")
          return self.shape[0]
-
 
     def __iter__(self):
         """Iterate over the first axis.  TypeError if scalar.

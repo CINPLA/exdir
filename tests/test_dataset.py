@@ -17,6 +17,25 @@ import quantities as pq
 
 from exdir.core import Attribute, File, Dataset
 
+# TODO add the code below for testing true equality when parallelizing
+# def __eq__(self, other):
+# self[:]
+# if isinstance(other, self.__class__):
+#     other[:]
+#     if self.__dict__.keys() != other.__dict__.keys():
+#         return False
+#
+#     for key in self.__dict__:
+#         if key == "_data":
+#             if not np.array_equal(self.__dict__["_data"], other.__dict__["_data"]):
+#                 return False
+#         else:
+#             if self.__dict__[key] != other.__dict__[key]:
+#                 return False
+#     return True
+# else:
+#     return False
+
 
 # Feature: Datasets can be created from a shape only
 

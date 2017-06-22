@@ -248,6 +248,8 @@ class Object():
         )
 
     def __eq__(self, other):
+        if not isinstance(other, Object):
+            return False
         return (
             self.relative_path == other.relative_path and
             self.root_directory == other.root_directory
