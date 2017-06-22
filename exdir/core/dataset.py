@@ -59,7 +59,8 @@ class Dataset(exdir_object.Object):
                 result = np.full(shape, fillvalue, dtype=dtype)
 
         if result is not None:
-            np.save(self.data_filename, result)
+            # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
+            np.save(str(self.data_filename), result)
 
             # TODO should we have this line?
             #      Might lead to bugs where we create data, but havent loaded it
@@ -72,6 +73,7 @@ class Dataset(exdir_object.Object):
             return np.array([])
 
         if self._data is None:
+            # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
             self._data = np.load(str(self.data_filename), mmap_mode=self._mmap_mode)
 
         if len(self._data.shape) == 0:
