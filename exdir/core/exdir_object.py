@@ -42,7 +42,7 @@ def _create_object_directory(directory, typename):
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
     directory.mkdir()
     meta_filename = directory / META_FILENAME
-    with meta_filename.open("w") as meta_file:
+    with meta_filename.open("w", encoding="utf-8") as meta_file:
         metadata = {
             EXDIR_METANAME: {
                 TYPE_METANAME: typename,
@@ -66,7 +66,7 @@ def is_nonraw_object_directory(directory):
     meta_filename = directory / META_FILENAME
     if not meta_filename.exists():
         return False
-    with meta_filename.open("r") as meta_file:
+    with meta_filename.open("r", encoding="utf-8") as meta_file:
         meta_data = yaml.safe_load(meta_file)
 
         if not isinstance(meta_data, dict):
@@ -103,7 +103,7 @@ def root_directory(path):
             continue
 
         meta_filename = path / META_FILENAME
-        with meta_filename.open("r") as meta_file:
+        with meta_filename.open("r", encoding="utf-8") as meta_file:
             meta_data = yaml.load(meta_file)
         if EXDIR_METANAME not in meta_data:
             path = path.parent

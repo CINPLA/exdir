@@ -177,7 +177,7 @@ def test_create_object_directory(setup_teardown_folder):
             exob.VERSION_METANAME: 1}
     }
 
-    with file_path.open("r") as meta_file:
+    with file_path.open("r", encoding="utf-8") as meta_file:
         metadata = yaml.safe_load(meta_file)
 
         assert metadata == compare_metadata
@@ -193,14 +193,14 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
     assert result is False
 
     compare_metafile = setup_teardown_folder[2] / exob.META_FILENAME
-    with compare_metafile.open("w") as f:
+    with compare_metafile.open("w", encoding="utf-8") as f:
         pass
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is False
 
     remove(setup_teardown_folder[1])
-    with compare_metafile.open("w") as meta_file:
+    with compare_metafile.open("w", encoding="utf-8") as meta_file:
         metadata = {
             exob.EXDIR_METANAME: {
                 exob.VERSION_METANAME: 1}
@@ -214,7 +214,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
     assert result is False
 
     remove(setup_teardown_folder[1])
-    with compare_metafile.open("w") as meta_file:
+    with compare_metafile.open("w", encoding="utf-8") as meta_file:
         metadata = {
             exob.EXDIR_METANAME: {
                 exob.TYPE_METANAME: "wrong_typename",
@@ -229,7 +229,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
     assert result is False
 
     remove(setup_teardown_folder[1])
-    with compare_metafile.open("w") as meta_file:
+    with compare_metafile.open("w", encoding="utf-8") as meta_file:
         metadata = {
             exob.EXDIR_METANAME: {
                 exob.TYPE_METANAME: exob.DATASET_TYPENAME,
