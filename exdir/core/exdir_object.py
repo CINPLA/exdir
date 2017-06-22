@@ -6,6 +6,7 @@ import pathlib
 from . import filename_validation
 
 from . import exdir_object
+from .. import utils
 from .attribute import Attribute
 
 # metadata
@@ -190,8 +191,8 @@ class Object():
 
     @property
     def directory(self):
-        return os.path.join(self.root_directory, self.relative_path)
-        
+        return self.root_directory / self.relative_path
+
     @property
     def attrs(self):
         return Attribute(self, mode=Attribute.Mode.ATTRIBUTES,
@@ -217,19 +218,21 @@ class Object():
     def create_raw(self, name):
         from . import raw
         _assert_valid_name(name, self)
-        directory_name = os.path.join(self.directory, name)
+        directory_name = self.directory / name
         if os.path.exists(directory_name):
             raise FileExistsError("Raw directory " + directory_name + " already exists.")
         os.mkdir(directory_name)
-        return raw.Raw(self.root_directory,
-                       self.parent_path,
-                       name,
-                       io_mode=self.io_mode)
+        return raw.Raw(
+            self.root_directory,
+            self.parent_path,
+            name,
+            io_mode=self.io_mode
+        )
 
     def require_raw(self, name):
-        directory_name = os.path.join(self.directory, name)
+        directory_name = self.directory / name
         if os.path.exists(directory_name):
-            if exdir_object.is_nonraw_object_directory(directory_name):
+            if is_nonraw_object_directory(directory_name):
                 raise FileExistsError("Directory '" + directory_name + "' already exists, but is not raw.")
             return directory_name
 

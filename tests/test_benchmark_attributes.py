@@ -38,13 +38,13 @@ def add_attribute_tree(obj):
     tree = {}
     for i in range(100):
         tree["hello" + str(i)] = "world"
-    tree["nested"] = {}
-    nested = tree["nested"]
+    tree["intermediate"] = {}
+    intermediate = tree["intermediate"]
     for level in range(10):
         level_str = "level" + str(level)
-        nested[level_str] = {}
-        nested = nested[level_str]
-    nested = 42
+        intermediate[level_str] = {}
+        intermediate = intermediate[level_str]
+    intermediate = 42
     obj.attrs["test"] = tree
 
 

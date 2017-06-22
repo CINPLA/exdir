@@ -108,6 +108,7 @@ def test_create_exclusive(setup_teardown_folder):
     with pytest.raises(IOError):
         File(setup_teardown_folder[1], 'w-')
 
+
 def test_append(setup_teardown_folder):
     """Mode 'a' opens file in append/readwrite mode, creating if necessary."""
 
@@ -149,6 +150,7 @@ def test_readwrite(setup_teardown_folder):
     assert 'bar' in f
     f.close()
 
+
 def test_nonexistent_file(setup_teardown_folder):
     """Modes 'r' and 'r+' do not create files."""
 
@@ -157,10 +159,12 @@ def test_nonexistent_file(setup_teardown_folder):
     with pytest.raises(IOError):
         File(setup_teardown_folder[1], 'r+')
 
+
 def test_invalid_mode(setup_teardown_folder):
     """Invalid modes raise ValueError."""
     with pytest.raises(ValueError):
         File(setup_teardown_folder[1], 'Error mode')
+
 
 def test_file_close(setup_teardown_folder):
     """Closing a file."""
@@ -187,7 +191,6 @@ def test_validate_name_strict(setup_teardown_folder):
         File(setup_teardown_folder[1]+"A" , validate_name=fv.strict)
 
 
-
 def test_validate_name_error(setup_teardown_folder):
     """Test naming rule with error."""
 
@@ -199,7 +202,6 @@ def test_validate_name_none(setup_teardown_folder):
     """Test naming rule with error."""
 
     File(setup_teardown_folder[1]+"&()", validate_name=fv.none)
-
 
 
 def test_opening_with_different_validate_name(setup_teardown_folder):
@@ -215,15 +217,13 @@ def test_opening_with_different_validate_name(setup_teardown_folder):
     f.close()
 
 
-
-
 def test_contains(setup_teardown_file):
     """Root group (by itself) is contained."""
     f = setup_teardown_file[3]
     f.create_group("test")
 
-    assert "/" in  f
-    assert "/test" in  f
+    assert "/" in f
+    assert "/test" in f
 
 
 def test_create_group(setup_teardown_file):
@@ -232,6 +232,7 @@ def test_create_group(setup_teardown_file):
     grp = f.create_group("/test")
 
     assert isinstance(grp, Group)
+
 
 def test_require_group(setup_teardown_file):
     """Root group (by itself) is contained."""

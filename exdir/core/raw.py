@@ -12,9 +12,3 @@ class Raw(exob.Object):
                                   parent_path=parent_path,
                                   object_name=object_name,
                                   io_mode=io_mode)
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
-
-        return False

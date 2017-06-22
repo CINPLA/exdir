@@ -1,11 +1,10 @@
 import os
 import shutil
-import warnings
 import pathlib
 
 from . import exdir_object as exob
 from .group import Group
-from . import filename_validation
+from .. import utils
 
 
 class File(Group):
@@ -13,7 +12,7 @@ class File(Group):
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  validate_name=None):
-        directory = pathlib.Path(directory)
+        directory = pathlib.Path(directory).resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
         mode = mode or 'a'
@@ -71,12 +70,7 @@ class File(Group):
                 should_create_directory = True
 
         if should_create_directory:
-            path, name = os.path.split(directory)
-            if path == "":
-                path = "."
-
-            self.validate_name(path, name)
-
+            self.validate_name(directory.parent, directory.name)
             exob._create_object_directory(directory, exob.FILE_TYPENAME)
 
     def close(self):
@@ -84,30 +78,21 @@ class File(Group):
         pass
 
     def create_group(self, name):
-        if name.startswith("/"):
-            name = name[1:]
+        path = utils.path.remove_root(name)
 
-        return super().create_group(name)
+        return super().create_group(path)
 
     def require_group(self, name):
-        if name.startswith("/"):
-            name = name[1:]
+        path = utils.path.remove_root(name)
 
-        return super().require_group(name)
+        return super().require_group(path)
 
     def __getitem__(self, name):
-        if name.startswith("/"):
-            if name == "/":
-                return self
-            else:
-                name = name[1:]
-
-        return super().__getitem__(name)
+        path = utils.path.remove_root(name)
+        if len(path.parts) < 1:
+            return self
+        return super().__getitem__(path)
 
     def __contains__(self, name):
-        if name.startswith("/"):
-            if name == "/":
-                return True
-            name = name[1:]
-
-        return super().__contains__(name)
+        path = utils.path.remove_root(name)
+        return super().__contains__(path)

@@ -1,6 +1,6 @@
 # This file is part of Exdir, the Experimental Directory Structure.
 #
-# Copyright 2017 Simen Tennøe
+# Copyright 2017 Simen Tennøe, Svenn-Arne Dragly
 #
 # License: MIT, see "LICENSE" file for the full license terms.
 #
@@ -13,6 +13,7 @@
 import os
 import pytest
 import pathlib
+import numpy as np
 from collections.abc import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
@@ -59,12 +60,13 @@ def test_create_group_absolute(setup_teardown_file):
 
 # TODO update this test when it is implemented
 def test_create_intermediate(setup_teardown_file):
-    """Intermediate groups can be created automatically."""
+    """intermediate groups can be created automatically."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")
 
-    with pytest.raises(NotImplementedError):
-        grp.create_group("foo/bar/baz")
+    grp.create_group("foo/bar/baz")
+
+    assert grp["foo/bar/baz"]
 
     # assert grp.name == "/foo/bar/baz"
 
@@ -115,6 +117,15 @@ def test_require_exception(setup_teardown_file):
 
     with pytest.raises(TypeError):
         grp.require_group("foo")
+
+
+def test_set_item_intermediate(exdir_tmpfile):
+    group1 = exdir_tmpfile.create_group("group1")
+    group2 = group1.create_group("group2")
+    group3 = group2.create_group("group3")
+    exdir_tmpfile["group1/group2/group3/dataset"] = np.array([1, 2, 3])
+
+    assert np.array_equal(exdir_tmpfile["group1/group2/group3/dataset"].data, np.array([1, 2, 3]))
 
 
 # TODO uncomment when deletion is implemented
@@ -229,13 +240,13 @@ def test_empty(setup_teardown_file):
     f = setup_teardown_file[3]
     grp = f.create_group("test")
 
-    assert not "" in grp
+    assert "" not in grp
 
 def test_dot(setup_teardown_file):
     """Current group "." is always contained."""
     f = setup_teardown_file[3]
 
-    assert "." in  f
+    assert "." in f
 
 def test_root(setup_teardown_file):
     """Root group (by itself) is contained."""
