@@ -68,7 +68,7 @@ class Dataset(exdir_object.Object):
 
 
     def __getitem__(self, args):
-        if not os.path.exists(self.data_filename):
+        if not self.data_filename.exists():
             return np.array([])
 
         if self._data is None:

@@ -52,7 +52,7 @@ def test_object_attrs(setup_teardown_folder):
 
     assert is_nonraw_object_directory(setup_teardown_folder[2] / "test_object")
 
-    with open(os.path.join(setup_teardown_folder[2], "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
+    with (setup_teardown_folder[2] / "test_object" / ATTRIBUTES_FILENAME).open("r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
 
         assert meta_data == "test value"
@@ -97,7 +97,7 @@ def test_object_create_raw(setup_teardown_folder):
                              GROUP_TYPENAME)
 
     obj.create_raw("test_raw")
-    assert os.path.isdir(setup_teardown_folder[2] / "test_object" / "test_raw")
+    assert (setup_teardown_folder[2] / "test_object" / "test_raw").is_dir()
 
     with pytest.raises(FileExistsError):
         obj.create_raw("test_raw")
@@ -110,7 +110,7 @@ def test_object_require_raw(setup_teardown_folder):
     _create_object_directory(setup_teardown_folder[2] / "test_object", GROUP_TYPENAME)
 
     obj.require_raw("test_raw")
-    assert os.path.isdir(setup_teardown_folder[2] / "test_object" / "test_raw")
+    assert (setup_teardown_folder[2] / "test_object" / "test_raw").is_dir()
 
     obj.require_raw("test_raw")
-    assert os.path.isdir(setup_teardown_folder[2] / "test_object" / "test_raw")
+    assert (setup_teardown_folder[2] / "test_object" / "test_raw").is_dir()

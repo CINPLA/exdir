@@ -166,10 +166,10 @@ def test_create_object_directory(setup_teardown_folder):
 
     exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob.DATASET_TYPENAME)
 
-    assert os.path.isdir(setup_teardown_folder[2])
+    assert setup_teardown_folder[2].is_dir()
 
     file_path = setup_teardown_folder[2] / exob.META_FILENAME
-    assert os.path.isfile(file_path)
+    assert file_path.is_file()
 
     compare_metadata = {
         exob.EXDIR_METANAME: {
@@ -177,7 +177,7 @@ def test_create_object_directory(setup_teardown_folder):
             exob.VERSION_METANAME: 1}
     }
 
-    with open(file_path, "r") as meta_file:
+    with file_path.open("r") as meta_file:
         metadata = yaml.safe_load(meta_file)
 
         assert metadata == compare_metadata
@@ -187,20 +187,20 @@ def test_create_object_directory(setup_teardown_folder):
 
 
 def test_is_nonraw_object_directory(setup_teardown_folder):
-    os.makedirs(setup_teardown_folder[2])
+    setup_teardown_folder[2].mkdir()
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is False
 
     compare_metafile = setup_teardown_folder[2] / exob.META_FILENAME
-    with open(compare_metafile, "w") as f:
+    with compare_metafile.open("w") as f:
         pass
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is False
 
     remove(setup_teardown_folder[1])
-    with open(compare_metafile, "w") as meta_file:
+    with compare_metafile.open("w") as meta_file:
         metadata = {
             exob.EXDIR_METANAME: {
                 exob.VERSION_METANAME: 1}
@@ -214,7 +214,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
     assert result is False
 
     remove(setup_teardown_folder[1])
-    with open(compare_metafile, "w") as meta_file:
+    with compare_metafile.open("w") as meta_file:
         metadata = {
             exob.EXDIR_METANAME: {
                 exob.TYPE_METANAME: "wrong_typename",
@@ -229,7 +229,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
     assert result is False
 
     remove(setup_teardown_folder[1])
-    with open(compare_metafile, "w") as meta_file:
+    with compare_metafile.open("w") as meta_file:
         metadata = {
             exob.EXDIR_METANAME: {
                 exob.TYPE_METANAME: exob.DATASET_TYPENAME,

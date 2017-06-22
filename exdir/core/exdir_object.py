@@ -35,14 +35,14 @@ def _create_object_directory(directory, typename):
     Create object directory and meta file if directory
     don't already exist.
     """
-    if os.path.exists(directory):
+    if directory.exists():
         raise IOError("The directory '" + str(directory) + "' already exists")
     valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
     if typename not in valid_types:
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
-    os.mkdir(directory)
+    directory.mkdir()
     meta_filename = directory / META_FILENAME
-    with open(meta_filename, "w") as meta_file:
+    with meta_filename.open("w") as meta_file:
         metadata = {
             EXDIR_METANAME: {
                 TYPE_METANAME: typename,
@@ -59,14 +59,14 @@ def is_exdir_object(directory):
     WARNING: Does not test if inside exdir directory,
     only if the object can be an exdir object (i.e. a directory).
     """
-    return os.path.isdir(directory)
+    return directory.is_dir()
 
 
 def is_nonraw_object_directory(directory):
     meta_filename = directory / META_FILENAME
-    if not os.path.exists(meta_filename):
+    if not meta_filename.exists():
         return False
-    with open(meta_filename, "r") as meta_file:
+    with meta_filename.open("r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
 
         if not isinstance(meta_data, dict):
@@ -103,7 +103,7 @@ def root_directory(path):
             continue
 
         meta_filename = path / META_FILENAME
-        with open(meta_filename, "r") as meta_file:
+        with meta_filename.open("r") as meta_file:
             meta_data = yaml.load(meta_file)
         if EXDIR_METANAME not in meta_data:
             path = path.parent
@@ -215,9 +215,7 @@ class Object():
         from . import raw
         _assert_valid_name(name, self)
         directory_name = self.directory / name
-        if os.path.exists(directory_name):
-            raise FileExistsError("Raw directory " + directory_name + " already exists.")
-        os.mkdir(directory_name)
+        directory_name.mkdir()
         return raw.Raw(
             self.root_directory,
             self.parent_path,
@@ -227,7 +225,7 @@ class Object():
 
     def require_raw(self, name):
         directory_name = self.directory / name
-        if os.path.exists(directory_name):
+        if directory_name.exists():
             if is_nonraw_object_directory(directory_name):
                 raise FileExistsError("Directory '" + directory_name + "' already exists, but is not raw.")
             return directory_name

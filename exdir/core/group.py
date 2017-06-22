@@ -76,7 +76,7 @@ class Group(Object):
             else:
                 raise TypeError("An object with name '" + name + "' already " +
                                 "exists, but it is not a Group.")
-        elif os.path.exists(group_directory):
+        elif group_directory.exists():
             raise IOError("Directory " + group_directory + " already exists," +
                           " but is not an Exdir object.")
 
@@ -153,7 +153,7 @@ class Group(Object):
             )
 
         meta_filename = directory / exob.META_FILENAME
-        with open(meta_filename, "r") as meta_file:
+        with meta_filename.open("r") as meta_file:
             meta_data = yaml.safe_load(meta_file)
         if meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.DATASET_TYPENAME:
             return Dataset(
@@ -207,6 +207,6 @@ class Group(Object):
 
     def __iter__(self):
         # NOTE os.walk is way faster than os.listdir + os.path.isdir
-        directories = next(os.walk(self.directory))[1]
+        directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):
             yield name

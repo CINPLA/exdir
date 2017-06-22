@@ -28,7 +28,7 @@ def test_file_init(setup_teardown_folder):
 
     f = File(no_exdir, mode="w")
     f.close()
-    assert is_nonraw_object_directory(no_exdir + ".exdir")
+    assert is_nonraw_object_directory(no_exdir.with_suffix(".exdir"))
     remove(setup_teardown_folder[1])
 
     f = File(setup_teardown_folder[1], mode="w")
@@ -46,7 +46,7 @@ def test_file_init(setup_teardown_folder):
     assert is_nonraw_object_directory(setup_teardown_folder[1])
     remove(setup_teardown_folder[1])
 
-    os.makedirs(setup_teardown_folder[1])
+    setup_teardown_folder[1].mkdir(parents=True)
     with pytest.raises(FileExistsError):
         f = File(setup_teardown_folder[1], mode="w")
 
@@ -190,7 +190,7 @@ def test_validate_name_strict(setup_teardown_folder):
     f.close()
 
     with pytest.raises(NameError):
-        File(setup_teardown_folder[1]+"A" , validate_name=fv.strict)
+        File(setup_teardown_folder[1].with_suffix(".exdirA"), validate_name=fv.strict)
 
 
 def test_validate_name_error(setup_teardown_folder):
@@ -203,7 +203,7 @@ def test_validate_name_error(setup_teardown_folder):
 def test_validate_name_none(setup_teardown_folder):
     """Test naming rule with error."""
 
-    File(setup_teardown_folder[1]+"&()", validate_name=fv.none)
+    File(setup_teardown_folder[1].with_name("test&().exdir"), validate_name=fv.none)
 
 
 def test_opening_with_different_validate_name(setup_teardown_folder):

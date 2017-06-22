@@ -2,25 +2,26 @@ import pytest
 import shutil
 import os
 import h5py
+import pathlib
 
 import exdir
 
 
 def remove(name):
-    if os.path.exists(name):
-        shutil.rmtree(name)
-    assert not os.path.exists(name)
+    if name.exists():
+        shutil.rmtree(str(name))
+    assert not name.exists()
 
 
 @pytest.fixture
 def setup_teardown_folder(tmpdir):
-    testpath = tmpdir.mkdir("test")
+    testpath = pathlib.Path(tmpdir.strpath)
     testdir = testpath / "exdir_dir"
     testfile = testpath / "test.exdir"
 
     remove(testpath)
 
-    os.makedirs(testpath)
+    testpath.mkdir(parents=True)
 
     yield testpath, testfile, testdir
 
@@ -29,13 +30,13 @@ def setup_teardown_folder(tmpdir):
 
 @pytest.fixture
 def setup_teardown_file(tmpdir):
-    testpath = tmpdir.mkdir("test")
+    testpath = pathlib.Path(tmpdir.strpath)
     testdir = testpath / "exdir_dir"
     testfile = testpath / "test.exdir"
 
     remove(testpath)
 
-    os.makedirs(testpath)
+    testpath.mkdir(parents=True)
 
     f = exdir.File(testfile, mode="w")
 
@@ -47,7 +48,7 @@ def setup_teardown_file(tmpdir):
 
 @pytest.fixture
 def exdir_tmpfile(tmpdir):
-    testpath = str(tmpdir.mkdir("test").join("test.exdir"))
+    testpath = pathlib.Path(tmpdir.strpath) / "test.exdir"
     f = exdir.File(testpath, mode="w")
     yield f
     f.close()
@@ -56,8 +57,8 @@ def exdir_tmpfile(tmpdir):
 
 @pytest.fixture
 def h5py_tmpfile(tmpdir):
-    testpath = str(tmpdir.mkdir("test").join("test.h5"))
+    testpath = pathlib.Path(tmpdir.strpath) / "test.h5"
     f = h5py.File(testpath, mode="w")
     yield f
     f.close()
-    os.remove(testpath)
+    os.remove(str(testpath))

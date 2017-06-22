@@ -12,7 +12,7 @@ class File(Group):
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  validate_name=None):
-        directory = pathlib.Path(directory).resolve()
+        directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
         mode = mode or 'a'
@@ -31,7 +31,7 @@ class File(Group):
                                    io_mode=self.io_mode,
                                    validate_name=validate_name)
 
-        already_exists = os.path.exists(directory)
+        already_exists = directory.exists()
         if already_exists:
             if not exob.is_nonraw_object_directory(directory):
                 raise FileExistsError("Path '" + str(directory) +
@@ -54,7 +54,7 @@ class File(Group):
         elif mode == "w":
             if already_exists:
                 if allow_remove:
-                    shutil.rmtree(directory)
+                    shutil.rmtree(str(directory))  # NOTE str needed for Python 3.5
                 else:
                     raise FileExistsError(
                         "File " + str(directory) + " already exists. We won't delete the entire tree" +

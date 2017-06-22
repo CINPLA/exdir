@@ -83,7 +83,7 @@ class Attribute(object):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
         meta_data = convert_quantities(meta_data)
-        with open(self.filename, "w") as meta_file:
+        with self.filename.open("w") as meta_file:
             yaml.safe_dump(meta_data,
                            meta_file,
                            default_flow_style=False,
@@ -92,8 +92,8 @@ class Attribute(object):
     # TODO only needs filename, make into free function
     def _open_or_create(self):
         meta_data = {}
-        if os.path.exists(self.filename):
-            with open(self.filename, "r") as meta_file:
+        if self.filename.exists():  # NOTE str for Python 3.5 support
+            with self.filename.open("r") as meta_file:
                 meta_data = yaml.safe_load(meta_file)
         return meta_data
 

@@ -438,7 +438,7 @@ def test_mmap(setup_teardown_file):
     dset = grp.create_dataset('foo', (10**3, 10**3), fillvalue=2)
     dset[1, 1] = 100
 
-    tmp_file = np.load(os.path.join(setup_teardown_file[1], "test", "foo", "data.npy"))
+    tmp_file = np.load(str(setup_teardown_file[1] / "test" / "foo" / "data.npy"))
 
     assert dset.data[1, 1] == 100
     assert tmp_file[1, 1] == 100
@@ -453,7 +453,7 @@ def test_mmap_quantities(setup_teardown_file):
 
     dset[1] = 100
 
-    tmp_file = np.load(os.path.join(setup_teardown_file[1], "test", "data", "data.npy"))
+    tmp_file = np.load(str(setup_teardown_file[1] / "test" / "data" / "data.npy"))
 
     assert dset.data[1] == 100
     assert tmp_file[1] == 100

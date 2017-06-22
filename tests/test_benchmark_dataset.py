@@ -50,7 +50,7 @@ def create_setup_exdir(tmpdir):
     def setup():
         testpath = str(tmpdir.mkdir("test").join("test.exdir"))
         if os.path.exists(testpath):
-            shutif.rmtree(testpath)
+            shutil.rmtree(testpath)
         f = exdir.File(testpath)
         return ((f,), {})
     return setup
