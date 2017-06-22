@@ -222,7 +222,7 @@ class Object():
         directory_name.mkdir()
         return Raw(
             root_directory=self.root_directory,
-            parent_path=self.parent_path,
+            parent_path=self.relative_path,
             object_name=name,
             io_mode=self.io_mode
         )
@@ -237,7 +237,7 @@ class Object():
                 )
             return Raw(
                 root_directory=self.root_directory,
-                parent_path=self.parent_path,
+                parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode
             )
