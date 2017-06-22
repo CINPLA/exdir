@@ -35,12 +35,10 @@ def minimal(parent_path, name):
     if name_str in dosnames:
         raise NameError("Name cannot be '" + name_str + "' because it is a reserved filename in Windows.")
 
-    if os.path.exists(path):
-        raise FileExistsError("Filename '" + name_str + "' already exsits in '" + str(path) + "'")
-
 
 def strict(parent_path, name):
     minimal(parent_path, name)
+    path = parent_path / name
     name_str = str(name)
 
     for char in name_str:
@@ -48,9 +46,13 @@ def strict(parent_path, name):
             raise NameError("Name '" + name_str + "' contains invalid character '" + char + "'.\n" +
                             "Valid characters are:\n" + VALID_CHARACTERS)
 
+    if os.path.exists(path):
+        raise FileExistsError("Filename '" + name_str + "' already exsits in '" + str(path) + "'")
+
 
 def thorough(parent_path, name):
     minimal(parent_path, name)
+    path = parent_path / name
     name_str = str(name)
 
     for char in name_str:
@@ -60,9 +62,12 @@ def thorough(parent_path, name):
 
         for item in os.listdir(parent_path):
             if name_str.lower() == item.lower():
-                raise NameError("A directory with name (case independent) '" + name_str +
+                raise FileExistsError("A directory with name (case independent) '" + name_str +
                                 "' already exists and cannot be made according " +
-                                "to the naming rule 'simple'.")
+                                "to the naming rule 'thorough'.")
+
+    if os.path.exists(path):
+        raise FileExistsError("Filename '" + name_str + "' already exsits in '" + str(path) + "'")
 
 
 def none(parent_path, name):

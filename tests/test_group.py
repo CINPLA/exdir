@@ -386,7 +386,7 @@ def test_validate_name_simple(setup_teardown_folder):
     grp = f.create_group("test")
     grp.create_group("aa")
 
-    with pytest.raises(NameError):
+    with pytest.raises(FileExistsError):
         grp.create_group("AA")
 
 

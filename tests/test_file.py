@@ -178,7 +178,7 @@ def test_validate_name_thorough(setup_teardown_folder):
     f = File(setup_teardown_folder[0] / "test.exdir", validate_name=fv.thorough)
     f.close()
 
-    with pytest.raises(NameError):
+    with pytest.raises(FileExistsError):
         File(setup_teardown_folder[0] / "Test.exdir", validate_name=fv.thorough)
         File(setup_teardown_folder[0] / "tes#.exdir", validate_name=fv.thorough)
 
@@ -212,8 +212,9 @@ def test_opening_with_different_validate_name(setup_teardown_folder):
     f.create_group("AAA")
     f.close()
 
+    # TODO changing name validation should result in warning/error
     f = File(setup_teardown_folder[1], "a", validate_name=fv.thorough)
-    with pytest.raises(NameError):
+    with pytest.raises(FileExistsError):
         f.create_group("aaa")
     f.close()
 
