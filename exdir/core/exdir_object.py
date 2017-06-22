@@ -179,7 +179,7 @@ class Object():
 
             warnings.warn(
                 "WARNING: validate_name should be set to one of the functions in " +
-                "the filename_validation module. " +
+                "the exdir.filename_validation module. " +
                 "Defining naming rule by string is no longer supported."
             )
 
