@@ -89,7 +89,29 @@ def test_convert_back_quantities():
     assert result == {"list": [1, 2, 3], "quantity": pq.Quantity(1, "m")}
 
 
-def test_assert_valid_name_simple(setup_teardown_folder):
+def test_assert_valid_name_minimal(setup_teardown_folder):
+    f = exdir.File(setup_teardown_folder[1], validate_name=fv.minimal)
+    exob._assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-", f)
+    with pytest.raises(NameError):
+        exob._assert_valid_name("", f)
+
+    exob._assert_valid_name("A", f)
+
+    exob._assert_valid_name("\n", f)
+
+    exob._assert_valid_name(six.unichr(0x4500), f)
+
+    with pytest.raises(NameError):
+        exob._assert_valid_name(exob.META_FILENAME, f)
+
+    with pytest.raises(NameError):
+        exob._assert_valid_name(exob.ATTRIBUTES_FILENAME, f)
+
+    with pytest.raises(NameError):
+        exob._assert_valid_name(exob.RAW_FOLDER_NAME, f)
+
+
+def test_assert_valid_name_thorough(setup_teardown_folder):
     f = exdir.File(setup_teardown_folder[1], validate_name=fv.thorough)
     exob._assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-", f)
     with pytest.raises(NameError):
@@ -114,7 +136,7 @@ def test_assert_valid_name_simple(setup_teardown_folder):
 
 
 def test_assert_valid_name_none(setup_teardown_folder):
-    f = exdir.File(setup_teardown_folder[1], validate_name=fv.minimal)
+    f = exdir.File(setup_teardown_folder[1], validate_name=fv.none)
     valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
     exob._assert_valid_name(valid_name, f)
@@ -131,14 +153,11 @@ def test_assert_valid_name_none(setup_teardown_folder):
     invalid_name = six.unichr(0x4500)
     exob._assert_valid_name(invalid_name, f)
 
-    with pytest.raises(NameError):
-        exob._assert_valid_name(exob.META_FILENAME, f)
+    exob._assert_valid_name(exob.META_FILENAME, f)
 
-    with pytest.raises(NameError):
-        exob._assert_valid_name(exob.ATTRIBUTES_FILENAME, f)
+    exob._assert_valid_name(exob.ATTRIBUTES_FILENAME, f)
 
-    with pytest.raises(NameError):
-        exob._assert_valid_name(exob.RAW_FOLDER_NAME, f)
+    exob._assert_valid_name(exob.RAW_FOLDER_NAME, f)
 
 
 def test_create_object_directory(setup_teardown_folder):
