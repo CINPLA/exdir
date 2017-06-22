@@ -221,20 +221,26 @@ class Object():
             raise FileExistsError("'{}' already exists in '{}'".format(name, self))
         directory_name.mkdir()
         return Raw(
-            self.root_directory,
-            self.parent_path,
-            name,
+            root_directory=self.root_directory,
+            parent_path=self.parent_path,
+            object_name=name,
             io_mode=self.io_mode
         )
 
     def require_raw(self, name):
+        from .raw import Raw
         directory_name = self.directory / name
         if directory_name.exists():
             if is_nonraw_object_directory(directory_name):
                 raise FileExistsError(
                     "Directory '{}' already exists, but is not raw.".format(directory_name)
                 )
-            return directory_name
+            return Raw(
+                root_directory=self.root_directory,
+                parent_path=self.parent_path,
+                object_name=name,
+                io_mode=self.io_mode
+            )
 
         return self.create_raw(name)
 
