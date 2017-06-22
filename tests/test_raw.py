@@ -48,3 +48,10 @@ def test_create_raw_twice(exdir_tmpfile):
     exdir_tmpfile.create_raw("test")
     with pytest.raises(FileExistsError):
         exdir_tmpfile.create_raw("test")
+
+
+def test_create_dataset_raw(exdir_tmpfile):
+    group = exdir_tmpfile.create_group("group")
+    dataset = group.create_dataset("dataset")
+    raw = dataset.create_raw("raw")
+    assert (exdir_tmpfile.directory / "group" / "dataset" / "raw").exists()
