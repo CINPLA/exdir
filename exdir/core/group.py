@@ -80,8 +80,10 @@ class Group(Object):
             if isinstance(current_object, Group):
                 return current_object
             else:
-                raise TypeError("An object with name '" + name + "' already " +
-                                "exists, but it is not a Group.")
+                raise TypeError(
+                    "An object with name '{}' already "
+                    "exists, but it is not a Group.".format(name)
+                )
         elif group_directory.exists():
             raise FileExistsError(
                 "Directory " + group_directory + " already exists, " +
@@ -95,18 +97,24 @@ class Group(Object):
             current_object = self[name]
 
             if not isinstance(current_object, Dataset):
-                msg = "Incompatible object ({}) already exists".format(current_object.__class__.__name__)
-                raise TypeError(msg)
+                raise TypeError(
+                    "Incompatible object ({}) already "
+                    "exists".format(current_object.__class__.__name__)
+                )
 
             if shape is not None:
                 if not np.array_equal(shape, current_object.shape):
-                    msg = "Shapes do not match (existing {} vs new {})".format(current_object.shape, shape)
-                    raise TypeError(msg)
+                    raise TypeError(
+                        "Shapes do not match (existing {} vs "
+                        "new {})".format(current_object.shape, shape)
+                    )
 
             if dtype is not None:
                 if dtype != current_object.dtype:
-                    msg = "Datatypes do not exactly match (existing {} vs new {})".format(current_object.dtype, dtype)
-                    raise TypeError(msg)
+                    raise TypeError(
+                        "Datatypes do not exactly match "
+                        "existing {} vs new {})".format(current_object.dtype, dtype)
+                    )
 
                 # if not numpy.can_cast(dtype, dset.dtype):
                 #     msg = "Datatypes cannot be safely cast (existing {} vs new {})".format(dset.dtype, dtype)

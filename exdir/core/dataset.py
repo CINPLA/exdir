@@ -19,11 +19,13 @@ class Dataset(exdir_object.Object):
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  validate_name=None):
-        super(Dataset, self).__init__(root_directory=root_directory,
-                                      parent_path=parent_path,
-                                      object_name=object_name,
-                                      io_mode=io_mode,
-                                      validate_name=validate_name)
+        super(Dataset, self).__init__(
+            root_directory=root_directory,
+            parent_path=parent_path,
+            object_name=object_name,
+            io_mode=io_mode,
+            validate_name=validate_name
+        )
         self.data_filename = self.directory / "data.npy"
         self._data = None
         if self.io_mode == self.OpenMode.READ_ONLY:
@@ -95,7 +97,7 @@ class Dataset(exdir_object.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
         if self._data is None:
-            self[:]  # TODO what is this good for?
+            self[:]  # NOTE This ensures that the data is loaded
         self._data[args] = value
 
     @property
@@ -119,10 +121,10 @@ class Dataset(exdir_object.Object):
         return self[:].dtype
 
     def __len__(self):
-         """ The size of the first axis.  TypeError if scalar."""
-         if len(self.shape) == 0:
-                raise TypeError("Attempt to take len() of scalar dataset")
-         return self.shape[0]
+        """ The size of the first axis.  TypeError if scalar."""
+        if len(self.shape) == 0:
+            raise TypeError("Attempt to take len() of scalar dataset")
+        return self.shape[0]
 
     def __iter__(self):
         """Iterate over the first axis.  TypeError if scalar.

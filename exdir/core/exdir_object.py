@@ -176,14 +176,14 @@ class Object():
                 validate_name = filename_validation.none
             else:
                 raise ValueError(
-                    'IO name rule "' + validate_name + '" not recognized,' +
-                    'name rule must be one of "strict", "simple", ' +
-                    '"thorough", "none"'
+                    'IO name rule "{}" not recognized, '
+                    'name rule must be one of "strict", "simple", '
+                    '"thorough", "none"'.format(validate_name)
                 )
 
             warnings.warn(
-                "WARNING: validate_name should be set to one of the functions in " +
-                "the exdir.filename_validation module. " +
+                "WARNING: validate_name should be set to one of the functions in "
+                "the exdir.filename_validation module. "
                 "Defining naming rule by string is no longer supported."
             )
 
@@ -195,8 +195,7 @@ class Object():
 
     @property
     def attrs(self):
-        return Attribute(self, mode=Attribute.Mode.ATTRIBUTES,
-                         io_mode=self.io_mode)
+        return Attribute(self, mode=Attribute.Mode.ATTRIBUTES, io_mode=self.io_mode)
 
     @attrs.setter
     def attrs(self, value):
@@ -204,8 +203,7 @@ class Object():
 
     @property
     def meta(self):
-        return Attribute(self, mode=Attribute.Mode.METADATA,
-                         io_mode=self.io_mode)
+        return Attribute(self, mode=Attribute.Mode.METADATA, io_mode=self.io_mode)
 
     @property
     def attributes_filename(self):
@@ -233,7 +231,9 @@ class Object():
         directory_name = self.directory / name
         if directory_name.exists():
             if is_nonraw_object_directory(directory_name):
-                raise FileExistsError("Directory '" + directory_name + "' already exists, but is not raw.")
+                raise FileExistsError(
+                    "Directory '{}' already exists, but is not raw.".format(directory_name)
+                )
             return directory_name
 
         return self.create_raw(name)

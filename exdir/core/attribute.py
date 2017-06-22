@@ -84,10 +84,12 @@ class Attribute(object):
             raise IOError("Cannot write in read only ("r") mode")
         meta_data = convert_quantities(meta_data)
         with self.filename.open("w", encoding="utf-8") as meta_file:
-            yaml.safe_dump(meta_data,
-                           meta_file,
-                           default_flow_style=False,
-                           allow_unicode=True)
+            yaml.safe_dump(
+                meta_data,
+                meta_file,
+                default_flow_style=False,
+                allow_unicode=True
+            )
 
     # TODO only needs filename, make into free function
     def _open_or_create(self):

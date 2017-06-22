@@ -18,31 +18,35 @@ class File(Group):
         mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
-            raise ValueError('IO mode "' + mode + '" not recognized,' +
-                             'mode must be one of {}'.format(recognized_modes))
+            raise ValueError(
+                "IO mode {} not recognized, "
+                "mode must be one of {}".format(mode, recognized_modes)
+            )
         if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY
         else:
             self.io_mode = self.OpenMode.READ_WRITE
 
-        super(File, self).__init__(root_directory=directory,
-                                   parent_path=pathlib.PurePosixPath(""),
-                                   object_name="",
-                                   io_mode=self.io_mode,
-                                   validate_name=validate_name)
+        super(File, self).__init__(
+            root_directory=directory,
+            parent_path=pathlib.PurePosixPath(""),
+            object_name="",
+            io_mode=self.io_mode,
+            validate_name=validate_name
+        )
         self.validate_name(directory.parent, directory.name)
 
         already_exists = directory.exists()
         if already_exists:
             if not exob.is_nonraw_object_directory(directory):
-                raise FileExistsError("Path '" + str(directory) +
-                                      "' already exists, but is not a valid " +
-                                      "exdir file.")
+                raise FileExistsError(
+                    "Path '{}' already exists, but is not a valid exdir file.".format(directory)
+                )
             # TODO consider extracting this function to avoid cyclic imports
             if self.meta[exob.EXDIR_METANAME][exob.TYPE_METANAME] != exob.FILE_TYPENAME:
-                raise FileExistsError("Path '" + str(directory) +
-                                      "' already exists, but is not a valid " +
-                                      "exdir file.")
+                raise FileExistsError(
+                    "Path '{}' already exists, but is not a valid exdir file.".format(directory)
+                )
 
         should_create_directory = False
 
@@ -58,8 +62,8 @@ class File(Group):
                     shutil.rmtree(str(directory))  # NOTE str needed for Python 3.5
                 else:
                     raise FileExistsError(
-                        "File " + str(directory) + " already exists. We won't delete the entire tree" +
-                        " by default. Add allow_remove=True to override."
+                        "File {} already exists. We won't delete the entire tree "
+                        "by default. Add allow_remove=True to override.".format(directory)
                     )
             should_create_directory = True
         elif mode == "w-" or mode == "x":
