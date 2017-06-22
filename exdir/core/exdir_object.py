@@ -157,7 +157,7 @@ class Object():
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  validate_name=None):
         self.root_directory = root_directory
-        self.object_name = object_name
+        self.object_name = str(object_name)  # NOTE could be path, so convert to str
         self.parent_path = parent_path
         self.relative_path = self.parent_path / self.object_name
         self.name = "/" + str(self.relative_path)

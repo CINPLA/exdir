@@ -32,7 +32,8 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
         dataset = Dataset(root_directory=self.root_directory,
-                          parent_path=self.relative_path, object_name=name,
+                          parent_path=self.relative_path,
+                          object_name=name,
                           io_mode=self.io_mode,
                           validate_name=self.validate_name)
 
@@ -60,7 +61,7 @@ class Group(Object):
         group = Group(
             root_directory=self.root_directory,
             parent_path=self.relative_path,
-            object_name=str(path),
+            object_name=path,
             io_mode=self.io_mode,
             validate_name=self.validate_name
         )
