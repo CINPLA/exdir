@@ -1,12 +1,12 @@
-import pytest
 import os
+import pathlib
 import six
-import exdir
 import yaml
 import quantities as pq
 import numpy as np
-import pathlib
+import pytest
 
+import exdir
 import exdir.core
 import exdir.core.exdir_object as exob
 import exdir.core.quantities_conversion as pqc
@@ -143,13 +143,13 @@ def test_assert_valid_name_none(setup_teardown_folder):
 
 def test_create_object_directory(setup_teardown_folder):
     with pytest.raises(ValueError):
-        exob._create_object_directory(setup_teardown_folder[2], "wrong_typename")
+        exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), "wrong_typename")
 
-    exob._create_object_directory(setup_teardown_folder[2], exob.DATASET_TYPENAME)
+    exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob.DATASET_TYPENAME)
 
     assert os.path.isdir(setup_teardown_folder[2])
 
-    file_path = os.path.join(setup_teardown_folder[2], exob.META_FILENAME)
+    file_path = setup_teardown_folder[2] / exob.META_FILENAME
     assert os.path.isfile(file_path)
 
     compare_metadata = {
@@ -164,26 +164,16 @@ def test_create_object_directory(setup_teardown_folder):
         assert metadata == compare_metadata
 
     with pytest.raises(IOError):
-        exob._create_object_directory(setup_teardown_folder[2], exob.DATASET_TYPENAME)
+        exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob.DATASET_TYPENAME)
 
 
-def test_metafile_from_directory(setup_teardown_folder):
-    compare_metafile = os.path.join(setup_teardown_folder[0], exob.META_FILENAME)
-    with open(compare_metafile, "w") as f:
-        pass
-
-    metafile = exob._metafile_from_directory(setup_teardown_folder[0])
-
-    assert metafile == compare_metafile
-
-
-def testis_nonraw_object_directory(setup_teardown_folder):
+def test_is_nonraw_object_directory(setup_teardown_folder):
     os.makedirs(setup_teardown_folder[2])
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is False
 
-    compare_metafile = os.path.join(setup_teardown_folder[2], exob.META_FILENAME)
+    compare_metafile = setup_teardown_folder[2] / exob.META_FILENAME
     with open(compare_metafile, "w") as f:
         pass
 
@@ -236,7 +226,7 @@ def testis_nonraw_object_directory(setup_teardown_folder):
 
     remove(setup_teardown_folder[2])
 
-    exob._create_object_directory(setup_teardown_folder[2], exob.DATASET_TYPENAME)
+    exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob.DATASET_TYPENAME)
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is True
 
@@ -248,7 +238,7 @@ def test_root_directory(setup_teardown_file):
 
     assert not exob.root_directory(setup_teardown_file[2])
 
-    path = os.path.join(setup_teardown_file[1], "foo", "bar")
+    path = setup_teardown_file[1] / "foo" / "bar"
     assert pathlib.Path(setup_teardown_file[1]) == exob.root_directory(path)
 
 
@@ -258,7 +248,7 @@ def test_is_inside_exdir(setup_teardown_file):
     grp = f.create_group("foo")
     grp.create_group("bar")
 
-    path = os.path.join(setup_teardown_file[1], "foo", "bar")
+    path = setup_teardown_file[1] / "foo" / "bar"
     assert exob.is_inside_exdir(path)
     assert not exob.is_inside_exdir(setup_teardown_file[2])
 
@@ -270,7 +260,7 @@ def test_assert_inside_exdir(setup_teardown_file):
     grp.create_group("bar")
 
 
-    path = os.path.join(setup_teardown_file[1], "foo", "bar")
+    path = setup_teardown_file[1] / "foo" / "bar"
     assert exob.assert_inside_exdir(path) is None
     with pytest.raises(FileNotFoundError):
         exob.assert_inside_exdir(setup_teardown_file[2])
@@ -282,7 +272,7 @@ def test_open_object(setup_teardown_file):
     grp = f.create_group("foo")
     grp2 = grp.create_group("bar")
 
-    path = os.path.join(setup_teardown_file[1], "foo", "bar")
+    path = setup_teardown_file[1] / "foo" / "bar"
     loaded_grp = exob.open_object(path)
 
     assert grp2 == loaded_grp

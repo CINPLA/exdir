@@ -24,7 +24,7 @@ class Dataset(exdir_object.Object):
                                       object_name=object_name,
                                       io_mode=io_mode,
                                       validate_name=validate_name)
-        self.data_filename = os.path.join(self.directory, "data.npy")
+        self.data_filename = self.directory / "data.npy"
         self._data = None
         if self.io_mode == self.OpenMode.READ_ONLY:
             self._mmap_mode = "r"
@@ -72,7 +72,7 @@ class Dataset(exdir_object.Object):
             return np.array([])
 
         if self._data is None:
-            self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+            self._data = np.load(str(self.data_filename), mmap_mode=self._mmap_mode)
 
         if len(self._data.shape) == 0:
             values = self._data
@@ -93,7 +93,7 @@ class Dataset(exdir_object.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
         if self._data is None:
-            self[:]
+            self[:]  # TODO what is this good for?
         self._data[args] = value
 
     @property

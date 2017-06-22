@@ -14,9 +14,9 @@ def remove(name):
 
 @pytest.fixture
 def setup_teardown_folder(tmpdir):
-    testpath = str(tmpdir.mkdir("test"))
-    testdir = os.path.join(testpath, "exdir_dir")
-    testfile = os.path.join(testpath, "test.exdir")
+    testpath = tmpdir.mkdir("test")
+    testdir = testpath / "exdir_dir"
+    testfile = testpath / "test.exdir"
 
     remove(testpath)
 
@@ -29,9 +29,9 @@ def setup_teardown_folder(tmpdir):
 
 @pytest.fixture
 def setup_teardown_file(tmpdir):
-    testpath = str(tmpdir.mkdir("test"))
-    testdir = os.path.join(testpath, "exdir_dir")
-    testfile = os.path.join(testpath, "test.exdir")
+    testpath = tmpdir.mkdir("test")
+    testdir = testpath / "exdir_dir"
+    testfile = testpath / "test.exdir"
 
     remove(testpath)
 

@@ -36,12 +36,12 @@ def _create_object_directory(directory, typename):
     don't already exist.
     """
     if os.path.exists(directory):
-        raise IOError("The directory '" + directory + "' already exists")
+        raise IOError("The directory '" + str(directory) + "' already exists")
     valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
     if typename not in valid_types:
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
     os.mkdir(directory)
-    meta_filename = _metafile_from_directory(directory)
+    meta_filename = directory / META_FILENAME
     with open(meta_filename, "w") as meta_file:
         metadata = {
             EXDIR_METANAME: {
@@ -54,10 +54,6 @@ def _create_object_directory(directory, typename):
                        allow_unicode=True)
 
 
-def _metafile_from_directory(directory):
-    return os.path.join(directory, META_FILENAME)
-
-
 def is_exdir_object(directory):
     """
     WARNING: Does not test if inside exdir directory,
@@ -67,7 +63,7 @@ def is_exdir_object(directory):
 
 
 def is_nonraw_object_directory(directory):
-    meta_filename = os.path.join(directory, META_FILENAME)
+    meta_filename = directory / META_FILENAME
     if not os.path.exists(meta_filename):
         return False
     with open(meta_filename, "r") as meta_file:
@@ -106,7 +102,7 @@ def root_directory(path):
             path = path.parent
             continue
 
-        meta_filename = _metafile_from_directory(path)
+        meta_filename = path / META_FILENAME
         with open(meta_filename, "r") as meta_file:
             meta_data = yaml.load(meta_file)
         if EXDIR_METANAME not in meta_data:
@@ -209,11 +205,11 @@ class Object():
 
     @property
     def attributes_filename(self):
-        return os.path.join(self.directory, ATTRIBUTES_FILENAME)
+        return self.directory / ATTRIBUTES_FILENAME
 
     @property
     def meta_filename(self):
-        return _metafile_from_directory(self.directory)
+        return self.directory / META_FILENAME
 
     def create_raw(self, name):
         from . import raw

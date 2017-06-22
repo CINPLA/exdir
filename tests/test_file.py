@@ -12,6 +12,7 @@
 
 import pytest
 import os
+import pathlib
 
 from exdir.core import File, Group
 from exdir.core.exdir_object import _create_object_directory, is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
@@ -23,7 +24,7 @@ from conftest import remove
 
 
 def test_file_init(setup_teardown_folder):
-    no_exdir = os.path.join(setup_teardown_folder[0], "no_exdir")
+    no_exdir = setup_teardown_folder[0] / "no_exdir"
 
     f = File(no_exdir, mode="w")
     f.close()
@@ -51,7 +52,7 @@ def test_file_init(setup_teardown_folder):
 
     remove(setup_teardown_folder[1])
 
-    _create_object_directory(setup_teardown_folder[1], DATASET_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), DATASET_TYPENAME)
     with pytest.raises(FileExistsError):
         f = File(setup_teardown_folder[1], mode="w")
 
@@ -62,18 +63,18 @@ def test_file_init(setup_teardown_folder):
     with pytest.raises(IOError):
         f = File(setup_teardown_folder[1], mode="r+")
 
-    _create_object_directory(setup_teardown_folder[1], FILE_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), FILE_TYPENAME)
 
     with pytest.raises(FileExistsError):
         f = File(setup_teardown_folder[1], mode="w")
 
     remove(setup_teardown_folder[1])
 
-    _create_object_directory(setup_teardown_folder[1], FILE_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), FILE_TYPENAME)
     f = File(setup_teardown_folder[1], mode="w", allow_remove=True)
     remove(setup_teardown_folder[1])
 
-    _create_object_directory(setup_teardown_folder[1], FILE_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), FILE_TYPENAME)
 
     with pytest.raises(IOError):
         f = File(setup_teardown_folder[1], mode="w-")
@@ -174,12 +175,12 @@ def test_file_close(setup_teardown_folder):
 
 def test_validate_name_thorough(setup_teardown_folder):
     """Test naming rule thorough."""
-    f = File(setup_teardown_folder[1], validate_name=fv.thorough)
+    f = File(setup_teardown_folder[0] / "test.exdir", validate_name=fv.thorough)
     f.close()
 
     with pytest.raises(NameError):
-        File(setup_teardown_folder[1][:-7] + "T.exdir", validate_name=fv.thorough)
-        File(setup_teardown_folder[1][:-7] + "#.exdir", validate_name=fv.thorough)
+        File(setup_teardown_folder[0] / "Test.exdir", validate_name=fv.thorough)
+        File(setup_teardown_folder[0] / "tes#.exdir", validate_name=fv.thorough)
 
 
 def test_validate_name_strict(setup_teardown_folder):
@@ -302,7 +303,7 @@ def test_open_two_attrs(setup_teardown_file):
 # def test_context_manager(setup_teardown_folder):
 #     """File objects can be used in with statements."""
 
-#     no_exdir = os.path.join(pytest.TESTPATH, "no_exdir")
+#     no_exdir = pytest.TESTPATH / "no_exdir"
 
 #     with File(no_exdir, mode="w") as f:
 #         assert f

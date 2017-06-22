@@ -26,7 +26,7 @@ class Group(Object):
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         exob._assert_valid_name(name, self)
-        dataset_directory = os.path.join(self.directory, name)
+        dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
         dataset = Dataset(root_directory=self.root_directory,

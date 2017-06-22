@@ -44,14 +44,13 @@ def test_object_attrs(setup_teardown_folder):
     obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
-                             GROUP_TYPENAME)
+    _create_object_directory(setup_teardown_folder[2] / "test_object", GROUP_TYPENAME)
 
     assert isinstance(obj.attrs, Attribute)
     assert obj.attrs.mode.value == 1
     obj.attrs = "test value"
 
-    assert is_nonraw_object_directory(os.path.join(setup_teardown_folder[2], "test_object"))
+    assert is_nonraw_object_directory(setup_teardown_folder[2] / "test_object")
 
     with open(os.path.join(setup_teardown_folder[2], "test_object", ATTRIBUTES_FILENAME), "r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
@@ -63,7 +62,7 @@ def test_object_meta(setup_teardown_folder):
     obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
+    _create_object_directory(setup_teardown_folder[2] / "test_object",
                              GROUP_TYPENAME)
 
     assert isinstance(obj.meta, Attribute)
@@ -81,24 +80,24 @@ def test_object_directory(setup_teardown_folder):
 def test_object_attributes_filename(setup_teardown_folder):
     obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
-    assert obj.attributes_filename == os.path.join(setup_teardown_folder[2], "", "test_object", ATTRIBUTES_FILENAME)
+    assert obj.attributes_filename == setup_teardown_folder[2] / "test_object" / ATTRIBUTES_FILENAME
 
 
 def test_object_meta_filename(setup_teardown_folder):
     obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
-    assert obj.meta_filename == os.path.join(setup_teardown_folder[2], "", "test_object", META_FILENAME)
+    assert obj.meta_filename == setup_teardown_folder[2] / "test_object" / META_FILENAME
 
 
 def test_object_create_raw(setup_teardown_folder):
     obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
+    _create_object_directory(setup_teardown_folder[2] / "test_object",
                              GROUP_TYPENAME)
 
     obj.create_raw("test_raw")
-    assert os.path.isdir(os.path.join(setup_teardown_folder[2], "test_object", "test_raw"))
+    assert os.path.isdir(setup_teardown_folder[2] / "test_object" / "test_raw")
 
     with pytest.raises(FileExistsError):
         obj.create_raw("test_raw")
@@ -108,11 +107,10 @@ def test_object_require_raw(setup_teardown_folder):
     obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
 
     _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(os.path.join(setup_teardown_folder[2], "test_object"),
-                             GROUP_TYPENAME)
+    _create_object_directory(setup_teardown_folder[2] / "test_object", GROUP_TYPENAME)
 
     obj.require_raw("test_raw")
-    assert os.path.isdir(os.path.join(setup_teardown_folder[2], "test_object", "test_raw"))
+    assert os.path.isdir(setup_teardown_folder[2] / "test_object" / "test_raw")
 
     obj.require_raw("test_raw")
-    assert os.path.isdir(os.path.join(setup_teardown_folder[2], "test_object", "test_raw"))
+    assert os.path.isdir(setup_teardown_folder[2] / "test_object" / "test_raw")
