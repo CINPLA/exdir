@@ -168,14 +168,18 @@ class Object():
         if isinstance(validate_name, str):
             if validate_name == 'simple':
                 validate_name = filename_validation.thorough
+            elif validate_name == 'thorough':
+                validate_name = filename_validation.thorough
             elif validate_name == 'strict':
                 validate_name = filename_validation.strict
             elif validate_name == 'none':
                 validate_name = filename_validation.none
             else:
-                raise ValueError('IO name rule "' + validate_name + '" not recognized,' +
-                                 'name rule must be one of "strict", "simple", ' +
-                                 '"thorough", "none"')
+                raise ValueError(
+                    'IO name rule "' + validate_name + '" not recognized,' +
+                    'name rule must be one of "strict", "simple", ' +
+                    '"thorough", "none"'
+                )
 
             warnings.warn(
                 "WARNING: validate_name should be set to one of the functions in " +
