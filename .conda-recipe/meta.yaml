@@ -12,7 +12,8 @@ build:
     # TODO remove this and add back quantities as conda package once its updated with the new numpy API
     - pip install git+https://github.com/python-quantities/python-quantities.git
     - python setup.py install
-
+    - coverage run --source exdir -m py.test -s --doctest-glob='*.rst'
+    - coverage report
 requirements:
   build:
     - python
