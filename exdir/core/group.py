@@ -31,6 +31,7 @@ class Group(Object):
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
+        # TODO use getitem instead of having two places where we create Dataset
         dataset = Dataset(root_directory=self.root_directory,
                           parent_path=self.relative_path,
                           object_name=name,
@@ -58,6 +59,7 @@ class Group(Object):
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
+        # TODO use getitem instead of having two places where we create Groups
         group = Group(
             root_directory=self.root_directory,
             parent_path=self.relative_path,
@@ -154,7 +156,7 @@ class Group(Object):
 
         directory = self.directory / path
 
-        if exob.is_raw_object_directory(directory):
+        if exob.is_raw_object_directory(directory):  # TODO create one function that handles all Raw creation
             return raw.Raw(
                 root_directory=self.root_directory,
                 parent_path=self.relative_path,
