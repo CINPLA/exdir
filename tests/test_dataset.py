@@ -77,13 +77,12 @@ def test_default_dtype(setup_teardown_file):
     dset = grp.create_dataset('foo', (63,))
     assert dset.dtype == np.dtype('float64')
 
-# def test_missing_shape(setup_teardown_file):
-#     """Missing shape raises TypeError."""
-#     f = setup_teardown_file[3]
+def test_missing_shape(setup_teardown_file):
+    """Missing shape raises TypeError."""
+    f = setup_teardown_file[3]
 
-#     with pytest.raises(TypeError):
-#         f.create_dataset('foo')
-
+    with pytest.raises(TypeError):
+        f.create_dataset('foo')
 
 def test_long_double(setup_teardown_file):
     """Confirm that the default dtype is float """

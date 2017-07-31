@@ -33,6 +33,12 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
+        if (shape is None and dtype is None) and data is None:
+            raise TypeError(
+                "Cannot create dataset. Missing shape and dtype "
+                "or data keyword."
+            )
+
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
