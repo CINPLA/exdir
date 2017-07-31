@@ -185,11 +185,6 @@ class Group(Object):
                     )
                 )
 
-        if data is None:
-            return current_object
-        
-        current_object.set_data(shape=shape, dtype=dtype,
-                                data=data, fillvalue=fillvalue)
         return current_object
 
     def __contains__(self, name):
