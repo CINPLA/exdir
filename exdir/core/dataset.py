@@ -69,7 +69,7 @@ class Dataset(exob.Object):
             self._mmap_mode = "r"
         else:
             self._mmap_mode = "r+"
-        
+
         self.data_filename = str(_dataset_filename(self.directory))
         self._reload()
 
@@ -95,10 +95,10 @@ class Dataset(exob.Object):
             raise IOError('Cannot write data to file in read only ("r") mode')
 
         self._data[args] = value
-    
+
     def _reload(self):
         self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
-        
+
     def _reset(self, value):
         attrs, data = _extract_quantity(value)
         np.save(self.data_filename, data)
@@ -131,18 +131,18 @@ class Dataset(exob.Object):
     @property
     def dtype(self):
         return self[:].dtype
-    
+
     @property
     def value(self):
         return self[:]
-    
+
     @value.setter
     def value(self, value):
         value = np.asarray(value, order="C")
         if self._data.shape != value.shape:
             self._reset(value)
             return
-            
+
         self[:] = value
 
     def __len__(self):
