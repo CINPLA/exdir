@@ -18,16 +18,21 @@ class Group(Object):
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  validate_name=None):
-        super(Group, self).__init__(root_directory=root_directory,
-                                    parent_path=parent_path,
-                                    object_name=object_name, io_mode=io_mode,
-                                    validate_name=validate_name)
+        super(Group, self).__init__(
+            root_directory=root_directory,
+            parent_path=parent_path,
+            object_name=object_name, io_mode=io_mode,
+            validate_name=validate_name
+        )
 
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         exob._assert_valid_name(name, self)
         if name in self:
-            raise FileExistsError("'{}' already exists in '{}'".format(name, self.name))
+            raise FileExistsError(
+                "'{}' already exists in '{}'".format(name, self.name)
+            )
+
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
@@ -62,7 +67,9 @@ class Group(Object):
         exob._assert_valid_name(path, self)
 
         if name in self:
-            raise FileExistsError("'{}' already exists in '{}'".format(name, self.name))
+            raise FileExistsError(
+                "'{}' already exists in '{}'".format(name, self.name)
+            )
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
@@ -101,7 +108,8 @@ class Group(Object):
 
         return self.create_group(name)
 
-    def require_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
+    def require_dataset(self, name, shape=None, dtype=None, data=None, 
+                        fillvalue=None):
         if name not in self:
             return self.create_dataset(
                 name,
@@ -216,7 +224,9 @@ class Group(Object):
             self.create_dataset(name, data=value)
         else:
             # TODO overwrite or not?
-            raise RuntimeError("Unable to assign value, {} already exists".format(name))
+            raise RuntimeError(
+                "Unable to assign value, {} already exists".format(name)
+            )
 
             # current_item = self.__getitem__(name)
             # if isinstance(current_item, Dataset):
