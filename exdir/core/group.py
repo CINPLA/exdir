@@ -244,20 +244,17 @@ class Group(Object):
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
             return
+
         if name not in self:
             self.create_dataset(name, data=value)
-        else:
-            # TODO overwrite or not?
+            return
+
+        if not isinstance(self[name], ds.Dataset):
             raise RuntimeError(
                 "Unable to assign value, {} already exists".format(name)
             )
 
-            # current_item = self.__getitem__(name)
-            # if isinstance(current_item, ds.Dataset):
-            #     current_item.set_data(data=value)
-            # else:
-            #     print("Data type")
-            #     raise NotImplementedError("Only dataset writing implemented")
+        self[name].value = value
 
     def keys(self):
         return abc.KeysView(self)

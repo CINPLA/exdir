@@ -409,8 +409,7 @@ def test_set_data(setup_teardown_file):
     assert np.all(outdata == testdata)
     assert outdata.dtype == testdata.dtype
 
-    with pytest.raises(RuntimeError):
-        grp['testdata'] = testdata
+    grp['testdata'] = testdata
 
 
 
