@@ -10,24 +10,24 @@ def _dataset_filename(dataset_directory):
 
 def _create_dataset_directory(dataset_directory, data):
     exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
-    # TODO check dimensions, npy or npz
-    # TODO use getitem instead of having two places where we create Dataset
-    # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
     filename = str(_dataset_filename(dataset_directory))
     np.save(filename, data)
-    
+
+def _extract_quantity(data):
+    attrs = {}
+    if isinstance(data, pq.Quantity):
+        result = data.magnitude
+        attrs["unit"] = data.dimensionality.string
+        if isinstance(data, pq.UncertainQuantity):
+            attrs["uncertainty"] = data.uncertainty
+    else:
+        result = data
+    return attrs, result
+
 def _convert_data(data, shape, dtype, fillvalue):
     attrs = {}
-
     if data is not None:
-        if isinstance(data, pq.Quantity):
-            result = data.magnitude
-            attrs["unit"] = data.dimensionality.string
-            if isinstance(data, pq.UncertainQuantity):
-                attrs["uncertainty"] = data.uncertainty
-        else:
-            result = data
-
+        attrs, result = _extract_quantity(data)
         if not isinstance(result, np.ndarray):
             result = np.asarray(data, order="C", dtype=dtype)
 
@@ -42,7 +42,7 @@ def _convert_data(data, shape, dtype, fillvalue):
 
     if result is None:
         raise TypeError("Could not create a meaningful dataset.")
-        
+
     return attrs, result
 
 class Dataset(exob.Object):
@@ -64,60 +64,16 @@ class Dataset(exob.Object):
             io_mode=io_mode,
             validate_name=validate_name
         )
-        self.data_filename = self.directory / "data.npy"
         self._data = None
         if self.io_mode == self.OpenMode.READ_ONLY:
             self._mmap_mode = "r"
         else:
             self._mmap_mode = "r+"
-
-    # TODO make support for creating a quantities array
-    def set_data(self, shape=None, dtype=None, data=None, fillvalue=None):
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ('r') mode")
-
-        if data is not None:
-            if isinstance(data, pq.Quantity):
-                result = data.magnitude
-                self.attrs["unit"] = data.dimensionality.string
-                if isinstance(data, pq.UncertainQuantity):
-                    self.attrs["uncertainty"] = data.uncertainty
-            else:
-                result = data
-
-            if not isinstance(result, np.ndarray):
-                result = np.asarray(data, order="C", dtype=dtype)
-
-            if shape is not None and result.shape != shape:
-                result = np.reshape(result, shape)
-        else:
-            if shape is None:
-                result = None
-            else:
-                fillvalue = fillvalue or 0.0
-                result = np.full(shape, fillvalue, dtype=dtype)
-
-        if result is not None:
-            # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
-            np.save(str(self.data_filename), result)
-
-            # TODO should we have this line?
-            #      Might lead to bugs where we create data, but havent loaded it
-            #      but requires the data always stay in memory
-            # self._data = result
-
-    def _create_file(self):
-        # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
-        self._data = np.load(str(self.data_filename), mmap_mode=self._mmap_mode)
+        
+        self.data_filename = str(_dataset_filename(self.directory))
+        self._reload()
 
     def __getitem__(self, args):
-        if not self.data_filename.exists():
-            raise FileNotFoundError(
-                "Dataset file not found: '{}'".format(self.data_filename)
-            )
-
-        if self._data is None:
-            self._create_file()
 
         if len(self._data.shape) == 0:
             values = self._data
@@ -138,10 +94,23 @@ class Dataset(exob.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
 
-        if self._data is None:
-            self._create_file()
-
         self._data[args] = value
+    
+    def _reload(self):
+        self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+        
+    def _reset(self, value):
+        attrs, data = _extract_quantity(value)
+        np.save(self.data_filename, data)
+        self._reload()
+        self.attrs = attrs
+        return
+
+    def set_data(self, data):
+        raise DeprecationWarning(
+            "set_data is deprecated. Use `dataset.value = data` instead."
+        )
+        self.value = data
 
     @property
     def data(self):
@@ -149,7 +118,7 @@ class Dataset(exob.Object):
 
     @data.setter
     def data(self, value):
-        self.set_data(data=value)
+        self.value = value
 
     @property
     def shape(self):
@@ -162,6 +131,19 @@ class Dataset(exob.Object):
     @property
     def dtype(self):
         return self[:].dtype
+    
+    @property
+    def value(self):
+        return self[:]
+    
+    @value.setter
+    def value(self, value):
+        value = np.asarray(value, order="C")
+        if self._data.shape != value.shape:
+            self._reset(value)
+            return
+            
+        self[:] = value
 
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar."""

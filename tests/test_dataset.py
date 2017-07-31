@@ -660,3 +660,9 @@ def test_slice_of_length_zero(setup_teardown_file):
         out = dset[1:1]
         assert isinstance(out, np.ndarray)
         assert out.shape == (0,)+shape[1:]
+
+def test_modify_all(setup_teardown_file):
+    f = setup_teardown_file[3]
+    dset = f.create_dataset("test", data=np.arange(10))
+    dset.data = np.ones(4)
+    assert np.all(dset.data == np.ones(4))

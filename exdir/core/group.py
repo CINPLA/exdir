@@ -45,11 +45,6 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
             )
         return
 
-    if shape is None:
-        raise TypeError(
-            "Cannot create dataset. Missing shape or data keyword."
-        )
-
 class Group(Object):
     """
     Container of other groups and datasets.
@@ -77,12 +72,16 @@ class Group(Object):
             )
 
         _assert_data_shape_dtype_match(data, shape, dtype)
+        if data is None and shape is None:
+            raise TypeError(
+                "Cannot create dataset. Missing shape or data keyword."
+            )
         data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
         attrs, result = ds._convert_data(data, shape, dtype, fillvalue)
         ds._create_dataset_directory(
             self.directory / name,
             result
-        )        
+        )
         dataset = self[name]
         dataset.attrs = attrs
         return dataset
@@ -144,9 +143,6 @@ class Group(Object):
                 fillvalue=fillvalue
             )
 
-        _assert_data_shape_dtype_match(data, shape, dtype)
-        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
-
         current_object = self[name]
 
         if not isinstance(current_object, ds.Dataset):
@@ -155,6 +151,12 @@ class Group(Object):
                     current_object.__class__.__name__
                 )
             )
+        
+        if data is None and shape is None and dtype is None:
+            return current_object
+
+        _assert_data_shape_dtype_match(data, shape, dtype)
+        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
         if not np.array_equal(shape, current_object.shape):
             raise TypeError(
