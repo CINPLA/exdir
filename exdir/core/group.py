@@ -3,6 +3,7 @@ import re
 import yaml
 import pathlib
 import numpy as np
+import quantities as pq
 from collections import abc
 
 from .exdir_object import Object
@@ -10,6 +11,37 @@ from . import exdir_object as exob
 from .dataset import Dataset
 from . import raw
 from .. import utils
+
+def _compare_and_convert_data_and_shape(data, shape, dtype):
+    if data is not None:
+        if not isinstance(data, pq.Quantity):
+            data = np.asarray(data, order="C")
+        if shape is not None and np.product(shape) != np.product(data.shape):
+            raise ValueError(
+                "Provided shape and data.shape do not match: {} vs {}".format(
+                    shape, data.shape
+                )
+            )
+        if dtype is not None and not data.dtype == dtype:
+            raise ValueError(
+                "Provided dtype and data.dtype do not match: {} vs {}".format(
+                    dtype, data.dtype
+                )
+            )
+        if shape is None:
+            shape = data.shape
+        if dtype is None:
+            dtype = data.dtype
+        return data, shape, dtype
+
+    if shape is None:
+        raise TypeError(
+            "Cannot create dataset. Missing shape or data keyword."
+        )
+
+    if dtype is None:
+        dtype = np.float32
+    return data, shape, dtype
 
 class Group(Object):
     """
@@ -32,12 +64,8 @@ class Group(Object):
             raise FileExistsError(
                 "'{}' already exists in '{}'".format(name, self.name)
             )
-
-        if (shape is None and dtype is None) and data is None:
-            raise TypeError(
-                "Cannot create dataset. Missing shape and dtype "
-                "or data keyword."
-            )
+        
+        data, shape, dtype = _compare_and_convert_data_and_shape(data, shape, dtype)
 
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
@@ -114,8 +142,8 @@ class Group(Object):
 
         return self.create_group(name)
 
-    def require_dataset(self, name, shape=None, dtype=None, data=None, 
-                        fillvalue=None):
+    def require_dataset(self, name, shape=None, dtype=None, exact=False,
+                        data=None, fillvalue=None):
         if name not in self:
             return self.create_dataset(
                 name,
@@ -125,40 +153,44 @@ class Group(Object):
                 fillvalue=fillvalue
             )
 
+        data, shape, dtype = _compare_and_convert_data_and_shape(data, shape, dtype)
+
         current_object = self[name]
 
         if not isinstance(current_object, Dataset):
             raise TypeError(
-                "Incompatible object ({}) already "
-                "exists".format(current_object.__class__.__name__)
+                "Incompatible object already exists: {}".format(
+                    current_object.__class__.__name__
+                )
             )
 
-        if shape is not None:
-            if not np.array_equal(shape, current_object.shape):
-                raise TypeError(
-                    "Shapes do not match (existing {} vs "
-                    "new {})".format(current_object.shape, shape)
-                )
+        if not np.array_equal(shape, current_object.shape):
+            raise TypeError(
+                "Shapes do not match (existing {} vs "
+                "new {})".format(current_object.shape, shape)
+            )
 
-        if dtype is not None:
-            if dtype != current_object.dtype:
+        if dtype != current_object.dtype:
+            if exact:
                 raise TypeError(
                     "Datatypes do not exactly match "
                     "existing {} vs new {})".format(current_object.dtype, dtype)
                 )
 
-            # if not numpy.can_cast(dtype, dset.dtype):
-            #     msg = "Datatypes cannot be safely cast (existing {} vs new {})".format(dset.dtype, dtype)
-            #     raise TypeError(msg)
+            if not np.can_cast(dtype, current_object.dtype):
+                raise TypeError(
+                    "Cannot safely cast from {} to {}".format(
+                        dtype,
+                        current_object.dtype
+                    )
+                )
 
-        # TODO is this correct or should we throw a typeerror if data is not similar to data?
-        #      This can potentially overwrite data
         if data is None:
             return current_object
-        else:
-            current_object.set_data(shape=shape, dtype=dtype,
-                                    data=data, fillvalue=fillvalue)
-            return current_object
+        
+        current_object.set_data(shape=shape, dtype=dtype,
+                                data=data, fillvalue=fillvalue)
+        return current_object
 
     def __contains__(self, name):
         if name == ".":

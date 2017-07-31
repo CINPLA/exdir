@@ -52,6 +52,6 @@ def test_create_raw_twice(exdir_tmpfile):
 
 def test_create_dataset_raw(exdir_tmpfile):
     group = exdir_tmpfile.create_group("group")
-    dataset = group.create_dataset("dataset")
+    dataset = group.create_dataset("dataset", shape=(1, 1), dtype='float32')
     raw = dataset.create_raw("raw")
     assert (exdir_tmpfile.directory / "group" / "dataset" / "raw").exists()
