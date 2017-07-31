@@ -151,13 +151,6 @@ def test_reshape(setup_teardown_file):
     assert dset.shape == (10, 3)
     assert np.array_equal(dset.data, data.reshape((10, 3)))
 
-def test_empty_create(setup_teardown_file):
-    f = setup_teardown_file[3]
-    grp = f.create_group("test")
-
-    dset = grp.create_dataset('foo')
-    assert np.array_equal(dset.data, np.array([]))
-
 # Feature: Datasets can be created only if they don't exist in the file
 def test_create(setup_teardown_file):
     """Create new dataset with no conflicts."""
