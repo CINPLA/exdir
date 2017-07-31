@@ -38,7 +38,6 @@ class Dataset(exdir_object.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ('r') mode")
 
-
         if data is not None:
             if isinstance(data, pq.Quantity):
                 result = data.magnitude

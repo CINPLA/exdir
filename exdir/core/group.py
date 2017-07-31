@@ -32,13 +32,20 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
         # TODO check dimensions, npy or npz
         # TODO use getitem instead of having two places where we create Dataset
-        dataset = Dataset(root_directory=self.root_directory,
-                          parent_path=self.relative_path,
-                          object_name=name,
-                          io_mode=self.io_mode,
-                          validate_name=self.validate_name)
+        dataset = Dataset(
+            root_directory=self.root_directory,
+            parent_path=self.relative_path,
+            object_name=name,
+            io_mode=self.io_mode,
+            validate_name=self.validate_name
+        )
 
-        dataset.set_data(shape=shape, dtype=dtype, data=data, fillvalue=fillvalue)
+        dataset.set_data(
+            shape=shape,
+            dtype=dtype,
+            data=data,
+            fillvalue=fillvalue
+        )
 
         return dataset
 
@@ -95,45 +102,49 @@ class Group(Object):
         return self.create_group(name)
 
     def require_dataset(self, name, shape=None, dtype=None, data=None, fillvalue=None):
-        if name in self:
-            current_object = self[name]
+        if name not in self:
+            return self.create_dataset(
+                name,
+                shape=shape,
+                dtype=dtype,
+                data=data,
+                fillvalue=fillvalue
+            )
 
-            if not isinstance(current_object, Dataset):
+        current_object = self[name]
+
+        if not isinstance(current_object, Dataset):
+            raise TypeError(
+                "Incompatible object ({}) already "
+                "exists".format(current_object.__class__.__name__)
+            )
+
+        if shape is not None:
+            if not np.array_equal(shape, current_object.shape):
                 raise TypeError(
-                    "Incompatible object ({}) already "
-                    "exists".format(current_object.__class__.__name__)
+                    "Shapes do not match (existing {} vs "
+                    "new {})".format(current_object.shape, shape)
                 )
 
-            if shape is not None:
-                if not np.array_equal(shape, current_object.shape):
-                    raise TypeError(
-                        "Shapes do not match (existing {} vs "
-                        "new {})".format(current_object.shape, shape)
-                    )
+        if dtype is not None:
+            if dtype != current_object.dtype:
+                raise TypeError(
+                    "Datatypes do not exactly match "
+                    "existing {} vs new {})".format(current_object.dtype, dtype)
+                )
 
-            if dtype is not None:
-                if dtype != current_object.dtype:
-                    raise TypeError(
-                        "Datatypes do not exactly match "
-                        "existing {} vs new {})".format(current_object.dtype, dtype)
-                    )
+            # if not numpy.can_cast(dtype, dset.dtype):
+            #     msg = "Datatypes cannot be safely cast (existing {} vs new {})".format(dset.dtype, dtype)
+            #     raise TypeError(msg)
 
-                # if not numpy.can_cast(dtype, dset.dtype):
-                #     msg = "Datatypes cannot be safely cast (existing {} vs new {})".format(dset.dtype, dtype)
-                #     raise TypeError(msg)
-
-            # TODO is this correct or should we throw a typeerror if data is not similar to data?
-            #      This can potentially overwrite data
-            if data is None:
-                return current_object
-            else:
-                current_object.set_data(shape=shape, dtype=dtype,
-                                        data=data, fillvalue=fillvalue)
-                return current_object
-
-        
-        return self.create_dataset(name, shape=shape, dtype=dtype,
-                                   data=data, fillvalue=fillvalue)
+        # TODO is this correct or should we throw a typeerror if data is not similar to data?
+        #      This can potentially overwrite data
+        if data is None:
+            return current_object
+        else:
+            current_object.set_data(shape=shape, dtype=dtype,
+                                    data=data, fillvalue=fillvalue)
+            return current_object
 
     def __contains__(self, name):
         if name == ".":
