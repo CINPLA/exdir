@@ -74,7 +74,9 @@ class Dataset(exdir_object.Object):
 
     def __getitem__(self, args):
         if not self.data_filename.exists():
-            return np.array([])
+            raise FileNotFoundError(
+                "Dataset file not found: '{}'".format(self.data_filename)
+            )
 
         if self._data is None:
             self._create_file()
