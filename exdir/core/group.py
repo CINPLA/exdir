@@ -151,9 +151,6 @@ class Group(Object):
                     current_object.__class__.__name__
                 )
             )
-        
-        if data is None and shape is None and dtype is None:
-            return current_object
 
         _assert_data_shape_dtype_match(data, shape, dtype)
         data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
