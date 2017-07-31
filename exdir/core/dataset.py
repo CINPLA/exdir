@@ -69,14 +69,16 @@ class Dataset(exdir_object.Object):
             #      but requires the data always stay in memory
             # self._data = result
 
+    def _create_file(self):
+        # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
+        self._data = np.load(str(self.data_filename), mmap_mode=self._mmap_mode)
 
     def __getitem__(self, args):
         if not self.data_filename.exists():
             return np.array([])
 
         if self._data is None:
-            # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
-            self._data = np.load(str(self.data_filename), mmap_mode=self._mmap_mode)
+            self._create_file()
 
         if len(self._data.shape) == 0:
             values = self._data
@@ -96,8 +98,10 @@ class Dataset(exdir_object.Object):
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
+
         if self._data is None:
-            self[:]  # NOTE This ensures that the data is loaded
+            self._create_file()
+
         self._data[args] = value
 
     @property
