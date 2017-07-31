@@ -131,9 +131,9 @@ class Group(Object):
                                         data=data, fillvalue=fillvalue)
                 return current_object
 
-        else:
-            return self.create_dataset(name, shape=shape, dtype=dtype,
-                                       data=data, fillvalue=fillvalue)
+        
+        return self.create_dataset(name, shape=shape, dtype=dtype,
+                                   data=data, fillvalue=fillvalue)
 
     def __contains__(self, name):
         if name == ".":
