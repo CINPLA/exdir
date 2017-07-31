@@ -8,40 +8,47 @@ from collections import abc
 
 from .exdir_object import Object
 from . import exdir_object as exob
-from .dataset import Dataset
+from . import dataset as ds
 from . import raw
 from .. import utils
 
-def _compare_and_convert_data_and_shape(data, shape, dtype):
+def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
         if not isinstance(data, pq.Quantity):
             data = np.asarray(data, order="C")
+        if shape is None:
+            shape = data.shape
+        if dtype is None:
+            dtype = data.dtype
+        return data, shape, dtype
+    if dtype is None:
+        dtype = np.float32
+    return data, shape, dtype
+
+def _assert_data_shape_dtype_match(data, shape, dtype):
+    if data is not None:
+        if not isinstance(data, pq.Quantity):
+            data = np.asarray(data, order="C")
+
         if shape is not None and np.product(shape) != np.product(data.shape):
             raise ValueError(
                 "Provided shape and data.shape do not match: {} vs {}".format(
                     shape, data.shape
                 )
             )
+
         if dtype is not None and not data.dtype == dtype:
             raise ValueError(
                 "Provided dtype and data.dtype do not match: {} vs {}".format(
                     dtype, data.dtype
                 )
             )
-        if shape is None:
-            shape = data.shape
-        if dtype is None:
-            dtype = data.dtype
-        return data, shape, dtype
+        return
 
     if shape is None:
         raise TypeError(
             "Cannot create dataset. Missing shape or data keyword."
         )
-
-    if dtype is None:
-        dtype = np.float32
-    return data, shape, dtype
 
 class Group(Object):
     """
@@ -60,32 +67,24 @@ class Group(Object):
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         exob._assert_valid_name(name, self)
+
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            raise IOError("Cannot write data to file in read only ('r') mode")
+
         if name in self:
             raise FileExistsError(
                 "'{}' already exists in '{}'".format(name, self.name)
             )
-        
-        data, shape, dtype = _compare_and_convert_data_and_shape(data, shape, dtype)
 
-        dataset_directory = self.directory / name
-        exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
-        # TODO check dimensions, npy or npz
-        # TODO use getitem instead of having two places where we create Dataset
-        dataset = Dataset(
-            root_directory=self.root_directory,
-            parent_path=self.relative_path,
-            object_name=name,
-            io_mode=self.io_mode,
-            validate_name=self.validate_name
-        )
-
-        dataset.set_data(
-            shape=shape,
-            dtype=dtype,
-            data=data,
-            fillvalue=fillvalue
-        )
-
+        _assert_data_shape_dtype_match(data, shape, dtype)
+        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+        attrs, result = ds._convert_data(data, shape, dtype, fillvalue)
+        ds._create_dataset_directory(
+            self.directory / name,
+            result
+        )        
+        dataset = self[name]
+        dataset.attrs = attrs
         return dataset
 
     def create_group(self, name):
@@ -107,15 +106,7 @@ class Group(Object):
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
-        # TODO use getitem instead of having two places where we create Groups
-        group = Group(
-            root_directory=self.root_directory,
-            parent_path=self.relative_path,
-            object_name=path,
-            io_mode=self.io_mode,
-            validate_name=self.validate_name
-        )
-        return group
+        return self[name]
 
     def require_group(self, name):
         path = utils.path.name_to_asserted_group_path(name)
@@ -153,11 +144,12 @@ class Group(Object):
                 fillvalue=fillvalue
             )
 
-        data, shape, dtype = _compare_and_convert_data_and_shape(data, shape, dtype)
+        _assert_data_shape_dtype_match(data, shape, dtype)
+        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
         current_object = self[name]
 
-        if not isinstance(current_object, Dataset):
+        if not isinstance(current_object, ds.Dataset):
             raise TypeError(
                 "Incompatible object already exists: {}".format(
                     current_object.__class__.__name__
@@ -226,7 +218,7 @@ class Group(Object):
         with meta_filename.open("r", encoding="utf-8") as meta_file:
             meta_data = yaml.safe_load(meta_file)
         if meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.DATASET_TYPENAME:
-            return Dataset(
+            return ds.Dataset(
                 root_directory=self.root_directory,
                 parent_path=self.relative_path,
                 object_name=name,
@@ -262,7 +254,7 @@ class Group(Object):
             )
 
             # current_item = self.__getitem__(name)
-            # if isinstance(current_item, Dataset):
+            # if isinstance(current_item, ds.Dataset):
             #     current_item.set_data(data=value)
             # else:
             #     print("Data type")

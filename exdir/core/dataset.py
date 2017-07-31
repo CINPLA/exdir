@@ -3,11 +3,49 @@ import quantities as pq
 import numpy as np
 
 from . import quantities_conversion as pqc
+from . import exdir_object as exob
 
-from . import exdir_object
+def _dataset_filename(dataset_directory):
+    return dataset_directory / "data.npy"
 
+def _create_dataset_directory(dataset_directory, data):
+    exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
+    # TODO check dimensions, npy or npz
+    # TODO use getitem instead of having two places where we create Dataset
+    # NOTE using str(filename) because of Python 3.5 and NumPy 1.11 support
+    filename = str(_dataset_filename(dataset_directory))
+    np.save(filename, data)
+    
+def _convert_data(data, shape, dtype, fillvalue):
+    attrs = {}
 
-class Dataset(exdir_object.Object):
+    if data is not None:
+        if isinstance(data, pq.Quantity):
+            result = data.magnitude
+            attrs["unit"] = data.dimensionality.string
+            if isinstance(data, pq.UncertainQuantity):
+                attrs["uncertainty"] = data.uncertainty
+        else:
+            result = data
+
+        if not isinstance(result, np.ndarray):
+            result = np.asarray(data, order="C", dtype=dtype)
+
+        if shape is not None and result.shape != shape:
+            result = np.reshape(result, shape)
+    else:
+        if shape is None:
+            result = None
+        else:
+            fillvalue = fillvalue or 0.0
+            result = np.full(shape, fillvalue, dtype=dtype)
+
+    if result is None:
+        raise TypeError("Could not create a meaningful dataset.")
+        
+    return attrs, result
+
+class Dataset(exob.Object):
     """
     Dataset class
 
