@@ -10,6 +10,11 @@ if [ $TRAVIS_TEST_RESULT -eq 0 ]; then
     conda convert "$PACKAGE" --platform linux-64 -o packages
     cd packages
     LABEL=${2:-main}
+
+    echo "Uploading source platform to anaconda with anaconda upload..."
+    set +x # hide token
+    anaconda -t "$CONDA_UPLOAD_TOKEN" upload -u "$1" --force "$PACKAGE" -l "$LABEL"
+    set -x
     for os in $(ls); do
         cd $os
         for package in $(ls); do
