@@ -149,7 +149,7 @@ def open_object(path):
 # TODO move this back to Object once circular imports are figured out
 
 
-class Object():
+class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
     """
