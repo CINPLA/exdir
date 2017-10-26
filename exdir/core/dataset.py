@@ -64,8 +64,8 @@ class Dataset(exob.Object):
         for plugin_name in self.meta["plugins"].keys():
             if not plugin_name in enabled_plugins:
                 raise Exception(
-                    "Plugin '{}' was used to write '{}', " +
-                    "but is not enabled.".format(plugin_name, name)
+                    ("Plugin '{}' was used to write '{}', "
+                    "but is not enabled.").format(plugin_name, self.name)
                 )
 
         for plugin in exdir.core.plugin.dataset_plugins:
