@@ -24,6 +24,9 @@ DATASET_TYPENAME = "dataset"
 GROUP_TYPENAME = "group"
 FILE_TYPENAME = "file"
 
+def resolve_path(path):
+    return pathlib.Path(path).resolve()
+
 
 def _assert_valid_name(name, container):
     """Check if name (dataset or group) is valid."""
@@ -92,7 +95,7 @@ def root_directory(path):
 
     returns: path to exdir.File or None if not found.
     """
-    path = pathlib.Path(path)
+    path = resolve_path(path)
     found = False
     while not found:
         if path.parent == path:  # parent is self
@@ -120,19 +123,19 @@ def root_directory(path):
 
 
 def is_inside_exdir(path):
-    path = pathlib.Path(path)
+    path = resolve_path(path)
     return root_directory(path) is not None
 
 
 def assert_inside_exdir(path):
-    path = pathlib.Path(path)
+    path = resolve_path(path)
     if not is_inside_exdir(path):
         raise FileNotFoundError("Path " + str(path) + " is not inside an Exdir repository.")
 
 
 def open_object(path):
     from . import exdir_file
-    path = pathlib.Path(path)
+    path = resolve_path(path)
     assert_inside_exdir(path)
     root_dir = root_directory(path)
     object_name = path.relative_to(root_dir)
