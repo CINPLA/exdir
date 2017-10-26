@@ -14,7 +14,6 @@ from .. import utils
 
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
-        data = np.asarray(data, order="C")
         if shape is None:
             shape = data.shape
         if dtype is None:
@@ -26,8 +25,6 @@ def _data_to_shape_and_dtype(data, shape, dtype):
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
-        data = np.asarray(data, order="C")
-
         if shape is not None and np.product(shape) != np.product(data.shape):
             raise ValueError(
                 "Provided shape and data.shape do not match: {} vs {}".format(
@@ -42,6 +39,17 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
                 )
             )
         return
+
+def _prepare_write(data):
+    attrs = {}
+    for plugin in exdir.dataset_plugins:
+        plugin_attrs, data = plugin.prepare_write(data)
+        attrs.update(plugin_attrs)
+
+    if data is not None:
+        data = np.asarray(data, order="C")
+
+    return data, attrs
 
 class Group(Object):
     """
@@ -69,10 +77,7 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
-        # attrs = {}
-        # for plugin in exdir.dataset_plugins:
-        #     plugin_attrs, data = plugin.prepare_write(data)
-        #     attrs.update(plugin_attrs)
+        data, attrs = _prepare_write(data)
 
         _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
@@ -83,9 +88,8 @@ class Group(Object):
         shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
         if data is not None:
-            data_asarray = np.asarray(data, order="C")
-            if shape is not None and data_asarray.shape != shape:
-                data = np.reshape(data_asarray, shape)
+            if shape is not None and data.shape != shape:
+                data = np.reshape(data, shape)
         else:
             if shape is None:
                 data = None
@@ -99,12 +103,10 @@ class Group(Object):
         dataset_directory = self.directory / name
 
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
-        # filename = str(ds._dataset_filename(dataset_directory))
-        # np.save(filename, data)
 
         dataset = self[name]
-        dataset._reset(data)
-        # dataset.attrs = attrs
+        dataset._reset(data, skip_plugins=True)
+        dataset.attrs = attrs
         return dataset
 
     def create_group(self, name):
@@ -172,6 +174,10 @@ class Group(Object):
                     current_object.__class__.__name__
                 )
             )
+
+        data, attrs = _prepare_write(data)
+
+        # TODO verify proper attributes
 
         _assert_data_shape_dtype_match(data, shape, dtype)
         shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)

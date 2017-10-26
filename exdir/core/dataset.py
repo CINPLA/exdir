@@ -164,14 +164,14 @@ class Dataset(exob.Object):
     def _reload(self):
         self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
 
-    def _reset(self, value):
-        for plugin in exdir.dataset_plugins:
-            attrs, value = plugin.prepare_write(value)
-            self.attrs.update(attrs)
+    def _reset(self, value, skip_plugins=False):
+        if not skip_plugins:
+            for plugin in exdir.dataset_plugins:
+                attrs, value = plugin.prepare_write(value)
+                self.attrs.update(attrs)
 
         np.save(self.data_filename, _ensure_writable(value))
         self._reload()
-        self.attrs = attrs
         return
 
     def set_data(self, data):
