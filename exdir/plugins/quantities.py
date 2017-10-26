@@ -95,5 +95,8 @@ class QuantitiesDatasetPlugin(exdir.plugin.Dataset):
 
 
 class QuantitiesAttributePlugin(exdir.plugin.Attribute):
-    def preprocess_meta_data(self, attribute, meta_data):
+    def prepare_read(self, meta_data):
         return convert_back_quantities(meta_data)
+
+    def prepare_write(self, meta_data):
+        return convert_quantities(meta_data)
