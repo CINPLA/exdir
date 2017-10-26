@@ -8,20 +8,20 @@ try:
 except ImportError:
     PLUGINBASE_AVAILABLE = False
 
+if PLUGINBASE_AVAILABLE:
+    plugin_base = pluginbase.PluginBase(
+        package="exdir.plugins",
+        searchpath=[]
+    )
 
-plugin_base = pluginbase.PluginBase(
-    package="exdir.plugins",
-    searchpath=[]
-)
-
-plugin_source = plugin_base.make_plugin_source(
-    identifier="exdir",
-    searchpath=[
-        os.path.join(
-            os.path.abspath(os.path.dirname(__file__)), "..", "plugins"
-        )
-    ]
-)
+    plugin_source = plugin_base.make_plugin_source(
+        identifier="exdir",
+        searchpath=[
+            os.path.join(
+                os.path.abspath(os.path.dirname(__file__)), "..", "plugins"
+            )
+        ]
+    )
 
 
 class Dataset:
@@ -83,6 +83,9 @@ class File:
 
 
 def load_plugins():
+    if not PLUGINBASE_AVAILABLE:
+        return
+    
     plugin_types = [
         (dataset_plugins, Dataset),
         (attribute_plugins, Attribute),
