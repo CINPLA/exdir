@@ -1,10 +1,73 @@
 from enum import Enum
 import yaml
 import os
+import numpy as np
+import exdir
+
+import quantities as pq
 
 from . import exdir_object as exob
-from .quantities_conversion import convert_quantities, convert_back_quantities
 
+
+def convert_back_quantities(value):
+    """Convert quantities back from dictionary."""
+    result = value
+    if isinstance(value, dict):
+        if "unit" in value and "value" in value and "uncertainty" in value:
+            try:
+                result = pq.UncertainQuantity(value["value"],
+                                              value["unit"],
+                                              value["uncertainty"])
+            except Exception:
+                pass
+        elif "unit" in value and "value" in value:
+            try:
+                result = pq.Quantity(value["value"], value["unit"])
+            except Exception:
+                pass
+        else:
+            try:
+                for key, value in result.items():
+                    result[key] = convert_back_quantities(value)
+            except AttributeError:
+                pass
+
+    return result
+
+
+def convert_quantities(value):
+    """Convert quantities to dictionary."""
+
+    result = value
+    if isinstance(value, pq.Quantity):
+        result = {
+            "value": value.magnitude.tolist(),
+            "unit": value.dimensionality.string
+        }
+        if isinstance(value, pq.UncertainQuantity):
+            assert value.dimensionality == value.uncertainty.dimensionality
+            result["uncertainty"] = value.uncertainty.magnitude.tolist()
+    elif isinstance(value, np.ndarray):
+        result = value.tolist()
+    elif isinstance(value, np.integer):
+        result = int(value)
+    elif isinstance(value, np.float):
+        result = float(value)
+    else:
+        # try if dictionary like objects can be converted if not return the
+        # original object
+        # Note, this might fail if .items() returns a strange combination of
+        # objects
+        try:
+            new_result = {}
+            for key, val in value.items():
+                new_key = convert_quantities(key)
+                new_result[new_key] = convert_quantities(val)
+            result = new_result
+        except AttributeError:
+            pass
+
+    return result
 
 class Attribute(object):
     """Attribute class."""
@@ -21,7 +84,10 @@ class Attribute(object):
 
     def __getitem__(self, name=None):
         meta_data = self._open_or_create()
-        meta_data = convert_back_quantities(meta_data)
+
+        for plugin in exdir.attribute_plugins:
+            meta_data = plugin.preprocess_meta_data(self, meta_data)
+
         for i in self.path:
             meta_data = meta_data[i]
         if name is not None:
@@ -112,3 +178,13 @@ class Attribute(object):
 
     def __len__(self):
         return len(self.keys())
+
+    def update(self, value):
+        for key in value:
+            self[key] = value[key]
+
+    def __str__(self):
+        string = ""
+        for key in self:
+            string += "{}: {},".format(key, self[key])
+        return "Attribute({}, {{{}}})".format(self.parent.name, string)

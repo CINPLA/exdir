@@ -398,6 +398,21 @@ def test_assign_quantities(setup_teardown_file):
     assert np.all(outdata == testdata)
     assert outdata.dtype == testdata.dtype
 
+
+def test_set_quantities(setup_teardown_file):
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    dset = grp.create_dataset('data', data=np.array([1]))
+
+    testdata = np.array([1.1, 2, 3]) * pq.J
+    dset.value = testdata
+    outdata = f['test']["data"][()]
+
+    assert isinstance(outdata, pq.Quantity)
+    assert np.all(outdata == testdata)
+    assert outdata.dtype == testdata.dtype
+
 def test_set_data(setup_teardown_file):
     """Set data works correctly."""
     f = setup_teardown_file[3]

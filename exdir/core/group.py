@@ -4,6 +4,7 @@ import yaml
 import pathlib
 import numpy as np
 import quantities as pq
+import exdir
 from collections import abc
 
 from .exdir_object import Object
@@ -71,19 +72,41 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
+        # attrs = {}
+        # for plugin in exdir.dataset_plugins:
+        #     plugin_attrs, data = plugin.prepare_write(data)
+        #     attrs.update(plugin_attrs)
+
         _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
             raise TypeError(
                 "Cannot create dataset. Missing shape or data keyword."
             )
+
         data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
-        attrs, result = ds._convert_data(data, shape, dtype, fillvalue)
-        ds._create_dataset_directory(
-            self.directory / name,
-            result
-        )
+
+        if data is not None:
+            if shape is not None and data.shape != shape:
+                data = np.reshape(data, shape)
+        else:
+            if shape is None:
+                data = None
+            else:
+                fillvalue = fillvalue or 0.0
+                data = np.full(shape, fillvalue, dtype=dtype)
+
+        if data is None:
+            raise TypeError("Could not create a meaningful dataset.")
+
+        dataset_directory = self.directory / name
+
+        exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
+        # filename = str(ds._dataset_filename(dataset_directory))
+        # np.save(filename, data)
+
         dataset = self[name]
-        dataset.attrs = attrs
+        dataset._reset(data)
+        # dataset.attrs = attrs
         return dataset
 
     def create_group(self, name):

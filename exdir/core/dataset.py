@@ -1,49 +1,117 @@
 import os
-import quantities as pq
 import numpy as np
+import exdir
 
-from . import quantities_conversion as pqc
+import quantities as pq
+
 from . import exdir_object as exob
+
+def _ensure_writable(value, dtype=None):
+    if not isinstance(value, np.ndarray):
+        return np.asarray(value, order="C", dtype=dtype)
+    return value
+
+def convert_back_quantities(value):
+    """Convert quantities back from dictionary."""
+    result = value
+    if isinstance(value, dict):
+        if "unit" in value and "value" in value and "uncertainty" in value:
+            try:
+                result = pq.UncertainQuantity(value["value"],
+                                              value["unit"],
+                                              value["uncertainty"])
+            except Exception:
+                pass
+        elif "unit" in value and "value" in value:
+            try:
+                result = pq.Quantity(value["value"], value["unit"])
+            except Exception:
+                pass
+        else:
+            try:
+                for key, value in result.items():
+                    result[key] = convert_back_quantities(value)
+            except AttributeError:
+                pass
+
+    return result
+
+
+def convert_quantities(value):
+    """Convert quantities to dictionary."""
+
+    result = value
+    if isinstance(value, pq.Quantity):
+        result = {
+            "value": value.magnitude.tolist(),
+            "unit": value.dimensionality.string
+        }
+        if isinstance(value, pq.UncertainQuantity):
+            assert value.dimensionality == value.uncertainty.dimensionality
+            result["uncertainty"] = value.uncertainty.magnitude.tolist()
+    elif isinstance(value, np.ndarray):
+        result = value.tolist()
+    elif isinstance(value, np.integer):
+        result = int(value)
+    elif isinstance(value, np.float):
+        result = float(value)
+    else:
+        # try if dictionary like objects can be converted if not return the
+        # original object
+        # Note, this might fail if .items() returns a strange combination of
+        # objects
+        try:
+            new_result = {}
+            for key, val in value.items():
+                new_key = convert_quantities(key)
+                new_result[new_key] = convert_quantities(val)
+            result = new_result
+        except AttributeError:
+            pass
+
+    return result
 
 def _dataset_filename(dataset_directory):
     return dataset_directory / "data.npy"
 
-def _create_dataset_directory(dataset_directory, data):
-    exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
-    filename = str(_dataset_filename(dataset_directory))
-    np.save(filename, data)
-
-def _extract_quantity(data):
-    attrs = {}
-    if isinstance(data, pq.Quantity):
-        result = data.magnitude
-        attrs["unit"] = data.dimensionality.string
-        if isinstance(data, pq.UncertainQuantity):
-            attrs["uncertainty"] = data.uncertainty
-    else:
-        result = data
-    return attrs, result
-
-def _convert_data(data, shape, dtype, fillvalue):
-    attrs = {}
-    if data is not None:
-        attrs, result = _extract_quantity(data)
-        if not isinstance(result, np.ndarray):
-            result = np.asarray(data, order="C", dtype=dtype)
-
-        if shape is not None and result.shape != shape:
-            result = np.reshape(result, shape)
-    else:
-        if shape is None:
-            result = None
-        else:
-            fillvalue = fillvalue or 0.0
-            result = np.full(shape, fillvalue, dtype=dtype)
-
-    if result is None:
-        raise TypeError("Could not create a meaningful dataset.")
-
-    return attrs, result
+# def _create_dataset_directory(dataset_directory, data):
+#     exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
+#     filename = str(_dataset_filename(dataset_directory))
+#     np.save(filename, data)
+#     # dataset = exob.open_object(filename)
+#     # dataset._reset(data)
+#
+# def _extract_quantity(data):
+#     attrs = {}
+#     if isinstance(data, pq.Quantity):
+#         result = data.magnitude
+#         attrs["unit"] = data.dimensionality.string
+#         if isinstance(data, pq.UncertainQuantity):
+#             attrs["uncertainty"] = data.uncertainty
+#     else:
+#         result = data
+#     return attrs, result
+#
+# def _convert_data(data, shape, dtype, fillvalue):
+#     attrs = {}
+#     if data is not None:
+#         attrs, result = _extract_quantity(data)
+#         if not isinstance(result, np.ndarray):
+#             result = np.asarray(data, order="C", dtype=dtype)
+#
+#         if shape is not None and result.shape != shape:
+#             result = np.reshape(result, shape)
+#     else:
+#         if shape is None:
+#             result = None
+#         else:
+#             fillvalue = fillvalue or 0.0
+#             result = np.full(shape, fillvalue, dtype=dtype)
+#
+#     if result is None:
+#         raise TypeError("Could not create a meaningful dataset.")
+#
+#     return attrs, result
 
 class Dataset(exob.Object):
     """
@@ -64,29 +132,22 @@ class Dataset(exob.Object):
             io_mode=io_mode,
             validate_name=validate_name
         )
-        self._data = None
+        self._data_memmap = None
         if self.io_mode == self.OpenMode.READ_ONLY:
             self._mmap_mode = "r"
         else:
             self._mmap_mode = "r+"
 
         self.data_filename = str(_dataset_filename(self.directory))
-        self._reload()
 
     def __getitem__(self, args):
-
         if len(self._data.shape) == 0:
             values = self._data
         else:
             values = self._data[args]
 
-        if "unit" in self.attrs:
-            item_dict = {"value": values,
-                         "unit": self.attrs["unit"]}
-            if "uncertainty" in self.attrs:
-                item_dict["uncertainty"] = self.attrs["uncertainty"]
-
-            values = pqc.convert_back_quantities(item_dict)
+        for plugin in exdir.dataset_plugins:
+            values = plugin.prepare_read(values, self.attrs)
 
         return values
 
@@ -94,14 +155,21 @@ class Dataset(exob.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
 
-        self._data[args] = value
+        for plugin in exdir.dataset_plugins:
+            attrs, value = plugin.prepare_write(value)
+            self.attrs.update(attrs)
+
+        self._data[args] = _ensure_writable(value)
 
     def _reload(self):
-        self._data = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+        self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
 
     def _reset(self, value):
-        attrs, data = _extract_quantity(value)
-        np.save(self.data_filename, data)
+        for plugin in exdir.dataset_plugins:
+            attrs, value = plugin.prepare_write(value)
+            self.attrs.update(attrs)
+
+        np.save(self.data_filename, _ensure_writable(value))
         self._reload()
         self.attrs = attrs
         return
@@ -138,7 +206,6 @@ class Dataset(exob.Object):
 
     @value.setter
     def value(self, value):
-        value = np.asarray(value, order="C")
         if self._data.shape != value.shape:
             self._reset(value)
             return
@@ -161,3 +228,9 @@ class Dataset(exob.Object):
 
         for i in range(self.shape[0]):
             yield self[i]
+
+    @property
+    def _data(self):
+        if self._data_memmap is None:
+            self._reload()
+        return self._data_memmap
