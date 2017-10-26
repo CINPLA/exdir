@@ -3,7 +3,6 @@ import re
 import yaml
 import pathlib
 import numpy as np
-import quantities as pq
 import exdir
 from collections import abc
 
@@ -15,21 +14,19 @@ from .. import utils
 
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
-        if not isinstance(data, pq.Quantity):
-            data = np.asarray(data, order="C")
+        data = np.asarray(data, order="C")
         if shape is None:
             shape = data.shape
         if dtype is None:
             dtype = data.dtype
-        return data, shape, dtype
+        return shape, dtype
     if dtype is None:
         dtype = np.float32
-    return data, shape, dtype
+    return shape, dtype
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
-        if not isinstance(data, pq.Quantity):
-            data = np.asarray(data, order="C")
+        data = np.asarray(data, order="C")
 
         if shape is not None and np.product(shape) != np.product(data.shape):
             raise ValueError(
@@ -83,11 +80,12 @@ class Group(Object):
                 "Cannot create dataset. Missing shape or data keyword."
             )
 
-        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
         if data is not None:
-            if shape is not None and data.shape != shape:
-                data = np.reshape(data, shape)
+            data_asarray = np.asarray(data, order="C")
+            if shape is not None and data_asarray.shape != shape:
+                data = np.reshape(data_asarray, shape)
         else:
             if shape is None:
                 data = None
@@ -176,7 +174,7 @@ class Group(Object):
             )
 
         _assert_data_shape_dtype_match(data, shape, dtype)
-        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
         if not np.array_equal(shape, current_object.shape):
             raise TypeError(
