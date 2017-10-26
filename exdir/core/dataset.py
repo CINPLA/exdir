@@ -7,17 +7,20 @@ from . import exdir_object as exob
 
 def _prepare_write(data):
     attrs = {}
+    meta = {}
     for plugin in exdir.core.plugin.dataset_plugins:
-        data, plugin_attrs = plugin.prepare_write(data)
+        data, plugin_attrs, plugin_meta = plugin.prepare_write(data)
         attrs.update(plugin_attrs)
+        if plugin_meta["required"]:
+            meta[plugin.IDENTIFIER] = plugin_meta
 
     if data is None:
-        return None, attrs
+        return None, attrs, meta
 
     if not isinstance(data, np.ndarray):
-        return np.asarray(data, order="C"), attrs
+        return np.asarray(data, order="C"), attrs, meta
 
-    return data, attrs
+    return data, attrs, meta
 
 
 def _dataset_filename(dataset_directory):
@@ -57,8 +60,17 @@ class Dataset(exob.Object):
         else:
             values = self._data[args]
 
+        enabled_plugins = [plugin.IDENTIFIER for plugin in exdir.core.plugin.dataset_plugins]
+        for plugin_name in self.meta["plugins"].keys():
+            if not plugin_name in enabled_plugins:
+                raise Exception(
+                    "Plugin '{}' was used to write '{}', " +
+                    "but is not enabled.".format(plugin_name, name)
+                )
+
         for plugin in exdir.core.plugin.dataset_plugins:
             values = plugin.prepare_read(values, self.attrs)
+
 
         return values
 
@@ -66,8 +78,9 @@ class Dataset(exob.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
 
-        value, attrs = _prepare_write(value)
+        value, attrs, meta = _prepare_write(value)
         self.attrs.update(attrs)
+        self.meta["plugins"] = meta
 
         self._data[args] = value
 
@@ -75,11 +88,12 @@ class Dataset(exob.Object):
         self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
 
     def _reset_data(self, value):
-        value, attrs = _prepare_write(value)
+        value, attrs, meta = _prepare_write(value)
 
         np.save(self.data_filename, value)
 
         self.attrs.update(attrs)
+        self.meta["plugins"] = meta
         self._reload_data()
         return
 

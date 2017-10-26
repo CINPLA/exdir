@@ -3,16 +3,7 @@ import quantities as pq
 import numpy as np
 import yaml
 
-def extract_quantity(data):
-    attrs = {}
-    if isinstance(data, pq.Quantity):
-        result = data.magnitude
-        attrs["unit"] = data.dimensionality.string
-        if isinstance(data, pq.UncertainQuantity):
-            attrs["uncertainty"] = data.uncertainty
-    else:
-        result = data
-    return result, attrs
+IDENTIFIER = "quantities"
 
 
 def convert_back_quantities(value):
@@ -89,8 +80,21 @@ class QuantitiesDatasetPlugin(exdir.core.plugin.Dataset):
             values = convert_back_quantities(item_dict)
         return values
 
-    def prepare_write(self, value):
-        return extract_quantity(value)
+    def prepare_write(self, data):
+        plugin_meta = {
+            "required": False
+        }
+        attrs = {}
+        if isinstance(data, pq.Quantity):
+            plugin_meta["required"] = True
+            result = data.magnitude
+            attrs["unit"] = data.dimensionality.string
+            if isinstance(data, pq.UncertainQuantity):
+                attrs["uncertainty"] = data.uncertainty
+        else:
+            result = data
+
+        return result, attrs, plugin_meta
 
 
 

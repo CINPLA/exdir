@@ -66,7 +66,7 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
-        data, attrs = ds._prepare_write(data)
+        data, attrs, meta = ds._prepare_write(data)
 
         _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
@@ -96,6 +96,7 @@ class Group(Object):
         dataset = self[name]
         dataset._reset_data(data)
         dataset.attrs = attrs
+        dataset.meta["plugins"] = meta
         return dataset
 
     def create_group(self, name):
@@ -164,7 +165,7 @@ class Group(Object):
                 )
             )
 
-        data, attrs = ds._prepare_write(data)
+        data, attrs, meta = ds._prepare_write(data)
 
         # TODO verify proper attributes
 

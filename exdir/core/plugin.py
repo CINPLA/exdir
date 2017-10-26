@@ -96,6 +96,7 @@ def load_plugins():
             classes = inspect.getmembers(plugin, inspect.isclass)
             for name, class_type in classes:
                 instance = class_type()
+                setattr(instance, "IDENTIFIER", plugin.IDENTIFIER)
                 if isinstance(instance, plugin_type):
                     plugin_list.append(instance)
 
