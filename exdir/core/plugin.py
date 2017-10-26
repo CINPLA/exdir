@@ -85,7 +85,7 @@ class File:
 def load_plugins():
     if not PLUGINBASE_AVAILABLE:
         return
-    
+
     plugin_types = [
         (dataset_plugins, Dataset),
         (attribute_plugins, Attribute),
@@ -99,7 +99,7 @@ def load_plugins():
             classes = inspect.getmembers(plugin, inspect.isclass)
             for name, class_type in classes:
                 instance = class_type()
-                setattr(instance, "IDENTIFIER", plugin.IDENTIFIER)
+                setattr(instance, "_plugin", plugin)
                 if isinstance(instance, plugin_type):
                     plugin_list.append(instance)
 

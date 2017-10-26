@@ -13,7 +13,7 @@ def _prepare_write(data):
         data, plugin_attrs, plugin_meta = plugin.prepare_write(data)
         attrs.update(plugin_attrs)
         if plugin_meta["required"]:
-            meta[plugin.IDENTIFIER] = plugin_meta
+            meta[plugin._plugin.IDENTIFIER] = plugin_meta
 
     if isinstance(data, (numbers.Number, tuple, str)):
         data = np.asarray(data, order="C")
@@ -58,7 +58,7 @@ class Dataset(exob.Object):
         else:
             values = self._data[args]
 
-        enabled_plugins = [plugin.IDENTIFIER for plugin in exdir.core.plugin.dataset_plugins]
+        enabled_plugins = [plugin._plugin.IDENTIFIER for plugin in exdir.core.plugin.dataset_plugins]
         for plugin_name in self.meta["plugins"].keys():
             if not plugin_name in enabled_plugins:
                 raise Exception(
