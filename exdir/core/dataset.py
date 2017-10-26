@@ -1,6 +1,7 @@
-import os
-import numpy as np
+import numbers
 import exdir
+
+import numpy as np
 
 from . import exdir_object as exob
 
@@ -14,11 +15,8 @@ def _prepare_write(data):
         if plugin_meta["required"]:
             meta[plugin.IDENTIFIER] = plugin_meta
 
-    if data is None:
-        return None, attrs, meta
-
-    if not isinstance(data, np.ndarray):
-        return np.asarray(data, order="C"), attrs, meta
+    if isinstance(data, (numbers.Number, tuple, str)):
+        data = np.asarray(data, order="C")
 
     return data, attrs, meta
 
