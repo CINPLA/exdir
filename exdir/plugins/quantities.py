@@ -12,7 +12,7 @@ def extract_quantity(data):
             attrs["uncertainty"] = data.uncertainty
     else:
         result = data
-    return attrs, result
+    return result, attrs
 
 
 def convert_back_quantities(value):

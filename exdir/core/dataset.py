@@ -6,10 +6,19 @@ import quantities as pq
 
 from . import exdir_object as exob
 
-def _ensure_writable(value, dtype=None):
-    if not isinstance(value, np.ndarray):
-        return np.asarray(value, order="C", dtype=dtype)
-    return value
+def _prepare_write(data):
+    attrs = {}
+    for plugin in exdir.dataset_plugins:
+        data, plugin_attrs = plugin.prepare_write(data)
+        attrs.update(plugin_attrs)
+
+    if data is None:
+        return None, attrs
+
+    if not isinstance(data, np.ndarray):
+        return np.asarray(data, order="C"), attrs
+
+    return data, attrs
 
 def convert_back_quantities(value):
     """Convert quantities back from dictionary."""
@@ -79,7 +88,7 @@ def _dataset_filename(dataset_directory):
 #     filename = str(_dataset_filename(dataset_directory))
 #     np.save(filename, data)
 #     # dataset = exob.open_object(filename)
-#     # dataset._reset(data)
+#     # dataset._reset_data(data)
 #
 # def _extract_quantity(data):
 #     attrs = {}
@@ -155,23 +164,21 @@ class Dataset(exob.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
 
-        for plugin in exdir.dataset_plugins:
-            attrs, value = plugin.prepare_write(value)
-            self.attrs.update(attrs)
+        value, attrs = _prepare_write(value)
+        self.attrs.update(attrs)
 
-        self._data[args] = _ensure_writable(value)
+        self._data[args] = value
 
-    def _reload(self):
+    def _reload_data(self):
         self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
 
-    def _reset(self, value, skip_plugins=False):
-        if not skip_plugins:
-            for plugin in exdir.dataset_plugins:
-                attrs, value = plugin.prepare_write(value)
-                self.attrs.update(attrs)
+    def _reset_data(self, value, skip_plugins=False):
+        value, attrs = _prepare_write(value)
 
-        np.save(self.data_filename, _ensure_writable(value))
-        self._reload()
+        np.save(self.data_filename, value)
+
+        self.attrs.update(attrs)
+        self._reload_data()
         return
 
     def set_data(self, data):
@@ -207,7 +214,7 @@ class Dataset(exob.Object):
     @value.setter
     def value(self, value):
         if self._data.shape != value.shape:
-            self._reset(value)
+            self._reset_data(value)
             return
 
         self[:] = value
@@ -232,5 +239,5 @@ class Dataset(exob.Object):
     @property
     def _data(self):
         if self._data_memmap is None:
-            self._reload()
+            self._reload_data()
         return self._data_memmap

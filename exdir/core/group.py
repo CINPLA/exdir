@@ -40,17 +40,6 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
             )
         return
 
-def _prepare_write(data):
-    attrs = {}
-    for plugin in exdir.dataset_plugins:
-        plugin_attrs, data = plugin.prepare_write(data)
-        attrs.update(plugin_attrs)
-
-    if data is not None:
-        data = np.asarray(data, order="C")
-
-    return data, attrs
-
 class Group(Object):
     """
     Container of other groups and datasets.
@@ -77,7 +66,7 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
-        data, attrs = _prepare_write(data)
+        data, attrs = ds._prepare_write(data)
 
         _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
@@ -105,7 +94,7 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
 
         dataset = self[name]
-        dataset._reset(data, skip_plugins=True)
+        dataset._reset_data(data, skip_plugins=True)
         dataset.attrs = attrs
         return dataset
 
@@ -175,7 +164,7 @@ class Group(Object):
                 )
             )
 
-        data, attrs = _prepare_write(data)
+        data, attrs = ds._prepare_write(data)
 
         # TODO verify proper attributes
 
