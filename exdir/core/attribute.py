@@ -23,7 +23,7 @@ class Attribute(object):
     def __getitem__(self, name=None):
         meta_data = self._open_or_create()
 
-        for plugin in exdir.attribute_plugins:
+        for plugin in exdir.core.plugin.attribute_plugins:
             meta_data = plugin.prepare_read(meta_data)
 
         for i in self.path:
@@ -69,7 +69,7 @@ class Attribute(object):
         for i in self.path:  # TODO check if this is necesary
             meta_data = meta_data[i]
 
-        for plugin in exdir.attribute_plugins:
+        for plugin in exdir.core.plugin.attribute_plugins:
             meta_data = plugin.prepare_read(meta_data)
 
         return meta_data
@@ -90,9 +90,9 @@ class Attribute(object):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
 
-        for plugin in exdir.attribute_plugins:
+        for plugin in exdir.core.plugin.attribute_plugins:
             meta_data = plugin.prepare_write(meta_data)
-            
+
         with self.filename.open("w", encoding="utf-8") as meta_file:
             yaml.safe_dump(
                 meta_data,

@@ -7,7 +7,7 @@ from . import exdir_object as exob
 
 def _prepare_write(data):
     attrs = {}
-    for plugin in exdir.dataset_plugins:
+    for plugin in exdir.core.plugin.dataset_plugins:
         data, plugin_attrs = plugin.prepare_write(data)
         attrs.update(plugin_attrs)
 
@@ -57,7 +57,7 @@ class Dataset(exob.Object):
         else:
             values = self._data[args]
 
-        for plugin in exdir.dataset_plugins:
+        for plugin in exdir.core.plugin.dataset_plugins:
             values = plugin.prepare_read(values, self.attrs)
 
         return values
@@ -74,7 +74,7 @@ class Dataset(exob.Object):
     def _reload_data(self):
         self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
 
-    def _reset_data(self, value, skip_plugins=False):
+    def _reset_data(self, value):
         value, attrs = _prepare_write(value)
 
         np.save(self.data_filename, value)

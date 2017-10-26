@@ -76,7 +76,7 @@ def convert_quantities(value):
     return result
 
 
-class QuantitiesDatasetPlugin(exdir.plugin.Dataset):
+class QuantitiesDatasetPlugin(exdir.core.plugin.Dataset):
     def prepare_read(self, values, attrs):
         if "unit" in attrs:
             item_dict = {
@@ -94,7 +94,7 @@ class QuantitiesDatasetPlugin(exdir.plugin.Dataset):
 
 
 
-class QuantitiesAttributePlugin(exdir.plugin.Attribute):
+class QuantitiesAttributePlugin(exdir.core.plugin.Attribute):
     def prepare_read(self, meta_data):
         return convert_back_quantities(meta_data)
 

@@ -94,7 +94,7 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
 
         dataset = self[name]
-        dataset._reset_data(data, skip_plugins=True)
+        dataset._reset_data(data)
         dataset.attrs = attrs
         return dataset
 

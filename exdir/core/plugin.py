@@ -1,3 +1,29 @@
+import os
+import inspect
+
+PLUGINBASE_AVAILABLE = True
+
+try:
+    import pluginbase
+except ImportError:
+    PLUGINBASE_AVAILABLE = False
+
+
+plugin_base = pluginbase.PluginBase(
+    package="exdir.plugins",
+    searchpath=[]
+)
+
+plugin_source = plugin_base.make_plugin_source(
+    identifier="exdir",
+    searchpath=[
+        os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), "..", "plugins"
+        )
+    ]
+)
+
+
 class Dataset:
     def prepare_read(self, value, attrs):
         """
@@ -25,6 +51,7 @@ class Dataset:
         attrs = {}
         return value, attrs
 
+
 class Attribute:
     def prepare_read(self, meta_data):
         """
@@ -49,5 +76,33 @@ class Attribute:
 class Group:
     pass
 
+
 class File:
     pass
+
+
+
+def load_plugins():
+    plugin_types = [
+        (dataset_plugins, Dataset),
+        (attribute_plugins, Attribute),
+        (attribute_plugins, Group),
+        (attribute_plugins, File)
+    ]
+
+    for plugin_list, plugin_type in plugin_types:
+        for plugin_name in plugin_source.list_plugins():
+            plugin = plugin_source.load_plugin(plugin_name)
+            classes = inspect.getmembers(plugin, inspect.isclass)
+            for name, class_type in classes:
+                instance = class_type()
+                if isinstance(instance, plugin_type):
+                    plugin_list.append(instance)
+
+        plugin_list = sorted(plugin_list)
+
+
+file_plugins = []
+group_plugins = []
+dataset_plugins = []
+attribute_plugins = []
