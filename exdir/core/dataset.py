@@ -33,7 +33,7 @@ class Dataset(exob.Object):
     Warning: Possible to overwrite existing dataset.
              This differs from the h5py API. However,
              it should only cause issues with existing
-             code if said code expects this to fail."
+             code if said code expects this to fail.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  validate_name=None):
@@ -61,10 +61,10 @@ class Dataset(exob.Object):
         enabled_plugins = [plugin._plugin.IDENTIFIER for plugin in exdir.core.plugin.dataset_plugins]
         for plugin_name in self.meta["plugins"].keys():
             if not plugin_name in enabled_plugins:
-                raise Exception(
-                    ("Plugin '{}' was used to write '{}', "
-                    "but is not enabled.").format(plugin_name, self.name)
-                )
+                raise Exception((
+                    "Plugin '{}' was used to write '{}', "
+                    "but is not enabled."
+                ).format(plugin_name, self.name))
 
         for plugin in exdir.core.plugin.dataset_plugins:
             values = plugin.prepare_read(values, self.attrs)
