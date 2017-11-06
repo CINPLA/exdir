@@ -6,14 +6,14 @@ import numpy as np
 from . import exdir_object as exob
 
 
-def _prepare_write(data):
+def _prepare_write(data, dataset_plugins):
     attrs = {}
     meta = {}
-    for plugin in exdir.core.plugin.dataset_plugins:
+    for plugin in dataset_plugins:
         data, plugin_attrs, plugin_meta = plugin.prepare_write(data)
         attrs.update(plugin_attrs)
-        if plugin_meta["required"]:
-            meta[plugin._plugin.IDENTIFIER] = plugin_meta
+        if "required" in plugin_meta and plugin_meta["required"] == True:
+            meta[plugin._plugin_module.name] = plugin_meta
 
     if isinstance(data, (numbers.Number, tuple, str)):
         data = np.asarray(data, order="C")
@@ -36,13 +36,14 @@ class Dataset(exob.Object):
              code if said code expects this to fail.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None):
+                 validate_name=None, plugin_manager=None):
         super(Dataset, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
             io_mode=io_mode,
-            validate_name=validate_name
+            validate_name=validate_name,
+            plugin_manager=plugin_manager
         )
         self._data_memmap = None
         if self.io_mode == self.OpenMode.READ_ONLY:
@@ -58,7 +59,7 @@ class Dataset(exob.Object):
         else:
             values = self._data[args]
 
-        enabled_plugins = [plugin._plugin.IDENTIFIER for plugin in exdir.core.plugin.dataset_plugins]
+        enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
         for plugin_name in self.meta["plugins"].keys():
             if not plugin_name in enabled_plugins:
                 raise Exception((
@@ -66,7 +67,7 @@ class Dataset(exob.Object):
                     "but is not enabled."
                 ).format(plugin_name, self.name))
 
-        for plugin in exdir.core.plugin.dataset_plugins:
+        for plugin in self.plugin_manager.dataset_plugins.read_order:
             values = plugin.prepare_read(values, self.attrs)
 
 
@@ -76,7 +77,7 @@ class Dataset(exob.Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
 
-        value, attrs, meta = _prepare_write(value)
+        value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
         self.attrs.update(attrs)
         self.meta["plugins"] = meta
 
@@ -86,7 +87,8 @@ class Dataset(exob.Object):
         self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
 
     def _reset_data(self, value):
-        value, attrs, meta = _prepare_write(value)
+        # TODO DRY violation, same as Group.create_dataset, but we have already called _prepare_write
+        value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
 
         np.save(self.data_filename, value)
 

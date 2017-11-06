@@ -1,4 +1,5 @@
 from . import core
+from . import plugins
 from .core import plugin
 from .core import File
 
@@ -7,4 +8,4 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-core.plugin.load_plugins()
+# core.plugin.load_plugins()

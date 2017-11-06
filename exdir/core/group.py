@@ -46,12 +46,14 @@ class Group(Object):
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None):
+                 validate_name=None, plugin_manager=None):
         super(Group, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
-            object_name=object_name, io_mode=io_mode,
-            validate_name=validate_name
+            object_name=object_name,
+            io_mode=io_mode,
+            validate_name=validate_name,
+            plugin_manager=plugin_manager
         )
 
     def create_dataset(self, name, shape=None, dtype=None,
@@ -66,7 +68,7 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
-        data, attrs, meta = ds._prepare_write(data)
+        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
 
         _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
@@ -93,10 +95,12 @@ class Group(Object):
 
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
 
+        # TODO DRY violation, same as dataset._reset_data, but we have already called _prepare_write
         dataset = self[name]
-        dataset._reset_data(data)
+        np.save(dataset.data_filename, data)
         dataset.attrs = attrs
         dataset.meta["plugins"] = meta
+        dataset._reload_data()
         return dataset
 
     def create_group(self, name):
@@ -165,7 +169,7 @@ class Group(Object):
                 )
             )
 
-        data, attrs, meta = ds._prepare_write(data)
+        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
 
         # TODO verify proper attributes
 
@@ -222,6 +226,7 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode # TODO validate name?
+                # TODO plugin manager?
             )
 
         if not exob.is_nonraw_object_directory(directory):
@@ -239,7 +244,8 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode,
-                validate_name=self.validate_name
+                validate_name=self.validate_name,
+                plugin_manager=self.plugin_manager
             )
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return Group(
@@ -247,7 +253,8 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode,
-                validate_name=self.validate_name
+                validate_name=self.validate_name,
+                plugin_manager=self.plugin_manager
             )
         else:
             print(

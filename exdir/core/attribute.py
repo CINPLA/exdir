@@ -7,6 +7,39 @@ import exdir
 from . import exdir_object as exob
 
 
+def convert_attributes(value):
+    result = value
+    if isinstance(value, pq.Quantity):
+        result = {
+            "value": value.magnitude.tolist(),
+            "unit": value.dimensionality.string
+        }
+        if isinstance(value, pq.UncertainQuantity):
+            assert value.dimensionality == value.uncertainty.dimensionality
+            result["uncertainty"] = value.uncertainty.magnitude.tolist()
+    elif isinstance(value, np.ndarray):
+        result = value.tolist()
+    elif isinstance(value, np.integer):
+        result = int(value)
+    elif isinstance(value, np.float):
+        result = float(value)
+    else:
+        # try if dictionary like objects can be converted if not return the
+        # original object
+        # Note, this might fail if .items() returns a strange combination of
+        # objects
+        try:
+            new_result = {}
+            for key, val in value.items():
+                new_key = convert_quantities(key)
+                new_result[new_key] = convert_quantities(val)
+            result = new_result
+        except AttributeError:
+            pass
+
+    return result
+
+
 class Attribute(object):
     """Attribute class."""
 
@@ -14,16 +47,17 @@ class Attribute(object):
         ATTRIBUTES = 1
         METADATA = 2
 
-    def __init__(self, parent, mode, io_mode, path=None):
+    def __init__(self, parent, mode, io_mode, path=None, plugin_manager=None):
         self.parent = parent
         self.mode = mode
         self.io_mode = io_mode
         self.path = path or []
+        self.plugin_manager = plugin_manager
 
     def __getitem__(self, name=None):
         meta_data = self._open_or_create()
 
-        for plugin in exdir.core.plugin.attribute_plugins:
+        for plugin in self.plugin_manager.attribute_plugins.read_order:
             meta_data = plugin.prepare_read(meta_data)
 
         for i in self.path:
@@ -31,8 +65,10 @@ class Attribute(object):
         if name is not None:
             meta_data = meta_data[name]
         if isinstance(meta_data, dict):
-            return Attribute(self.parent, self.mode, self.io_mode,
-                             self.path + [name])
+            return Attribute(
+                self.parent, self.mode, self.io_mode, self.path + [name],
+                plugin_manager=self.plugin_manager
+            )
         else:
             return meta_data
 
@@ -69,7 +105,7 @@ class Attribute(object):
         for i in self.path:  # TODO check if this is necesary
             meta_data = meta_data[i]
 
-        for plugin in exdir.core.plugin.attribute_plugins:
+        for plugin in self.plugin_manager.attribute_plugins.read_order:
             meta_data = plugin.prepare_read(meta_data)
 
         return meta_data
@@ -90,7 +126,7 @@ class Attribute(object):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
 
-        for plugin in exdir.core.plugin.attribute_plugins:
+        for plugin in self.plugin_manager.attribute_plugins.write_order:
             meta_data = plugin.prepare_write(meta_data)
 
         with self.filename.open("w", encoding="utf-8") as meta_file:

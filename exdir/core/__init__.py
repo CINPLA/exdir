@@ -9,3 +9,4 @@ from .attribute import Attribute
 from .dataset import Dataset
 from .group import Group
 from .raw import Raw
+from . import plugin

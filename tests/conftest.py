@@ -64,20 +64,10 @@ def h5py_tmpfile(tmpdir):
     os.remove(str(testpath))
 
 
-# @pytest.fixture
-# def setup_teardown_file_quantities(tmpdir):
-#     testpath = pathlib.Path(tmpdir.strpath)
-#     testdir = testpath / "exdir_dir"
-#     testfile = testpath / "test.exdir"
-
-#     remove(testpath)
-
-#     testpath.mkdir(parents=True)
-
-#     f = exdir.File(testfile, mode="w", plu)
-
-#     yield testpath, testfile, testdir, f
-
-#     f.close()
-
-#     remove(testpath)
+@pytest.fixture
+def quantities_tmpfile(tmpdir):
+    testpath = pathlib.Path(tmpdir.strpath) / "test.exdir"
+    f = exdir.File(testpath, mode="w", plugins=exdir.plugins.quantities)
+    yield f
+    f.close()
+    remove(testpath)

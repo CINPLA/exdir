@@ -14,16 +14,37 @@ import pytest
 import numpy as np
 import os
 import quantities as pq
+import exdir
 
 from exdir.core import Attribute, File, Dataset, plugin
 
 from exdir.plugins.quantities import convert_quantities, convert_back_quantities
 
 
-def test_create_quantities_data(setup_teardown_file):
-    plugin.load_plugins()
+def test_create_quantities_file(setup_teardown_folder):
+    f = exdir.File(setup_teardown_folder[1], 'w', plugins=exdir.plugins.quantities)
+    d = f.create_dataset("foo", data=np.array([1, 2, 3]) * pq.m)
+    assert all(d.data.magnitude == np.array([1, 2, 3]))
+    assert d.data.units == pq.m
+    f.close()
 
-    f = setup_teardown_file[3]
+def test_quantities_attributes(quantities_tmpfile):
+    """
+    Test if quantities is saved
+    """
+    f = quantities_tmpfile
+
+    f.attrs["temperature"] = 99.0
+    assert f.attrs["temperature"] == 99.0
+    f.attrs["temperature"] = 99.0 * pq.deg
+    assert f.attrs["temperature"] == 99.0 * pq.deg
+
+    attrs = f.attrs
+    assert type(attrs) is Attribute
+
+
+def test_create_quantities_data(quantities_tmpfile):
+    f = quantities_tmpfile
     grp = f.create_group("test")
 
     testdata = np.array([1, 2, 3]) * pq.J
@@ -43,8 +64,8 @@ def test_create_quantities_data(setup_teardown_file):
 
 
 
-def test_assign_quantities(setup_teardown_file):
-    f = setup_teardown_file[3]
+def test_assign_quantities(quantities_tmpfile):
+    f = quantities_tmpfile
     grp = f.create_group("test")
 
     testdata = np.array([1,2,3]) * pq.J
@@ -57,8 +78,8 @@ def test_assign_quantities(setup_teardown_file):
     assert outdata.dtype == testdata.dtype
 
 
-def test_set_quantities(setup_teardown_file):
-    f = setup_teardown_file[3]
+def test_set_quantities(quantities_tmpfile):
+    f = quantities_tmpfile
     grp = f.create_group("test")
 
     dset = grp.create_dataset('data', data=np.array([1]))
@@ -88,8 +109,8 @@ def test_mmap_quantities(setup_teardown_file):
     assert tmp_file[1] == 100
 
 
-def test_require_quantities(setup_teardown_file):
-    f = setup_teardown_file[3]
+def test_require_quantities(quantities_tmpfile):
+    f = quantities_tmpfile
     grp = f.create_group("test")
 
     testdata = np.array([1, 2, 3]) * pq.J
