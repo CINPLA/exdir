@@ -13,7 +13,6 @@ voltage_2 = np.sin(time) + 10
 f = exdir.File("experiments.exdir", "w")
 f.attrs['description'] = "This is a mock experiment with voltage values over time"
 
-
 # Creating group and datasets for experiment 1
 grp_1 = f.create_group("experiment_1")
 
@@ -22,7 +21,6 @@ dset_time_1.attrs['unit'] = "ms"
 
 dset_voltage_1 = grp_1.create_dataset("voltage", data=voltage_1)
 dset_voltage_1.attrs['unit'] = "mV"
-
 
 # Creating group and datasets for experiment 2
 grp_2 = f.create_group("experiment_2")
@@ -33,11 +31,8 @@ dset_time_2.attrs['unit'] = "ms"
 dset_voltage_2 = grp_2.create_dataset("voltage", data=voltage_2)
 dset_voltage_2.attrs['unit'] = "mV"
 
-
 # Creating group and subgroup for experiment 3
 grp_3 = f.create_group("experiment_invalid")
-
-
 
 # Looping through and accessing
 print("Experiments: ", list(f.keys()))
