@@ -67,7 +67,6 @@ def test_plugin_order():
 
     manager = exdir.core.plugin.Manager([first, second, third, fourth, fifth])
 
-    print()
     names = [plugin._plugin_module.name for plugin in manager.dataset_plugins.write_order]
     assert(names == ["first", "second", "third", "fourth", "fifth"])
     names = [plugin._plugin_module.name for plugin in manager.dataset_plugins.read_order]
@@ -94,7 +93,8 @@ def test_noop(setup_teardown_folder):
     assert all(d.data == np.array([1, 2, 3]))
     f.close()
 
-def test_fail_reading_without_requried(setup_teardown_folder):
+
+def test_fail_reading_without_required(setup_teardown_folder):
     class DatasetPlugin(exdir.core.plugin.Dataset):
         def prepare_read(self, values, attrs):
             return values
@@ -124,6 +124,7 @@ def test_fail_reading_without_requried(setup_teardown_folder):
         print(d.data)
     f.close()
 
+
 def test_one_way_scaling(setup_teardown_folder):
     class DatasetPlugin(exdir.core.plugin.Dataset):
         def prepare_read(self, values, attrs):
@@ -146,6 +147,7 @@ def test_one_way_scaling(setup_teardown_folder):
     d = f.create_dataset("foo", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([2, 4, 6]))
     f.close()
+
 
 def test_scaling(setup_teardown_folder):
 

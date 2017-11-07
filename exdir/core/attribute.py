@@ -7,39 +7,6 @@ import exdir
 from . import exdir_object as exob
 
 
-def convert_attributes(value):
-    result = value
-    if isinstance(value, pq.Quantity):
-        result = {
-            "value": value.magnitude.tolist(),
-            "unit": value.dimensionality.string
-        }
-        if isinstance(value, pq.UncertainQuantity):
-            assert value.dimensionality == value.uncertainty.dimensionality
-            result["uncertainty"] = value.uncertainty.magnitude.tolist()
-    elif isinstance(value, np.ndarray):
-        result = value.tolist()
-    elif isinstance(value, np.integer):
-        result = int(value)
-    elif isinstance(value, np.float):
-        result = float(value)
-    else:
-        # try if dictionary like objects can be converted if not return the
-        # original object
-        # Note, this might fail if .items() returns a strange combination of
-        # objects
-        try:
-            new_result = {}
-            for key, val in value.items():
-                new_key = convert_quantities(key)
-                new_result[new_key] = convert_quantities(val)
-            result = new_result
-        except AttributeError:
-            pass
-
-    return result
-
-
 class Attribute(object):
     """Attribute class."""
 

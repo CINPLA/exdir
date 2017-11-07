@@ -12,6 +12,7 @@
 
 import pytest
 import numpy as np
+import yaml
 
 from exdir.core import Attribute, File
 import six
@@ -76,24 +77,18 @@ def test_rank(setup_teardown_file):
 
 
 def test_single(setup_teardown_file):
-    """Attributes of shape (1,) don"t become scalars."""
+    """Numpy arrays as attribute gives errors."""
     f = setup_teardown_file[3]
-    # TODO add back this when proper
-    # with pytest.raises(RepresenterError):
-    #     f.attrs["a"] = np.ones((1,))
-    # out = f.attrs["a"]
-    # assert type(out) == list
-    # assert out[0] == 1.0
+
+    with pytest.raises(yaml.representer.RepresenterError):
+        f.attrs["a"] = np.ones((1,))
 
 def test_array(setup_teardown_file):
-    """Attributes of shape (1,) don"t become scalars."""
+    """Numpy arrays as attribute gives errors."""
     f = setup_teardown_file[3]
-    # TODO add back this when proper
-    # with pytest.raises(RepresenterError):
-    #     f.attrs["a"] = np.ones((2, 2))
-    # out = f.attrs["a"]
-    # assert type(out) == list
-    # assert out == [[1, 1], [1, 1]]
+
+    with pytest.raises(yaml.representer.RepresenterError):
+        f.attrs["a"] = np.ones((2, 2))
 
 
 
