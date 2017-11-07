@@ -76,13 +76,3 @@ def test_object_create_raw(setup_teardown_file):
 
     with pytest.raises(FileExistsError):
         obj.create_raw("test_raw")
-
-
-# def test_object_require_raw(setup_teardown_file):
-#     obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
-#
-#     obj.require_raw("test_raw")
-#     assert (setup_teardown_file[2] / "test_object" / "test_raw").is_dir()
-#
-#     obj.require_raw("test_raw")
-#     assert (setup_teardown_file[2] / "test_object" / "test_raw").is_dir()
