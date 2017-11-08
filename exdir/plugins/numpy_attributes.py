@@ -43,9 +43,10 @@ class AttributePlugin(exdir.core.plugin.Attribute):
     def prepare_read(self, meta_data):
         return convert_from_list(meta_data)
 
-numpy_attributes = exdir.core.plugin.Plugin(
-    "numpy_attributes",
-    attribute_plugins=[AttributePlugin()],
-    read_after=["quantities"],
-    write_after=["quantities"]
-)
+def plugins():
+    return [exdir.core.plugin.Plugin(
+        "numpy_attributes",
+        attribute_plugins=[AttributePlugin()],
+        read_after=["quantities"],
+        write_after=["quantities"]
+    )]

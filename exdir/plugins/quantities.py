@@ -104,10 +104,11 @@ class AttributePlugin(exdir.core.plugin.Attribute):
         return convert_quantities(meta_data)
 
 
-quantities = exdir.core.plugin.Plugin(
-    "quantities",
-    dataset_plugins=[DatasetPlugin()],
-    attribute_plugins=[AttributePlugin()],
-    read_before=["numpy_attributes"],
-    write_before=["numpy_attributes"]
-)
+def plugins():
+    return [exdir.core.plugin.Plugin(
+        "quantities",
+        dataset_plugins=[DatasetPlugin()],
+        attribute_plugins=[AttributePlugin()],
+        read_before=["numpy_attributes"],
+        write_before=["numpy_attributes"]
+    )]
