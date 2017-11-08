@@ -1,7 +1,6 @@
 import os
 import inspect
 
-
 class Plugin:
     def __init__(self, name, dataset_plugins=None, attribute_plugins=None,
                  file_plugins=None, group_plugins=None, raw_plugins=None,
@@ -243,8 +242,14 @@ class Manager:
         except TypeError:
             plugins = [plugins]
 
-        self.plugins = plugins
+        self.plugins = []
         for plugin in plugins:
+            if inspect.ismodule(plugin):
+                self.plugins.extend(plugin.plugins())
+            else:
+                self.plugins.append(plugin)
+
+        for plugin in self.plugins:
             dataset_plugins.extend(plugin.dataset_plugins)
             attribute_plugins.extend(plugin.attribute_plugins)
             file_plugins.extend(plugin.file_plugins)
