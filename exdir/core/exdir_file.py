@@ -13,6 +13,37 @@ class File(Group):
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  validate_name=None, plugins=None):
+        """
+        Parameters
+        ----------
+        directory:
+            Name of the directory to be opened or created as an Exdir File.
+        mode: str, optional
+            A file mode string that defines the read/write behavior.
+            See open() for information about the different modes.
+        allow_remove: bool
+            Set to True if you want mode 'w' to remove existing trees if they
+            exist. This False by default to avoid removing entire directory
+            trees by mistake.
+        validate_name: str, function, optional
+            Set the validation mode for names.
+            Can be a function that takes a name and returns True if the name
+            is valid or one of the following built-in validation modes:
+
+                'strict': only allow numbers, lowercase letters, underscore (_)
+                    and dash (-)
+                'simple': allow numbers, lowercase letters, uppercase letters,
+                    underscore (_) and dash (-), check if any file exists with
+                    same name in any case.
+                'thorough': verify if name is safe on all platforms, check if
+                    any file exists with same name in any case.                    
+                'none': allows any filename
+
+            The default is 'thorough'.
+        plugins: list, optional
+            A list of instantiated plugins or modules with a plugins()
+            function that returns a list of plugins.
+        """
         directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")

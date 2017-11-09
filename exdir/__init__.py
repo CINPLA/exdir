@@ -1,6 +1,5 @@
 from . import core
 from . import plugins
-from .core import plugin
 from .core import File
 
 # TODO remove versioneer

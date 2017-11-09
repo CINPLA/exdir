@@ -3,6 +3,7 @@ import shutil
 import os
 import h5py
 import pathlib
+import time
 
 import exdir
 
@@ -71,3 +72,25 @@ def quantities_tmpfile(tmpdir):
     yield f
     f.close()
     remove(testpath)
+
+@pytest.fixture
+def exdir_benchmark(tmpdir):
+    def benchmark(name, target, setup=None, teardown=None, iterations=1):
+        total_time = 0
+        for i in range(iterations):
+            data = tuple()
+            if setup is not None:
+                data = setup()
+            start_time = time.time()
+            target(*data)
+            end_time = time.time()
+            total_time += end_time - start_time
+            if teardown is not None:
+                teardown(*data)
+        print("--------------------")
+        print("Result for:", name, sep="\n")
+        print("Iterations:", iterations, sep="\n")
+        print("Mean:", total_time / iterations, sep="\n")
+        print("--------------------")
+
+    yield benchmark
