@@ -149,7 +149,7 @@ def open_object(path):
 # TODO move this back to Object once circular imports are figured out
 
 
-class Object():
+class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
     """
@@ -158,13 +158,15 @@ class Object():
         READ_ONLY = 2
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None):
+                 validate_name=None, plugin_manager=None):
+        # TODO put io_mode, validate_name, plugin_types into a configuration object
         self.root_directory = root_directory
         self.object_name = str(object_name)  # NOTE could be path, so convert to str
         self.parent_path = parent_path
         self.relative_path = self.parent_path / self.object_name
         self.name = "/" + str(self.relative_path)
         self.io_mode = io_mode
+        self.plugin_manager = plugin_manager
 
         validate_name = validate_name or filename_validation.thorough
 
@@ -198,7 +200,12 @@ class Object():
 
     @property
     def attrs(self):
-        return Attribute(self, mode=Attribute.Mode.ATTRIBUTES, io_mode=self.io_mode)
+        return Attribute(
+            self,
+            mode=Attribute.Mode.ATTRIBUTES,
+            io_mode=self.io_mode,
+            plugin_manager=self.plugin_manager
+        )
 
     @attrs.setter
     def attrs(self, value):
@@ -206,7 +213,12 @@ class Object():
 
     @property
     def meta(self):
-        return Attribute(self, mode=Attribute.Mode.METADATA, io_mode=self.io_mode)
+        return Attribute(
+            self,
+            mode=Attribute.Mode.METADATA,
+            io_mode=self.io_mode,
+            plugin_manager=self.plugin_manager
+        )
 
     @property
     def attributes_filename(self):
@@ -259,7 +271,8 @@ class Object():
             parent_path=parent_parent_path,
             object_name=parent_name,
             io_mode=self.io_mode,
-            validate_name=self.validate_name
+            validate_name=self.validate_name,
+            plugin_manager=self.plugin_manager
         )
 
     def __eq__(self, other):

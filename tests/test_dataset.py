@@ -13,7 +13,6 @@
 import pytest
 import numpy as np
 import os
-import quantities as pq
 
 from exdir.core import Attribute, File, Dataset
 
@@ -103,26 +102,6 @@ def test_create_scalar_data(setup_teardown_file):
     assert dset.shape == data.shape
 
 
-def test_create_quantities_data(setup_teardown_file):
-    f = setup_teardown_file[3]
-    grp = f.create_group("test")
-
-    testdata = np.array([1, 2, 3]) * pq.J
-    dset = grp.create_dataset('data', data=testdata)
-
-    outdata = dset[()]
-
-    assert isinstance(outdata, pq.Quantity)
-    assert np.all(outdata == testdata)
-    assert outdata.dtype == testdata.dtype
-
-    outdata = dset[0]
-
-    assert isinstance(outdata, pq.Quantity)
-    assert np.all(outdata == testdata[0])
-    assert outdata.dtype == testdata.dtype
-
-
 def test_create_extended_data(setup_teardown_file):
     """Create an extended dataset from existing data."""
     f = setup_teardown_file[3]
@@ -180,20 +159,6 @@ def test_create_existing(setup_teardown_file):
     assert dset == dset2
 
 
-def test_require_quantities(setup_teardown_file):
-    f = setup_teardown_file[3]
-    grp = f.create_group("test")
-
-    testdata = np.array([1, 2, 3]) * pq.J
-    dset = grp.create_dataset('data', data=testdata)
-
-    dset2 = grp.require_dataset('data', data=testdata)
-
-    assert dset == dset2
-    assert np.all(dset[:] == testdata)
-    assert np.all(dset2[:] == testdata)
-    assert isinstance(dset[:], pq.Quantity)
-
 def test_shape_conflict(setup_teardown_file):
     """require_dataset with shape conflict yields TypeError."""
     f = setup_teardown_file[3]
@@ -202,6 +167,7 @@ def test_shape_conflict(setup_teardown_file):
     grp.create_dataset('foo', (10, 3), 'f')
     with pytest.raises(TypeError):
         grp.require_dataset('foo', (10, 4), 'f')
+
 
 def test_type_confict(setup_teardown_file):
     """require_dataset with object type conflict yields TypeError."""
@@ -212,6 +178,7 @@ def test_type_confict(setup_teardown_file):
     with pytest.raises(TypeError):
         grp.require_dataset('foo', (10, 3), 'f')
 
+
 def test_dtype_conflict(setup_teardown_file):
     """require_dataset with dtype conflict (strict mode) yields TypeError."""
     f = setup_teardown_file[3]
@@ -220,6 +187,7 @@ def test_dtype_conflict(setup_teardown_file):
     dset = grp.create_dataset('foo', (10, 3), 'f')
     with pytest.raises(TypeError):
         grp.require_dataset('foo', (10, 3), 'S10')
+
 
 def test_dtype_close(setup_teardown_file):
     """require_dataset with convertible type succeeds (non-strict mode)-"""
@@ -230,7 +198,6 @@ def test_dtype_close(setup_teardown_file):
     dset2 = grp.require_dataset('foo', (10, 3), 'i2', exact=False)
     assert dset == dset2
     assert dset2.dtype == np.dtype('i4')
-
 
 
 # Feature: Datasets can be created with fill value
@@ -385,18 +352,7 @@ def test_assign(setup_teardown_file):
     assert outdata.dtype == testdata.dtype
 
 
-def test_assign_quantities(setup_teardown_file):
-    f = setup_teardown_file[3]
-    grp = f.create_group("test")
 
-    testdata = np.array([1,2,3]) * pq.J
-    dset = grp.create_dataset('data', data=testdata)
-
-    outdata = f['test']["data"][()]
-
-    assert isinstance(outdata, pq.Quantity)
-    assert np.all(outdata == testdata)
-    assert outdata.dtype == testdata.dtype
 
 def test_set_data(setup_teardown_file):
     """Set data works correctly."""
@@ -447,22 +403,6 @@ def test_mmap(setup_teardown_file):
 
     assert dset.data[1, 1] == 100
     assert tmp_file[1, 1] == 100
-
-
-def test_mmap_quantities(setup_teardown_file):
-    f = setup_teardown_file[3]
-    grp = f.create_group("test")
-
-    testdata = np.array([1, 2, 3]) * pq.J
-    dset = grp.create_dataset('data', data=testdata)
-
-    dset[1] = 100
-
-    tmp_file = np.load(str(setup_teardown_file[1] / "test" / "data" / "data.npy"))
-
-    assert dset.data[1] == 100
-    assert tmp_file[1] == 100
-
 
 
 def test_modify_view(setup_teardown_file):

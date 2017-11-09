@@ -2,6 +2,7 @@ import os
 import shutil
 import pathlib
 
+import exdir
 from . import exdir_object as exob
 from .group import Group
 from .. import utils
@@ -11,7 +12,7 @@ class File(Group):
     """Exdir file object."""
 
     def __init__(self, directory, mode=None, allow_remove=False,
-                 validate_name=None):
+                 validate_name=None, plugins=None):
         directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
@@ -22,6 +23,9 @@ class File(Group):
                 "IO mode {} not recognized, "
                 "mode must be one of {}".format(mode, recognized_modes)
             )
+
+        plugin_manager = exdir.core.plugin.Manager(plugins)
+
         if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY
         else:
@@ -32,7 +36,8 @@ class File(Group):
             parent_path=pathlib.PurePosixPath(""),
             object_name="",
             io_mode=self.io_mode,
-            validate_name=validate_name
+            validate_name=validate_name,
+            plugin_manager=plugin_manager
         )
         self.validate_name(directory.parent, directory.name)
 

@@ -1,9 +1,10 @@
 from enum import Enum
 import yaml
 import os
+import numpy as np
+import exdir
 
 from . import exdir_object as exob
-from .quantities_conversion import convert_quantities, convert_back_quantities
 
 
 class Attribute(object):
@@ -13,22 +14,28 @@ class Attribute(object):
         ATTRIBUTES = 1
         METADATA = 2
 
-    def __init__(self, parent, mode, io_mode, path=None):
+    def __init__(self, parent, mode, io_mode, path=None, plugin_manager=None):
         self.parent = parent
         self.mode = mode
         self.io_mode = io_mode
         self.path = path or []
+        self.plugin_manager = plugin_manager
 
     def __getitem__(self, name=None):
         meta_data = self._open_or_create()
-        meta_data = convert_back_quantities(meta_data)
+
+        for plugin in self.plugin_manager.attribute_plugins.read_order:
+            meta_data = plugin.prepare_read(meta_data)
+
         for i in self.path:
             meta_data = meta_data[i]
         if name is not None:
             meta_data = meta_data[name]
         if isinstance(meta_data, dict):
-            return Attribute(self.parent, self.mode, self.io_mode,
-                             self.path + [name])
+            return Attribute(
+                self.parent, self.mode, self.io_mode, self.path + [name],
+                plugin_manager=self.plugin_manager
+            )
         else:
             return meta_data
 
@@ -64,7 +71,10 @@ class Attribute(object):
         meta_data = self._open_or_create()
         for i in self.path:  # TODO check if this is necesary
             meta_data = meta_data[i]
-        meta_data = convert_back_quantities(meta_data)
+
+        for plugin in self.plugin_manager.attribute_plugins.read_order:
+            meta_data = plugin.prepare_read(meta_data)
+
         return meta_data
 
     def items(self):
@@ -82,7 +92,10 @@ class Attribute(object):
     def _set_data(self, meta_data):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
-        meta_data = convert_quantities(meta_data)
+
+        for plugin in self.plugin_manager.attribute_plugins.write_order:
+            meta_data = plugin.prepare_write(meta_data)
+
         with self.filename.open("w", encoding="utf-8") as meta_file:
             yaml.safe_dump(
                 meta_data,
@@ -112,3 +125,13 @@ class Attribute(object):
 
     def __len__(self):
         return len(self.keys())
+
+    def update(self, value):
+        for key in value:
+            self[key] = value[key]
+
+    def __str__(self):
+        string = ""
+        for key in self:
+            string += "{}: {},".format(key, self[key])
+        return "Attribute({}, {{{}}})".format(self.parent.name, string)

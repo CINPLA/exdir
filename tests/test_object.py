@@ -14,6 +14,7 @@ import pytest
 import os
 import yaml
 import pathlib
+import exdir
 
 from exdir.core import Object, Attribute
 # TODO Remove this import and use import <> as <> instead
@@ -40,77 +41,38 @@ def test_open_object(exdir_tmpfile):
     exob.open_object(grp2.directory)
 
 
-def test_object_attrs(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
-
-    _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(setup_teardown_folder[2] / "test_object", GROUP_TYPENAME)
+def test_object_attrs(setup_teardown_file):
+    obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
 
     assert isinstance(obj.attrs, Attribute)
     assert obj.attrs.mode.value == 1
     obj.attrs = "test value"
 
-    assert is_nonraw_object_directory(setup_teardown_folder[2] / "test_object")
-
-    with (setup_teardown_folder[2] / "test_object" / ATTRIBUTES_FILENAME).open("r") as meta_file:
+    with (setup_teardown_file[1] / "test_object" / ATTRIBUTES_FILENAME).open("r") as meta_file:
         meta_data = yaml.safe_load(meta_file)
-
         assert meta_data == "test value"
 
 
-def test_object_meta(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
-
-    _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(setup_teardown_folder[2] / "test_object",
-                             GROUP_TYPENAME)
+def test_object_meta(setup_teardown_file):
+    obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
 
     assert isinstance(obj.meta, Attribute)
-    assert obj.meta.mode.value == 2
+    assert obj.meta.mode == exdir.core.Attribute.Mode.METADATA
     with pytest.raises(AttributeError):
         obj.meta = "test value"
 
 
-def test_object_directory(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
+def test_object_directory(setup_teardown_file):
+    obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
 
-    assert obj.directory == pathlib.Path(setup_teardown_folder[2]) / "test_object"
+    assert obj.directory == pathlib.Path(setup_teardown_file[1]) / "test_object"
+    assert obj.attributes_filename == setup_teardown_file[1] / "test_object" / ATTRIBUTES_FILENAME
+    assert obj.meta_filename == setup_teardown_file[1] / "test_object" / META_FILENAME
 
-
-def test_object_attributes_filename(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
-
-    assert obj.attributes_filename == setup_teardown_folder[2] / "test_object" / ATTRIBUTES_FILENAME
-
-
-def test_object_meta_filename(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
-
-    assert obj.meta_filename == setup_teardown_folder[2] / "test_object" / META_FILENAME
-
-
-def test_object_create_raw(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
-
-    _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(setup_teardown_folder[2] / "test_object",
-                             GROUP_TYPENAME)
-
+def test_object_create_raw(setup_teardown_file):
+    obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
     obj.create_raw("test_raw")
-    assert (setup_teardown_folder[2] / "test_object" / "test_raw").is_dir()
+    assert (setup_teardown_file[1] / "test_object" / "test_raw").is_dir()
 
     with pytest.raises(FileExistsError):
         obj.create_raw("test_raw")
-
-
-def test_object_require_raw(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
-
-    _create_object_directory(setup_teardown_folder[2], DATASET_TYPENAME)
-    _create_object_directory(setup_teardown_folder[2] / "test_object", GROUP_TYPENAME)
-
-    obj.require_raw("test_raw")
-    assert (setup_teardown_folder[2] / "test_object" / "test_raw").is_dir()
-
-    obj.require_raw("test_raw")
-    assert (setup_teardown_folder[2] / "test_object" / "test_raw").is_dir()

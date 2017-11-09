@@ -3,7 +3,7 @@ import re
 import yaml
 import pathlib
 import numpy as np
-import quantities as pq
+import exdir
 from collections import abc
 
 from .exdir_object import Object
@@ -14,22 +14,17 @@ from .. import utils
 
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
-        if not isinstance(data, pq.Quantity):
-            data = np.asarray(data, order="C")
         if shape is None:
             shape = data.shape
         if dtype is None:
             dtype = data.dtype
-        return data, shape, dtype
+        return shape, dtype
     if dtype is None:
         dtype = np.float32
-    return data, shape, dtype
+    return shape, dtype
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
-        if not isinstance(data, pq.Quantity):
-            data = np.asarray(data, order="C")
-
         if shape is not None and np.product(shape) != np.product(data.shape):
             raise ValueError(
                 "Provided shape and data.shape do not match: {} vs {}".format(
@@ -51,12 +46,14 @@ class Group(Object):
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None):
+                 validate_name=None, plugin_manager=None):
         super(Group, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
-            object_name=object_name, io_mode=io_mode,
-            validate_name=validate_name
+            object_name=object_name,
+            io_mode=io_mode,
+            validate_name=validate_name,
+            plugin_manager=plugin_manager
         )
 
     def create_dataset(self, name, shape=None, dtype=None,
@@ -71,19 +68,39 @@ class Group(Object):
                 "'{}' already exists in '{}'".format(name, self.name)
             )
 
+        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
+
         _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
             raise TypeError(
                 "Cannot create dataset. Missing shape or data keyword."
             )
-        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
-        attrs, result = ds._convert_data(data, shape, dtype, fillvalue)
-        ds._create_dataset_directory(
-            self.directory / name,
-            result
-        )
+
+        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+
+        if data is not None:
+            if shape is not None and data.shape != shape:
+                data = np.reshape(data, shape)
+        else:
+            if shape is None:
+                data = None
+            else:
+                fillvalue = fillvalue or 0.0
+                data = np.full(shape, fillvalue, dtype=dtype)
+
+        if data is None:
+            raise TypeError("Could not create a meaningful dataset.")
+
+        dataset_directory = self.directory / name
+
+        exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
+
+        # TODO DRY violation, same as dataset._reset_data, but we have already called _prepare_write
         dataset = self[name]
+        np.save(dataset.data_filename, data)
         dataset.attrs = attrs
+        dataset.meta["plugins"] = meta
+        dataset._reload_data()
         return dataset
 
     def create_group(self, name):
@@ -152,8 +169,12 @@ class Group(Object):
                 )
             )
 
+        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
+
+        # TODO verify proper attributes
+
         _assert_data_shape_dtype_match(data, shape, dtype)
-        data, shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
         if not np.array_equal(shape, current_object.shape):
             raise TypeError(
@@ -205,6 +226,7 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode # TODO validate name?
+                # TODO plugin manager?
             )
 
         if not exob.is_nonraw_object_directory(directory):
@@ -222,7 +244,8 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode,
-                validate_name=self.validate_name
+                validate_name=self.validate_name,
+                plugin_manager=self.plugin_manager
             )
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return Group(
@@ -230,7 +253,8 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode,
-                validate_name=self.validate_name
+                validate_name=self.validate_name,
+                plugin_manager=self.plugin_manager
             )
         else:
             print(

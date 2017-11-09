@@ -62,3 +62,12 @@ def h5py_tmpfile(tmpdir):
     yield f
     f.close()
     os.remove(str(testpath))
+
+
+@pytest.fixture
+def quantities_tmpfile(tmpdir):
+    testpath = pathlib.Path(tmpdir.strpath) / "test.exdir"
+    f = exdir.File(testpath, mode="w", plugins=exdir.plugins.quantities)
+    yield f
+    f.close()
+    remove(testpath)

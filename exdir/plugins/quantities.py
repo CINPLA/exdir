@@ -1,3 +1,4 @@
+import exdir
 import quantities as pq
 import numpy as np
 import yaml
@@ -62,3 +63,52 @@ def convert_quantities(value):
             pass
 
     return result
+
+
+class DatasetPlugin(exdir.core.plugin.Dataset):
+    def prepare_read(self, values, attrs):
+        if "unit" in attrs:
+            item_dict = {
+                "value": values,
+                "unit": attrs["unit"]
+            }
+            if "uncertainty" in attrs:
+                item_dict["uncertainty"] = attrs["uncertainty"]
+
+            values = convert_back_quantities(item_dict)
+        return values
+
+    def prepare_write(self, data):
+        plugin_meta = {
+            "required": False
+        }
+        attrs = {}
+        if isinstance(data, pq.Quantity):
+            plugin_meta["required"] = True
+            result = data.magnitude
+            attrs["unit"] = data.dimensionality.string
+            if isinstance(data, pq.UncertainQuantity):
+                attrs["uncertainty"] = data.uncertainty
+        else:
+            result = data
+
+        return result, attrs, plugin_meta
+
+
+
+class AttributePlugin(exdir.core.plugin.Attribute):
+    def prepare_read(self, meta_data):
+        return convert_back_quantities(meta_data)
+
+    def prepare_write(self, meta_data):
+        return convert_quantities(meta_data)
+
+
+def plugins():
+    return [exdir.core.plugin.Plugin(
+        "quantities",
+        dataset_plugins=[DatasetPlugin()],
+        attribute_plugins=[AttributePlugin()],
+        read_before=["numpy_attributes"],
+        write_before=["numpy_attributes"]
+    )]
