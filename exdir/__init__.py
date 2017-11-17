@@ -1,4 +1,5 @@
 from . import core
+from . import plugin_interface
 from . import plugins
 from .core import File
 

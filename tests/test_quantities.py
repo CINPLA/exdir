@@ -16,7 +16,7 @@ import os
 import quantities as pq
 import exdir
 
-from exdir.core import Attribute, File, Dataset, plugin
+from exdir.core import Attribute, File, Dataset
 
 from exdir.plugins.quantities import convert_quantities, convert_back_quantities
 
@@ -27,6 +27,7 @@ def test_create_quantities_file(setup_teardown_folder):
     assert all(d.data.magnitude == np.array([1, 2, 3]))
     assert d.data.units == pq.m
     f.close()
+
 
 def test_quantities_attributes(quantities_tmpfile):
     """

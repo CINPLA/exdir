@@ -20,21 +20,21 @@ import exdir
 import exdir.core
 
 def test_plugin_order():
-    class DatasetPlugin(exdir.core.plugin.Dataset):
+    class DatasetPlugin(exdir.plugin_interface.Dataset):
         def prepare_read(self, values, attrs):
             return values
 
         def prepare_write(self, data):
             return data, {}, {}
 
-    first = exdir.core.plugin.Plugin(
+    first = exdir.plugin_interface.Plugin(
         "first",
         write_before=["third"],
         read_before=["second"],
         dataset_plugins=[DatasetPlugin()]
     )
 
-    second = exdir.core.plugin.Plugin(
+    second = exdir.plugin_interface.Plugin(
         "second",
         write_after=["first", "dummy"],
         read_after=["first", "none"],
@@ -42,7 +42,7 @@ def test_plugin_order():
         dataset_plugins=[DatasetPlugin()]
     )
 
-    third = exdir.core.plugin.Plugin(
+    third = exdir.plugin_interface.Plugin(
         "third",
         write_after=["second", "test"],
         write_before=["fourth", "test"],
@@ -51,21 +51,21 @@ def test_plugin_order():
         dataset_plugins=[DatasetPlugin()]
     )
 
-    fourth = exdir.core.plugin.Plugin(
+    fourth = exdir.plugin_interface.Plugin(
         "fourth",
         write_before=["fifth", "test"],
         read_before=["fifth", "something"],
         dataset_plugins=[DatasetPlugin()]
     )
 
-    fifth = exdir.core.plugin.Plugin(
+    fifth = exdir.plugin_interface.Plugin(
         "fifth",
         write_after=["first", "second", "third"],
         read_after=["third", "dummy"],
         dataset_plugins=[DatasetPlugin()]
     )
 
-    manager = exdir.core.plugin.Manager([first, second, third, fourth, fifth])
+    manager = exdir.plugin_interface.plugin_interface.Manager([first, second, third, fourth, fifth])
 
     names = [plugin._plugin_module.name for plugin in manager.dataset_plugins.write_order]
     assert(names == ["first", "second", "third", "fourth", "fifth"])
@@ -74,7 +74,7 @@ def test_plugin_order():
 
 
 def test_noop(setup_teardown_folder):
-    class DatasetPlugin(exdir.core.plugin.Dataset):
+    class DatasetPlugin(exdir.plugin_interface.Dataset):
         def prepare_read(self, values, attrs):
             return values
 
@@ -83,7 +83,7 @@ def test_noop(setup_teardown_folder):
             attrs = {}
             return data, attrs, plugin_meta
 
-    noop = exdir.core.plugin.Plugin(
+    noop = exdir.plugin_interface.Plugin(
         "noop",
         dataset_plugins=[DatasetPlugin()]
     )
@@ -95,7 +95,7 @@ def test_noop(setup_teardown_folder):
 
 
 def test_fail_reading_without_required(setup_teardown_folder):
-    class DatasetPlugin(exdir.core.plugin.Dataset):
+    class DatasetPlugin(exdir.plugin_interface.Dataset):
         def prepare_read(self, values, attrs):
             return values
 
@@ -106,7 +106,7 @@ def test_fail_reading_without_required(setup_teardown_folder):
             attrs = {}
             return data, attrs, plugin_meta
 
-    required = exdir.core.plugin.Plugin(
+    required = exdir.plugin_interface.Plugin(
         "required",
         dataset_plugins=[DatasetPlugin()]
     )
@@ -126,7 +126,7 @@ def test_fail_reading_without_required(setup_teardown_folder):
 
 
 def test_one_way_scaling(setup_teardown_folder):
-    class DatasetPlugin(exdir.core.plugin.Dataset):
+    class DatasetPlugin(exdir.plugin_interface.Dataset):
         def prepare_read(self, values, attrs):
             return values
 
@@ -137,7 +137,7 @@ def test_one_way_scaling(setup_teardown_folder):
             attrs = {}
             return data * 2, attrs, plugin_meta
 
-    one_way_scaling = exdir.core.plugin.Plugin(
+    one_way_scaling = exdir.plugin_interface.Plugin(
         "one_way_scaling",
         dataset_plugins=[DatasetPlugin()]
     )
@@ -151,7 +151,7 @@ def test_one_way_scaling(setup_teardown_folder):
 
 def test_scaling(setup_teardown_folder):
 
-    class DatasetPlugin(exdir.core.plugin.Dataset):
+    class DatasetPlugin(exdir.plugin_interface.Dataset):
         def prepare_read(self, values, attrs):
             return values / 2
 
@@ -162,7 +162,7 @@ def test_scaling(setup_teardown_folder):
             attrs = {}
             return data * 2, attrs, plugin_meta
 
-    scaling = exdir.core.plugin.Plugin(
+    scaling = exdir.plugin_interface.Plugin(
         "scaling",
         dataset_plugins=[DatasetPlugin()]
     )

@@ -36,7 +36,7 @@ class File(Group):
                     underscore (_) and dash (-), check if any file exists with
                     same name in any case.
                 'thorough': verify if name is safe on all platforms, check if
-                    any file exists with same name in any case.                    
+                    any file exists with same name in any case.
                 'none': allows any filename
 
             The default is 'thorough'.
@@ -55,7 +55,7 @@ class File(Group):
                 "mode must be one of {}".format(mode, recognized_modes)
             )
 
-        plugin_manager = exdir.core.plugin.Manager(plugins)
+        plugin_manager = exdir.plugin_interface.plugin_interface.Manager(plugins)
 
         if mode == "r":
             self.io_mode = self.OpenMode.READ_ONLY

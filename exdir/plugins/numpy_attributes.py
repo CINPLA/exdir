@@ -3,6 +3,7 @@ import quantities as pq
 import numpy as np
 import yaml
 
+
 def convert_from_list(data):
     if isinstance(data, dict):
         try:
@@ -35,7 +36,7 @@ def convert_to_list(data):
     return data
 
 
-class AttributePlugin(exdir.core.plugin.Attribute):
+class AttributePlugin(exdir.plugin_interface.Attribute):
     def prepare_write(self, meta_data):
         result = convert_to_list(meta_data)
         return result
@@ -43,8 +44,9 @@ class AttributePlugin(exdir.core.plugin.Attribute):
     def prepare_read(self, meta_data):
         return convert_from_list(meta_data)
 
+
 def plugins():
-    return [exdir.core.plugin.Plugin(
+    return [exdir.plugin_interface.Plugin(
         "numpy_attributes",
         attribute_plugins=[AttributePlugin()],
         read_after=["quantities"],
