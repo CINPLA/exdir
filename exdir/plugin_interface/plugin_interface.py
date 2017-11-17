@@ -1,6 +1,7 @@
 import os
 import inspect
 
+
 class Plugin:
     def __init__(self, name, dataset_plugins=None, attribute_plugins=None,
                  file_plugins=None, group_plugins=None, raw_plugins=None,
@@ -135,6 +136,7 @@ class Attribute:
         """
         return []
 
+
 class Group:
     pass
 
@@ -145,6 +147,7 @@ class File:
 
 class Raw:
     pass
+
 
 def solve_plugin_order(plugins, read_mode=False):
     available_plugins = plugins
@@ -218,6 +221,7 @@ def solve_plugin_order(plugins, read_mode=False):
             ordered_plugins.append(plugin_map[name])
 
     return ordered_plugins
+
 
 class Manager:
     class Ordered:
