@@ -31,8 +31,22 @@ class Plugin:
                 setattr(plugin, "_plugin_module", self)
 
 
+class DatasetData:
+    def __init__(self, data, attrs, meta):
+        self.data = data
+        self.attrs = attrs
+        self.meta = meta
+
+
+class AttributeData:
+    def __init__(self, data, attrs, meta):
+        self.data = data
+        self.attrs = attrs
+        self.meta = meta
+
+
 class Dataset:
-    def prepare_read(self, value, attrs):
+    def prepare_read(self, data, attrs):
         """
         Overload this function in your plugin implementation.
 
