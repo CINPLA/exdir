@@ -9,16 +9,20 @@ from . import exdir_object as exob
 def _prepare_write(data, dataset_plugins):
     attrs = {}
     meta = {}
+    dataset_data = exdir.plugin_interface.DatasetData(data=data,
+                                                      attrs={},
+                                                      meta={})
+
     for plugin in dataset_plugins:
-        data, plugin_attrs, plugin_meta = plugin.prepare_write(data)
-        attrs.update(plugin_attrs)
-        if "required" in plugin_meta and plugin_meta["required"] == True:
-            meta[plugin._plugin_module.name] = plugin_meta
+        dataset_data = plugin.prepare_write(dataset_data)
+        attrs.update(dataset_data.attrs)
+        if "required" in dataset_data.meta and dataset_data.meta["required"] is True:
+            meta[plugin._plugin_module.name] = dataset_data.meta
 
-    if isinstance(data, (numbers.Number, tuple, str)):
-        data = np.asarray(data, order="C")
+    if isinstance(dataset_data.data, (numbers.Number, tuple, str)):
+        dataset_data.data = np.asarray(dataset_data.data, order="C")
 
-    return data, attrs, meta
+    return dataset_data.data, attrs, meta
 
 
 def _dataset_filename(dataset_directory):
