@@ -65,7 +65,7 @@ class Dataset(exob.Object):
 
         enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
         for plugin_name in self.meta["plugins"].keys():
-            if not plugin_name in enabled_plugins:
+            if plugin_name not in enabled_plugins:
                 raise Exception((
                     "Plugin '{}' was used to write '{}', "
                     "but is not enabled."
@@ -73,7 +73,6 @@ class Dataset(exob.Object):
 
         for plugin in self.plugin_manager.dataset_plugins.read_order:
             values = plugin.prepare_read(values, self.attrs)
-
 
         return values
 
