@@ -57,20 +57,15 @@ class Dataset:
         The returned value should be numeric or numpy.ndarray.
         """
 
-        return value
+        return data
 
-    def prepare_write(self, value):
+    def prepare_write(self, dataset_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the value to be parsed by the plugin and returns a value and
-        attributes that are ready to be written to file.
-        The returned value should be numeric or numpy.ndarray and the returned
-        attributes should be a dictionary or dictionary-like.
+        It receives the value to be parsed by the plugin and returns an exdir.plugin_interface.DatasetData that is ready to be written to file.
         """
-
-        attrs = {}
-        return value, attrs
+        return dataset_data
 
     def write_before(self):
         """
@@ -112,15 +107,14 @@ class Attribute:
         """
         return meta_data
 
-    def prepare_write(self, meta_data):
+    def prepare_write(self, attribute_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the meta_data as provided by the user and should be parsed
-        by the plugin into a basic dictionary that is YAML-compatible.
-        This dictionary is returned by the function.
+        It receives the attribute_data as provided by the user and returns
+        exdir.plugin_interface.AttributeData
         """
-        return meta_data
+        return attribute_data
 
     def write_before(self):
         """
