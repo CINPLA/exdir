@@ -78,13 +78,15 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
             values = convert_back_quantities(item_dict)
         return values
 
-    def prepare_write(self, data):
-        plugin_meta = {
+    def prepare_write(self, dataset_data):
+        data = dataset_data.data
+        attrs = {}
+        meta = {
             "required": False
         }
-        attrs = {}
+
         if isinstance(data, pq.Quantity):
-            plugin_meta["required"] = True
+            meta["required"] = True
             result = data.magnitude
             attrs["unit"] = data.dimensionality.string
             if isinstance(data, pq.UncertainQuantity):
@@ -92,16 +94,19 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
         else:
             result = data
 
-        return result, attrs, plugin_meta
+        dataset_data.data = data
+        dataset_data.attrs = attrs
+        dataset_data.meta = meta
 
+        return dataset_data
 
 
 class AttributePlugin(exdir.plugin_interface.Attribute):
     def prepare_read(self, meta_data):
         return convert_back_quantities(meta_data)
 
-    def prepare_write(self, meta_data):
-        return convert_quantities(meta_data)
+    def prepare_write(self, attribute_data):
+        return convert_quantities(attribute_data)
 
 
 def plugins():
