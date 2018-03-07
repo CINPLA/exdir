@@ -106,7 +106,8 @@ class AttributePlugin(exdir.plugin_interface.Attribute):
         return convert_back_quantities(meta_data)
 
     def prepare_write(self, attribute_data):
-        return convert_quantities(attribute_data)
+        attribute_data.meta = convert_quantities(attribute_data.meta)
+        return attribute_data
 
 
 def plugins():
