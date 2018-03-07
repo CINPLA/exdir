@@ -37,9 +37,9 @@ def convert_to_list(data):
 
 
 class AttributePlugin(exdir.plugin_interface.Attribute):
-    def prepare_write(self, meta_data):
-        result = convert_to_list(meta_data)
-        return result
+    def prepare_write(self, attribute_data):
+        attribute_data.meta = convert_to_list(attribute_data.meta)
+        return attribute_data
 
     def prepare_read(self, meta_data):
         return convert_from_list(meta_data)
