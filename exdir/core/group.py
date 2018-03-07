@@ -122,7 +122,14 @@ class Group(Object):
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
-        return self[name]
+        return Group(
+            root_directory=self.root_directory,
+            parent_path=self.relative_path,
+            object_name=name,
+            io_mode=self.io_mode,
+            validate_name=self.validate_name,
+            plugin_manager=self.plugin_manager
+        )
 
     def require_group(self, name):
         path = utils.path.name_to_asserted_group_path(name)
