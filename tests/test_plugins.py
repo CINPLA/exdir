@@ -19,13 +19,14 @@ import quantities as pq
 import exdir
 import exdir.core
 
+
 def test_plugin_order():
     class DatasetPlugin(exdir.plugin_interface.Dataset):
         def prepare_read(self, values, attrs):
             return values
 
-        def prepare_write(self, data):
-            return data, {}, {}
+        def prepare_write(self, dataset_data):
+            return dataset_data
 
     first = exdir.plugin_interface.Plugin(
         "first",
@@ -78,10 +79,8 @@ def test_noop(setup_teardown_folder):
         def prepare_read(self, values, attrs):
             return values
 
-        def prepare_write(self, data):
-            plugin_meta = {}
-            attrs = {}
-            return data, attrs, plugin_meta
+        def prepare_write(self, dataset_data):
+            return dataset_data
 
     noop = exdir.plugin_interface.Plugin(
         "noop",
@@ -99,12 +98,12 @@ def test_fail_reading_without_required(setup_teardown_folder):
         def prepare_read(self, values, attrs):
             return values
 
-        def prepare_write(self, data):
+        def prepare_write(self, dataset_data):
             plugin_meta = {
                 "required": True
             }
-            attrs = {}
-            return data, attrs, plugin_meta
+            dataset_data.meta = plugin_meta
+            return dataset_data
 
     required = exdir.plugin_interface.Plugin(
         "required",
@@ -130,12 +129,13 @@ def test_one_way_scaling(setup_teardown_folder):
         def prepare_read(self, values, attrs):
             return values
 
-        def prepare_write(self, data):
+        def prepare_write(self, dataset_data):
             plugin_meta = {
                 "required": False
             }
-            attrs = {}
-            return data * 2, attrs, plugin_meta
+            dataset_data.data *= 2
+            dataset_data.meta = plugin_meta 
+            return dataset_data
 
     one_way_scaling = exdir.plugin_interface.Plugin(
         "one_way_scaling",
@@ -155,12 +155,13 @@ def test_scaling(setup_teardown_folder):
         def prepare_read(self, values, attrs):
             return values / 2
 
-        def prepare_write(self, data):
+        def prepare_write(self, dataset_data):
             plugin_meta = {
                 "required": True
             }
-            attrs = {}
-            return data * 2, attrs, plugin_meta
+            dataset_data.data *= 2
+            dataset_data.meta = plugin_meta 
+            return dataset_data
 
     scaling = exdir.plugin_interface.Plugin(
         "scaling",
