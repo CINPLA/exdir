@@ -39,8 +39,7 @@ class DatasetData:
 
 
 class AttributeData:
-    def __init__(self, data, attrs, meta):
-        self.data = data
+    def __init__(self, attrs, meta):
         self.attrs = attrs
         self.meta = meta
 

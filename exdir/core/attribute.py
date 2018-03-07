@@ -26,7 +26,7 @@ class Attribute(object):
 
         for plugin in self.plugin_manager.attribute_plugins.read_order:
             meta_data = plugin.prepare_read(meta_data)
-
+        
         for i in self.path:
             meta_data = meta_data[i]
         if name is not None:
@@ -92,13 +92,21 @@ class Attribute(object):
     def _set_data(self, meta_data):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
-
+                    
+        attrs = {}
+        attribute_data = exdir.plugin_interface.AttributeData(attrs={},
+                                                              meta=meta_data)
+        
         for plugin in self.plugin_manager.attribute_plugins.write_order:
-            meta_data = plugin.prepare_write(meta_data)
+            attribute_data = plugin.prepare_write(attribute_data)
+            attrs.update(attribute_data.attrs)
+    
+            # TODO: do we need to check for required
+            # TODO: how should we add attrs in file?    
 
         with self.filename.open("w", encoding="utf-8") as meta_file:
             yaml.safe_dump(
-                meta_data,
+                attribute_data.meta,
                 meta_file,
                 default_flow_style=False,
                 allow_unicode=True
