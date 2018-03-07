@@ -45,7 +45,7 @@ def setup_exdir():
     # testpath = tmpdir / "test.exdir"
     if os.path.exists(testpath):
         shutil.rmtree(testpath)
-    f = exdir.File(testpath)
+    f = exdir.File(testpath, validate_name="none")
     return f, testpath
 
 
