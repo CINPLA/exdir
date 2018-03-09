@@ -46,15 +46,18 @@ def _create_object_directory(directory, typename):
     directory.mkdir()
     meta_filename = directory / META_FILENAME
     with meta_filename.open("w", encoding="utf-8") as meta_file:
-        metadata = {
-            EXDIR_METANAME: {
-                TYPE_METANAME: typename,
-                VERSION_METANAME: 1}
-        }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
+        metadata = """
+{exdir_meta}:
+    {type_meta}: "{typename}"
+    {version_meta}: {version}
+""".format(
+        exdir_meta=EXDIR_METANAME,
+        type_meta=TYPE_METANAME,
+        typename=typename,
+        version_meta=VERSION_METANAME,
+        version=1
+    )
+        meta_file.write(metadata)
 
 
 def is_exdir_object(directory):
