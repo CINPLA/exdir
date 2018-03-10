@@ -12,19 +12,21 @@ class NamingRule(Enum):
     THOROUGH = 3
     NONE = 4
 
-
-def unique(parent_path, name):
-    if name in parent_path.iterdir():
+def _assert_unique(parent_path, name):
+    if (parent_path / name).exists():
         raise FileExistsError(
             "'{}' already exists in '{}'".format(name, parent_path)
         )
 
-def minimal(parent_path, name):
-    unique(parent_path, name)
-    name_str = str(name)
 
+def _assert_nonempty(parent_path, name):
+    name_str = str(name)
     if len(name_str) < 1:
         raise NameError("Name cannot be empty.")
+
+
+def _assert_nonreserved(name):
+    name_str = str(name)
 
     reserved_names = [
         exob.META_FILENAME,
@@ -50,9 +52,20 @@ def minimal(parent_path, name):
         )
 
 
+def unique(parent_path, name):
+    _assert_nonempty(parent_path, name)
+    _assert_unique(parent_path, name)
+
+
+def minimal(parent_path, name):
+    _assert_nonempty(parent_path, name)
+    _assert_nonreserved(name)
+    _assert_unique(parent_path, name)
+
+
 def strict(parent_path, name):
-    unique(parent_path, name)
-    minimal(parent_path, name)
+    _assert_nonreserved(name)
+    _assert_unique(parent_path, name)
     name_str = str(name)
 
     for char in name_str:
@@ -64,7 +77,8 @@ def strict(parent_path, name):
 
 
 def thorough(parent_path, name):
-    minimal(parent_path, name)
+    _assert_nonempty(parent_path, name)
+    _assert_nonreserved(name)
     name_str = str(name)
 
     for char in name_str:
