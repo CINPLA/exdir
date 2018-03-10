@@ -76,11 +76,12 @@ def thorough(parent_path, name):
     name_lower = str(name).lower()
     _assert_valid_characters(name_lower)
 
-    for item in parent_path.iterdir():
-        if name_str != item.name and name_str.lower() == item.name.lower():
+    # NOTE os.listdir is much faster here than os.walk or parent_path.iterdir
+    for item in os.listdir(parent_path):
+        if name_lower == item.lower():
             raise FileExistsError(
                 "A directory with name (case independent) '{}' already exists "
-                " and cannot be made according to the naming rule 'thorough'.".format(name_str)
+                " and cannot be made according to the naming rule 'thorough'.".format(name)
             )
 
 
