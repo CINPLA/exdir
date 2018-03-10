@@ -76,7 +76,13 @@ def thorough(parent_path, name):
     name_lower = str(name).lower()
     _assert_valid_characters(name_lower)
 
-    # NOTE os.listdir is much faster here than os.walk or parent_path.iterdir
+    if isinstance(pathlib.Path(parent_path), pathlib.WindowsPath):
+        # use _assert_unique if we're already on Windows, because it is much faster
+        # than the test below
+        _assert_unique(parent_path, name)
+        return
+
+    # os.listdir is much faster here than os.walk or parent_path.iterdir
     for item in os.listdir(parent_path):
         if name_lower == item.lower():
             raise FileExistsError(
