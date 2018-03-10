@@ -93,8 +93,10 @@ class Group(Object):
         # TODO DRY violation, same as dataset._reset_data, but we have already called _prepare_write
         dataset = self._dataset(name)
         np.save(dataset.data_filename, data)
-        dataset.attrs = attrs
-        dataset.meta["plugins"] = meta
+        if attrs:
+            dataset.attrs = attrs
+        if meta:
+            dataset.meta["plugins"] = meta
         dataset._reload_data()
         return dataset
 
