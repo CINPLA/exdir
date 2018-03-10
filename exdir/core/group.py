@@ -58,46 +58,40 @@ class Group(Object):
 
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
-        exob._assert_valid_name(name, self)
-
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ('r') mode")
 
-        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
+        exob._assert_valid_name(name, self)
 
-        _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
             raise TypeError(
                 "Cannot create dataset. Missing shape or data keyword."
             )
 
-        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+        prepared_data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
 
-        if data is not None:
-            if shape is not None and data.shape != shape:
-                data = np.reshape(data, shape)
+        _assert_data_shape_dtype_match(prepared_data, shape, dtype)
+
+        shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
+
+        if prepared_data is not None:
+            if shape is not None and prepared_data.shape != shape:
+                prepared_data = np.reshape(prepared_data, shape)
         else:
             if shape is None:
-                data = None
+                prepared_data = None
             else:
                 fillvalue = fillvalue or 0.0
-                data = np.full(shape, fillvalue, dtype=dtype)
+                prepared_data = np.full(shape, fillvalue, dtype=dtype)
 
-        if data is None:
+        if prepared_data is None:
             raise TypeError("Could not create a meaningful dataset.")
 
         dataset_directory = self.directory / name
-
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
 
-        # TODO DRY violation, same as dataset._reset_data, but we have already called _prepare_write
         dataset = self._dataset(name)
-        np.save(dataset.data_filename, data)
-        if attrs:
-            dataset.attrs = attrs
-        if meta:
-            dataset.meta["plugins"] = meta
-        dataset._reload_data()
+        dataset._reset_data(prepared_data, attrs, meta)
         return dataset
 
     def create_group(self, name):

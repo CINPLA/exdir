@@ -85,17 +85,31 @@ class Dataset(exob.Object):
             mmap_mode = "r"
         else:
             mmap_mode = "r+"
+
         self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode)
 
-    def _reset_data(self, value):
-        # TODO DRY violation, same as Group.create_dataset, but we have already called _prepare_write
-        value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+    def _reset_data(self, value, attrs, meta):
+        self._data_memmap = np.lib.format.open_memmap(
+            self.data_filename,
+            mode="w+",
+            dtype=value.dtype,
+            shape=value.shape
+        )
 
-        np.save(self.data_filename, value)
+        if len(value.shape) == 0:
+            # scalars need to be set with itemset
+            self._data_memmap.itemset(value)
+        else:
+            # replace the contents with the value
+            self._data_memmap[:] = value
 
-        self.attrs.update(attrs)
-        self.meta["plugins"] = meta
-        self._reload_data()
+        # update attributes and plugin metadata
+        if attrs:
+            self.attrs.update(attrs)
+
+        if meta:
+            self.meta["plugins"] = meta
+
         return
 
     def set_data(self, data):
@@ -130,8 +144,9 @@ class Dataset(exob.Object):
 
     @value.setter
     def value(self, value):
-        if self._data.shape != value.shape:
-            self._reset_data(value)
+        if self._data.shape != value.shape or self._data.dtype != value.dtype:
+            value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+            self._reset_data(value, attrs, meta)
             return
 
         self[:] = value
