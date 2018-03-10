@@ -46,10 +46,6 @@ class Dataset(exob.Object):
             plugin_manager=plugin_manager
         )
         self._data_memmap = None
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            self._mmap_mode = "r"
-        else:
-            self._mmap_mode = "r+"
 
         self.data_filename = str(_dataset_filename(self.directory))
 
@@ -85,7 +81,11 @@ class Dataset(exob.Object):
         self._data[args] = value
 
     def _reload_data(self):
-        self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            mmap_mode = "r"
+        else:
+            mmap_mode = "r+"
+        self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode)
 
     def _reset_data(self, value):
         # TODO DRY violation, same as Group.create_dataset, but we have already called _prepare_write
