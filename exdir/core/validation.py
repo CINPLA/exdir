@@ -44,6 +44,15 @@ def _assert_nonreserved(name):
             "Name cannot be '{}' because it is a reserved filename in Windows.".format(name_str)
         )
 
+def _assert_valid_characters(name):
+    name_str = str(name)
+
+    for char in name_str:
+        if char not in VALID_CHARACTERS:
+            raise NameError(
+                "Name '{}' contains invalid character '{}'.\n"
+                "Valid characters are:\n{}".format(name_str, char, VALID_CHARACTERS)
+            )
 
 def unique(parent_path, name):
     _assert_nonempty(parent_path, name)
@@ -59,27 +68,13 @@ def minimal(parent_path, name):
 def strict(parent_path, name):
     _assert_nonreserved(name)
     _assert_unique(parent_path, name)
-    name_str = str(name)
-
-    for char in name_str:
-        if char not in VALID_CHARACTERS:
-            raise NameError(
-                "Name '{}' contains invalid character '{}'.\n"
-                "Valid characters are:\n{}".format(name_str, char, VALID_CHARACTERS)
-            )
-
+    _assert_valid_characters(name)
 
 def thorough(parent_path, name):
     _assert_nonempty(parent_path, name)
     _assert_nonreserved(name)
-    name_str = str(name)
-
-    for char in name_str:
-        if char.lower() not in VALID_CHARACTERS:
-            raise NameError(
-                "Name contains invalid character '{}'.\n"
-                "Valid characters are:\n{}".format(char, VALID_CHARACTERS)
-            )
+    name_lower = str(name).lower()
+    _assert_valid_characters(name_lower)
 
     for item in parent_path.iterdir():
         if name_str != item.name and name_str.lower() == item.name.lower():
