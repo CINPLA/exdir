@@ -3,24 +3,23 @@
 [![Anaconda-Server Badge](https://anaconda.org/cinpla/exdir/badges/installer/conda.svg)](https://conda.anaconda.org/cinpla)
 [![codecov](https://codecov.io/gh/CINPLA/exdir/branch/dev/graph/badge.svg)](https://codecov.io/gh/CINPLA/exdir)
 
-*Important*: The implementations contained in this repository are intended for
-feedback and as a basis for future reference implementations.
-They are not ready for production use.
-
+*Important*: The reference implementation contained in this repository is intended for
+feedback and as a basis for future library implementations.
+It is not ready for production use.
 
 # Experimental Directory Structure #
 
-The Experimental Directory Structure (exdir) is a proposed, open file format standard for
+Experimental Directory Structure (exdir) is a proposed, open specification for
 experimental pipelines.
-exdir is currently a prototype published to invite researchers to give feedback on
+Exdir is currently a prototype published to invite researchers to give feedback on
 the standard.
 
-exdir is an hierarchical format based on open standards.
+Exdir is an hierarchical format based on open standards.
 It is inspired by already existing formats, such as HDF5 and NumPy,
 and attempts to solve some of the problems assosciated with these while
 retaining their benefits.
 The development of exdir owes a great deal to the efforts of others to standardize
-data formats in science in general and neuroscience in particular, among them 
+data formats in science in general and neuroscience in particular, among them
 the Klusta Kwik Team and Neuroscience Without Borders.
 
 ## Installation
@@ -29,48 +28,76 @@ Exdir can be installed with Anaconda:
 
     conda install exdir -c cinpla -c conda-forge
 
+## Usage
+
+The following code creates an Exdir directory with a group and a dataset:
+
+```
+import numpy as np
+import exdir
+
+experiment = exdir.File("experiment.exdir")
+group = experiment.create_group("group")
+data = np.arange(10)
+dataset = group.create_dataset("dataset", data=data)
+```
+
+The data can be retrieved using the above used keys:
+
+```
+group = experiment["group"]
+dataset = group["dataset"]
+print(dataset)
+```
+
+Attributes can be added to all objects, including files, groups and datasets:
+
+```
+group.attrs["room_number"] = 1234
+dataset.attrs["recoring_date"] = "2018-02-04"
+```
+
+See the [documentation](https://exdir.readthedocs.io) for more information.
+
 ## Quick introduction ##
 
-exdir is not a file format in itself, but rather a standardized folder structure.
-The structure is equivalent to the internal structure of HDF5,
-to simplify a transition from either format.
-However, data is not stored in a single file, but rather multiple files within
-the hierarchy.
-The metadata is stored in the YAML format and the binary data in the NumPy
-format.
+Exdir is not a file format in itself, but rather a standardized folder structure.
+The abstract data model is almost equivalent to that of HDF5,
+with groups, datasets, and attributes.
+This was done to simplify the transition from either format.
+However, data in Exdir is not stored in a single file,
+but rather multiple files within the hierarchy.
+The metadata is stored in a restricted verison of the YAML 1.2 format
+and the binary data in the NumPy 2.0 format.
 
 Here is an example structure:
 
 ```
 example.exdir (File, folder)
-│   attributes.yml (-, file)
-│   meta.yml (-, file)
+│   attributes.yaml (-, file)
+│   exdir.yaml (-, file)
 │
 ├── dataset1 (Dataset, folder)
 │   ├── data.npy (-, file)
-│   ├── attributes.yml (-, file)
-│   └── meta.yml (-, file)
-│
-├── dataset2 (Dataset, folder)
-│   ├── data.npz (-, file)
-│   └── meta.yml (-, file)
+│   ├── attributes.yaml (-, file)
+│   └── exdir.yaml (-, file)
 │
 └── group1 (Group, folder)
-│   ├── attributes.yml (-, file)
-    └── meta.yml (-, file)
+│   ├── attributes.yaml (-, file)
+    └── exdir.yaml (-, file)
     │
     ├── dataset3 (Dataset, folder)
     │   ├── data.npy (-, file)
-    │   ├── attributes.yml (-, file)
-    │   └── meta.yml (-, file)
+    │   ├── attributes.yaml (-, file)
+    │   └── exdir.yaml (-, file)
     │
     ├── link1 (Link, folder)
-    │   └── meta.yml (-, file)
+    │   └── exdir.yaml (-, file)
     │
     └── dataset4 (Dataset, folder)
         ├── data.npy (-, file)
-        ├── attributes.yml (-, file)
-        ├── meta.yml (-, file)
+        ├── attributes.yaml (-, file)
+        ├── exdir.yaml (-, file)
         │
         └── raw (Raw, folder)
             ├── image0001.tif (-, file)
@@ -92,23 +119,21 @@ It is however explicitly stored in the file system.
 The above structure shows that the `example.exdir` file is simply a folder in
 the file system, but when read by an exdir parser, it appears as a `File`.
 The `File` is the root object of any structure.
-The metadata of the `File` is stored in a file named meta.yml.
+The metadata of the `File` is stored in a file named meta.yaml.
 This is internal to exdir.
-Attributes of the `File` is stored in a file named attributes.yml.
+Attributes of the `File` is stored in a file named attributes.yaml.
 This is optional.
 
 Below the file, multiple objects may appear, among them `Dataset`s and `Group`s.
 Both `Dataset`s and `Group`s are stored as folders in the file system.
-Both have their metadata stored in files named meta.yml.
+Both have their metadata stored in files named meta.yaml.
 These are not visible as files within the exdir format, but appear simply as
 the metadata for the `Dataset`s and `Group`s.
 
-The data within a dataset is stored in a file named data.npy (1D or 2D) or
-data.npz (3D).
 If there is any additional data assosciated with the dataset,
 it may (optionally) be stored in a folder named `raw`.
 This differs from HDF5, but allows storing raw data from experiments (such as
-TIFF images from an external microscopy system) locally with the data 
+TIFF images from an external microscopy system) locally with the data
 converted to the NumPy format.
 
 ## Goals and benefits ##
@@ -160,16 +185,5 @@ However, for analysis it is often necessary to modify the data multiple times as
 different methods and parameters are tested.
 At the same time, it is beneficial to keep the analysed data stored together
 with the acquisition data.
-
-## Alternative formats ##
-
-HDF5 is an obvious alternative and mentioned several times in the above text.
-There are also other formats that we have investigated.
-Currently, we have only listed ASDF, but other formats will be discussed.
-
-### ASDF ###
-
-- Binary data is stored within YAML text files. 
-  This is non-standard and requires additional tools to parse the files.
 
 [1] http://cyrille.rossant.net/moving-away-hdf5/
