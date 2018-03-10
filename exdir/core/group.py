@@ -46,13 +46,13 @@ class Group(Object):
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None, plugin_manager=None):
+                 name_validation=None, plugin_manager=None):
         super(Group, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
             io_mode=io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
 
@@ -122,7 +122,14 @@ class Group(Object):
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
-        return self[name]
+        return Group(
+            root_directory=self.root_directory,
+            parent_path=self.relative_path,
+            object_name=name,
+            io_mode=self.io_mode,
+            name_validation=self.name_validation,
+            plugin_manager=self.plugin_manager
+        )
 
     def require_group(self, name):
         path = utils.path.name_to_asserted_group_path(name)
@@ -244,7 +251,7 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode,
-                validate_name=self.validate_name,
+                name_validation=self.name_validation,
                 plugin_manager=self.plugin_manager
             )
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
@@ -253,7 +260,7 @@ class Group(Object):
                 parent_path=self.relative_path,
                 object_name=name,
                 io_mode=self.io_mode,
-                validate_name=self.validate_name,
+                name_validation=self.name_validation,
                 plugin_manager=self.plugin_manager
             )
         else:

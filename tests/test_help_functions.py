@@ -9,13 +9,13 @@ import pytest
 import exdir
 import exdir.core
 import exdir.core.exdir_object as exob
-from exdir.core import filename_validation as fv
+from exdir import validation as fv
 
 from conftest import remove
 
 
 def test_assert_valid_name_minimal(setup_teardown_folder):
-    f = exdir.File(setup_teardown_folder[1], validate_name=fv.minimal)
+    f = exdir.File(setup_teardown_folder[1], name_validation=fv.minimal)
     exob._assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-", f)
     with pytest.raises(NameError):
         exob._assert_valid_name("", f)
@@ -37,7 +37,7 @@ def test_assert_valid_name_minimal(setup_teardown_folder):
 
 
 def test_assert_valid_name_thorough(setup_teardown_folder):
-    f = exdir.File(setup_teardown_folder[1], validate_name=fv.thorough)
+    f = exdir.File(setup_teardown_folder[1], name_validation=fv.thorough)
     exob._assert_valid_name("abcdefghijklmnopqrstuvwxyz1234567890_-", f)
     with pytest.raises(NameError):
         exob._assert_valid_name("", f)
@@ -61,7 +61,7 @@ def test_assert_valid_name_thorough(setup_teardown_folder):
 
 
 def test_assert_valid_name_none(setup_teardown_folder):
-    f = exdir.File(setup_teardown_folder[1], validate_name=fv.none)
+    f = exdir.File(setup_teardown_folder[1], name_validation=fv.none)
     valid_name = ("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
     exob._assert_valid_name(valid_name, f)
