@@ -1,5 +1,5 @@
 import exdir
-import exdir.core.filename_validation
+import exdir.core.validation
 import pytest
 import os
 import shutil
@@ -12,7 +12,7 @@ def setup_exdir():
     # testpath = tmpdir / "test.exdir"
     if os.path.exists(testpath):
         shutil.rmtree(testpath)
-    f = exdir.File(testpath, validate_name=exdir.core.filename_validation.none)
+    f = exdir.File(testpath, validate_name=exdir.validation.none)
     return f, testpath
 
 obj = setup_exdir()[0]

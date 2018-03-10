@@ -51,7 +51,7 @@ def setup_exdir():
     # testpath = tmpdir / "test.exdir"
     if os.path.exists(testpath):
         shutil.rmtree(testpath)
-    f = exdir.File(testpath, validate_name="none")
+    f = exdir.File(testpath, name_validation=exdir.validation.none)
     return f, testpath
 
 
@@ -67,7 +67,7 @@ def setup_h5py():
 def benchmark_exdir(function, iterations=100):
     benchmark(
         "exdir_" + function.__name__,
-        lambda f, tmpdir: function(f),
+        lambda f: function(f),
         setup_exdir,
         teardown_exdir,
         iterations=iterations
@@ -77,7 +77,7 @@ def benchmark_exdir(function, iterations=100):
 def benchmark_h5py(function, iterations=100):
     benchmark(
         "h5py_" + function.__name__,
-        lambda f, tmpdir: function(f),
+        lambda f: function(f),
         setup_h5py,
         teardown_h5py,
         iterations=iterations
