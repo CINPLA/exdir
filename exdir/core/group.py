@@ -63,11 +63,6 @@ class Group(Object):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ('r') mode")
 
-        if name in self:
-            raise FileExistsError(
-                "'{}' already exists in '{}'".format(name, self.name)
-            )
-
         data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
 
         _assert_data_shape_dtype_match(data, shape, dtype)

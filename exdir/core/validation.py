@@ -13,7 +13,14 @@ class NamingRule(Enum):
     NONE = 4
 
 
+def unique(parent_path, name):
+    if name in parent_path.iterdir():
+        raise FileExistsError(
+            "'{}' already exists in '{}'".format(name, parent_path)
+        )
+
 def minimal(parent_path, name):
+    unique(parent_path, name)
     name_str = str(name)
 
     if len(name_str) < 1:
@@ -44,6 +51,7 @@ def minimal(parent_path, name):
 
 
 def strict(parent_path, name):
+    unique(parent_path, name)
     minimal(parent_path, name)
     name_str = str(name)
 
