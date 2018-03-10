@@ -75,7 +75,6 @@ class File(Group):
             name_validation=name_validation,
             plugin_manager=plugin_manager
         )
-        self.name_validation(directory.parent, directory.name)
 
         already_exists = directory.exists()
         if already_exists:
@@ -116,6 +115,7 @@ class File(Group):
                 should_create_directory = True
 
         if should_create_directory:
+            self.name_validation(directory.parent, directory.name)
             exob._create_object_directory(directory, exob.FILE_TYPENAME)
 
     def close(self):
