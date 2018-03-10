@@ -91,7 +91,7 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
 
         # TODO DRY violation, same as dataset._reset_data, but we have already called _prepare_write
-        dataset = self[name]
+        dataset = self._dataset(name)
         np.save(dataset.data_filename, data)
         dataset.attrs = attrs
         dataset.meta["plugins"] = meta
@@ -117,6 +117,9 @@ class Group(Object):
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
+        return self._group(name)
+
+    def _group(self, name):
         return Group(
             root_directory=self.root_directory,
             parent_path=self.relative_path,
@@ -241,29 +244,25 @@ class Group(Object):
         with meta_filename.open("r", encoding="utf-8") as meta_file:
             meta_data = yaml.safe_load(meta_file)
         if meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.DATASET_TYPENAME:
-            return ds.Dataset(
-                root_directory=self.root_directory,
-                parent_path=self.relative_path,
-                object_name=name,
-                io_mode=self.io_mode,
-                name_validation=self.name_validation,
-                plugin_manager=self.plugin_manager
-            )
+            return self._dataset(name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
-            return Group(
-                root_directory=self.root_directory,
-                parent_path=self.relative_path,
-                object_name=name,
-                io_mode=self.io_mode,
-                name_validation=self.name_validation,
-                plugin_manager=self.plugin_manager
-            )
+            return self._group(name)
         else:
             print(
                 "Object", name, "has data type",
                 meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
             )
             raise NotImplementedError("Cannot open objects of this type")
+
+    def _dataset(self, name):
+        return ds.Dataset(
+            root_directory=self.root_directory,
+            parent_path=self.relative_path,
+            object_name=name,
+            io_mode=self.io_mode,
+            name_validation=self.name_validation,
+            plugin_manager=self.plugin_manager
+        )
 
     def __setitem__(self, name, value):
         path = utils.path.name_to_asserted_group_path(name)
