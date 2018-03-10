@@ -36,13 +36,13 @@ class Dataset(exob.Object):
              code if said code expects this to fail.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None, plugin_manager=None):
+                 name_validation=None, plugin_manager=None):
         super(Dataset, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
             io_mode=io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
         self._data_memmap = None
