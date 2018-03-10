@@ -34,19 +34,12 @@ def _assert_nonreserved(name):
         exob.RAW_FOLDER_NAME
     ]
 
-    dosnames = [
-        "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3",
-        "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6",
-        "LPT7", "LPT8", "LPT9"
-    ]
-
     if name_str in reserved_names:
         raise NameError(
             "Name cannot be '{}' because it is a reserved filename in Exdir.".format(name_str)
         )
 
-    if name_str in dosnames:
+    if pathlib.PureWindowsPath(name).is_reserved():
         raise NameError(
             "Name cannot be '{}' because it is a reserved filename in Windows.".format(name_str)
         )
