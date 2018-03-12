@@ -1,6 +1,6 @@
 from enum import Enum
 import os
-import yaml
+import ruamel_yaml as yaml
 import warnings
 import pathlib
 from . import filename_validation

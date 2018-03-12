@@ -1,5 +1,5 @@
 from enum import Enum
-import yaml
+import ruamel_yaml as yaml
 import os
 import numpy as np
 import exdir
