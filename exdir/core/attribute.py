@@ -22,91 +22,93 @@ class Attribute(object):
         self.plugin_manager = plugin_manager
 
     def __getitem__(self, name=None):
-        meta_data = self._open_or_create()
+        attrs = self._open_or_create()
+
+        meta = {}
+        attribute_data = exdir.plugin_interface.AttributeData(attrs=attrs,
+                                                              meta=meta)
 
         for plugin in self.plugin_manager.attribute_plugins.read_order:
-            meta_data = plugin.prepare_read(meta_data)
-        
+            attribute_data = plugin.prepare_read(attribute_data)
+            attrs = attribute_data.attrs
+            meta.update(attribute_data.meta)
+
         for i in self.path:
-            meta_data = meta_data[i]
+            attrs = attrs[i]
         if name is not None:
-            meta_data = meta_data[name]
-        if isinstance(meta_data, dict):
+            attrs = attrs[name]
+        if isinstance(attrs, dict):
             return Attribute(
                 self.parent, self.mode, self.io_mode, self.path + [name],
                 plugin_manager=self.plugin_manager
             )
         else:
-            return meta_data
+            return attrs
 
     def __setitem__(self, name, value):
-        meta_data = self._open_or_create()
-
-        # if isinstance(name, np.integer):
-        #     key = int(name)
-        # else:
-        #     key = name
+        attrs = self._open_or_create()
         key = name
-
-        sub_meta_data = meta_data
+        sub_attrs = attrs
+        
         for i in self.path:
-            sub_meta_data = sub_meta_data[i]
-        sub_meta_data[key] = value
+            sub_attrs = sub_attrs[i]
+        sub_attrs[key] = value
 
-        self._set_data(meta_data)
+        self._set_data(attrs)
 
     def __contains__(self, name):
-        meta_data = self._open_or_create()
+        attrs = self._open_or_create()
         for i in self.path:
-            meta_data = meta_data[i]
-        return name in meta_data
+            attrs = attrs[i]
+        return name in attrs
 
     def keys(self):
-        meta_data = self._open_or_create()
+        attrs = self._open_or_create()
         for i in self.path:
-            meta_data = meta_data[i]
-        return meta_data.keys()
+            attrs = attrs[i]
+        return attrs.keys()
 
     def to_dict(self):
-        meta_data = self._open_or_create()
+        attrs = self._open_or_create()
         for i in self.path:  # TODO check if this is necesary
-            meta_data = meta_data[i]
+            attrs = attrs[i]
 
         for plugin in self.plugin_manager.attribute_plugins.read_order:
-            meta_data = plugin.prepare_read(meta_data)
+            attrs = plugin.prepare_read(attrs)
 
-        return meta_data
+        return attrs
 
     def items(self):
-        meta_data = self._open_or_create()
+        attrs = self._open_or_create()
         for i in self.path:
-            meta_data = meta_data[i]
-        return meta_data.items()
+            attrs = attrs[i]
+        return attrs.items()
 
     def values(self):
-        meta_data = self._open_or_create()
+        attrs = self._open_or_create()
         for i in self.path:
-            meta_data = meta_data[i]
-        return meta_data.values()
+            attrs = attrs[i]
+        return attrs.values()
 
-    def _set_data(self, meta_data):
+    def _set_data(self, attrs):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
-                    
-        attrs = {}
-        attribute_data = exdir.plugin_interface.AttributeData(attrs={},
-                                                              meta=meta_data)
-        
+
+        meta = {}
+        attribute_data = exdir.plugin_interface.AttributeData(attrs=attrs,
+                                                              meta=meta)
+
         for plugin in self.plugin_manager.attribute_plugins.write_order:
             attribute_data = plugin.prepare_write(attribute_data)
-            attrs.update(attribute_data.attrs)
-    
-            # TODO: do we need to check for required
-            # TODO: how should we add attrs in file?    
+
+            if "required" in attribute_data.meta and attribute_data.meta["required"] is True:
+                meta[plugin._plugin_module.name] = attribute_data.meta
+
+        # QUESTION: Should we add plugin meta data to parent.meta here?
 
         with self.filename.open("w", encoding="utf-8") as meta_file:
             yaml.safe_dump(
-                attribute_data.meta,
+                attribute_data.attrs,
                 meta_file,
                 default_flow_style=False,
                 allow_unicode=True
@@ -114,11 +116,11 @@ class Attribute(object):
 
     # TODO only needs filename, make into free function
     def _open_or_create(self):
-        meta_data = {}
+        attrs = {}
         if self.filename.exists():  # NOTE str for Python 3.5 support
             with self.filename.open("r", encoding="utf-8") as meta_file:
-                meta_data = yaml.safe_load(meta_file)
-        return meta_data
+                attrs = yaml.safe_load(meta_file)
+        return attrs
 
     def __iter__(self):
         for key in self.keys():
