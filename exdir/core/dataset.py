@@ -71,10 +71,15 @@ class Dataset(exob.Object):
                     "but is not enabled."
                 ).format(plugin_name, self.name))
 
-        for plugin in self.plugin_manager.dataset_plugins.read_order:
-            values = plugin.prepare_read(values, self.attrs)
+        # QUESTION: Should we give the plugin self.meta["plugins"]?
+        dataset_data = exdir.plugin_interface.DatasetData(data=values,
+                                                          attrs=self.attrs,
+                                                          meta=self.meta["plugins"])
 
-        return values
+        for plugin in self.plugin_manager.dataset_plugins.read_order:
+            dataset_data = plugin.prepare_read(dataset_data)
+
+        return dataset_data.data
 
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:
@@ -83,7 +88,6 @@ class Dataset(exob.Object):
         value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
         self.attrs.update(attrs)
         self.meta["plugins"] = meta
-
         self._data[args] = value
 
     def _reload_data(self):

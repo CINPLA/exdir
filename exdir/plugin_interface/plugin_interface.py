@@ -32,6 +32,9 @@ class Plugin:
 
 
 class DatasetData:
+    """
+    Container class for dataset plugin data
+    """
     def __init__(self, data, attrs, meta):
         self.data = data
         self.attrs = attrs
@@ -45,15 +48,16 @@ class AttributeData:
 
 
 class Dataset:
-    def prepare_read(self, data, attrs):
+    def prepare_read(self, dataset_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the data from the NumPy file and the attributes from the
-        YAML file.
-        The plugin parses these and returns them in a reasonable format  to be
+        It receives a exdir.plugin_interface.DatasetData which has its data
+        from the NumPy file and the attributes from the YAML file.
+        The plugin parses these and returns them in a reasonable format to be
         used by the user.
-        The returned value should be numeric or numpy.ndarray.
+
+        The returned value should be exdir.plugin_interface.DatasetData.
         """
 
         return data
