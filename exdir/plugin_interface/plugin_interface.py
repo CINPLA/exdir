@@ -34,6 +34,13 @@ class Plugin:
 class DatasetData:
     """
     Container class for dataset plugin data
+
+    Parameters
+    ----------
+    data : numeric or numpy.ndarray
+    attrs : dictionary or dictionary-like
+    meta : dictionary or dictionary-like
+
     """
     def __init__(self, data, attrs, meta):
         self.data = data
@@ -44,6 +51,12 @@ class DatasetData:
 class AttributeData:
     """
     Container class for attribute plugin data
+
+    Parameters
+    ----------
+    attrs : dictionary or dictionary-like
+    meta : dictionary or dictionary-like
+
     """
     def __init__(self, attrs, meta):
         self.attrs = attrs
