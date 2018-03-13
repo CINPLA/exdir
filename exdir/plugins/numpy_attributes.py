@@ -38,17 +38,19 @@ def convert_to_list(data):
 
 class AttributePlugin(exdir.plugin_interface.Attribute):
     def prepare_write(self, attribute_data):
-        attribute_data.meta = convert_to_list(attribute_data.meta)
+        attribute_data.attrs = convert_to_list(attribute_data.attrs)
         return attribute_data
 
-    def prepare_read(self, meta_data):
-        return convert_from_list(meta_data)
+    def prepare_read(self, attribute_data):
+        attribute_data.attrs = convert_from_list(attribute_data.attrs)
+        return attribute_data
 
 
 def plugins():
     return [exdir.plugin_interface.Plugin(
         "numpy_attributes",
         attribute_plugins=[AttributePlugin()],
+        dataset_plugins=[DatasetPlugin()],
         read_after=["quantities"],
         write_after=["quantities"]
     )]

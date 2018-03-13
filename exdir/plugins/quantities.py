@@ -66,7 +66,10 @@ def convert_quantities(value):
 
 
 class DatasetPlugin(exdir.plugin_interface.Dataset):
-    def prepare_read(self, values, attrs):
+    def prepare_read(self, dataset_data):
+        values = dataset_data.data
+        attrs = dataset_data.attrs
+
         if "unit" in attrs:
             item_dict = {
                 "value": values,
@@ -76,7 +79,10 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
                 item_dict["uncertainty"] = attrs["uncertainty"]
 
             values = convert_back_quantities(item_dict)
-        return values
+
+        dataset_data.data = values
+
+        return dataset_data
 
     def prepare_write(self, dataset_data):
         data = dataset_data.data
@@ -102,11 +108,12 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
 
 
 class AttributePlugin(exdir.plugin_interface.Attribute):
-    def prepare_read(self, meta_data):
-        return convert_back_quantities(meta_data)
+    def prepare_read(self, attribute_data):
+        attribute_data.attrs = convert_back_quantities(attribute_data.attrs)
+        return attribute_data
 
     def prepare_write(self, attribute_data):
-        attribute_data.meta = convert_quantities(attribute_data.meta)
+        attribute_data.attrs = convert_quantities(attribute_data.attrs)
         return attribute_data
 
 
