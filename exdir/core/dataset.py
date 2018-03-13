@@ -71,7 +71,7 @@ class Dataset(exob.Object):
                     "but is not enabled."
                 ).format(plugin_name, self.name))
 
-        # QUESTION: Should we give the plugin self.meta["plugins"]?
+        # QUESTION: Should we give self.meta["plugins"] to the plugin?
         dataset_data = exdir.plugin_interface.DatasetData(data=values,
                                                           attrs=self.attrs,
                                                           meta=self.meta["plugins"])
