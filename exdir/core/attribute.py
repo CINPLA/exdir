@@ -63,7 +63,7 @@ class Attribute(object):
         attrs = self._open_or_create()
         key = name
         sub_attrs = attrs
-        
+
         for i in self.path:
             sub_attrs = sub_attrs[i]
         sub_attrs[key] = value
@@ -120,7 +120,7 @@ class Attribute(object):
 
         # QUESTION: Should we add plugin meta data to parent.meta here?
 
-        meta_data_quoted = _quote_strings(meta_data)
+        meta_data_quoted = _quote_strings(attribute_data.attrs)
 
         with self.filename.open("w", encoding="utf-8") as meta_file:
             yaml.dump(
