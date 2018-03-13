@@ -50,7 +50,6 @@ def plugins():
     return [exdir.plugin_interface.Plugin(
         "numpy_attributes",
         attribute_plugins=[AttributePlugin()],
-        dataset_plugins=[DatasetPlugin()],
         read_after=["quantities"],
         write_after=["quantities"]
     )]
