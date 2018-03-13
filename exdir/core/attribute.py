@@ -1,10 +1,24 @@
 from enum import Enum
-import yaml
+import ruamel_yaml as yaml
 import os
 import numpy as np
 import exdir
 
 from . import exdir_object as exob
+
+
+def _quote_strings(value):
+    if isinstance(value, str):
+        return yaml.scalarstring.DoubleQuotedScalarString(value)
+    else:
+        try:
+            new_result = {}
+            for key, val in value.items():
+                new_result[key] = _quote_strings(val)
+            return new_result
+        except AttributeError:
+            pass
+    return value
 
 
 class Attribute(object):
@@ -106,12 +120,15 @@ class Attribute(object):
 
         # QUESTION: Should we add plugin meta data to parent.meta here?
 
+        meta_data_quoted = _quote_strings(meta_data)
+
         with self.filename.open("w", encoding="utf-8") as meta_file:
-            yaml.safe_dump(
-                attribute_data.attrs,
+            yaml.dump(
+                meta_data_quoted,
                 meta_file,
                 default_flow_style=False,
-                allow_unicode=True
+                allow_unicode=True,
+                Dumper=yaml.RoundTripDumper
             )
 
     # TODO only needs filename, make into free function

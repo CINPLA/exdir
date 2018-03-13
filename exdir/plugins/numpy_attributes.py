@@ -1,7 +1,6 @@
 import exdir
 import quantities as pq
 import numpy as np
-import yaml
 
 
 def convert_from_list(data):
