@@ -1,6 +1,6 @@
 from enum import Enum
 import os
-import yaml
+import ruamel_yaml as yaml
 import warnings
 import pathlib
 from . import validation
@@ -110,7 +110,7 @@ def root_directory(path):
 
         meta_filename = path / META_FILENAME
         with meta_filename.open("r", encoding="utf-8") as meta_file:
-            meta_data = yaml.load(meta_file)
+            meta_data = yaml.safe_load(meta_file)
         if EXDIR_METANAME not in meta_data:
             path = path.parent
             continue

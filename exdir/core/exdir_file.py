@@ -15,6 +15,8 @@ class File(Group):
     def __init__(self, directory, mode=None, allow_remove=False,
                  name_validation=None, plugins=None, validate_name=None):
         """
+        Create or open a directory as an Exdir File.
+
         Parameters
         ----------
         directory:

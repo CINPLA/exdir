@@ -1,7 +1,7 @@
 import os
 import pathlib
 import six
-import yaml
+import ruamel_yaml as yaml
 import quantities as pq
 import numpy as np
 import pytest

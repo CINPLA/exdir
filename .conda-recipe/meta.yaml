@@ -25,7 +25,7 @@ requirements:
     - pip
     - numpy
     - scipy
-    - pyyaml
+    - ruamel_yaml
 
 test:
   requires:

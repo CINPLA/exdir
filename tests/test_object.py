@@ -12,7 +12,7 @@
 
 import pytest
 import os
-import yaml
+import ruamel_yaml as yaml
 import pathlib
 import exdir
 
