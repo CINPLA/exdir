@@ -1,6 +1,7 @@
 import os
 import shutil
 import pathlib
+import warnings
 
 import exdir
 from . import exdir_object as exob
@@ -12,7 +13,7 @@ class File(Group):
     """Exdir file object."""
 
     def __init__(self, directory, mode=None, allow_remove=False,
-                 validate_name=None, plugins=None):
+                 name_validation=None, plugins=None, validate_name=None):
         """
         Create or open a directory as an Exdir File.
 
@@ -27,7 +28,7 @@ class File(Group):
             Set to True if you want mode 'w' to remove existing trees if they
             exist. This False by default to avoid removing entire directory
             trees by mistake.
-        validate_name: str, function, optional
+        name_validation: str, function, optional
             Set the validation mode for names.
             Can be a function that takes a name and returns True if the name
             is valid or one of the following built-in validation modes:
@@ -46,6 +47,10 @@ class File(Group):
             A list of instantiated plugins or modules with a plugins()
             function that returns a list of plugins.
         """
+        if validate_name is not None:
+            warnings.warn("validate_name is deprecated. Use name_validation instead.")
+            name_validation = name_validation or validate_name
+
         directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
@@ -69,10 +74,9 @@ class File(Group):
             parent_path=pathlib.PurePosixPath(""),
             object_name="",
             io_mode=self.io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
-        self.validate_name(directory.parent, directory.name)
 
         already_exists = directory.exists()
         if already_exists:
@@ -113,6 +117,7 @@ class File(Group):
                 should_create_directory = True
 
         if should_create_directory:
+            self.name_validation(directory.parent, directory.name)
             exob._create_object_directory(directory, exob.FILE_TYPENAME)
 
     def close(self):

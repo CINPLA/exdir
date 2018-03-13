@@ -6,7 +6,13 @@ import time
 import numpy as np
 import h5py
 
+one_hundred_attributes = {}
+for i in range(200):
+    one_hundred_attributes["hello" + str(i)] = "world"
+
 def benchmark(name, target, setup=None, teardown=None, iterations=1):
+    print(("Running {name}...").format(name=name))
+
     total_time = 0
     setup_teardown_start = time.time()
     for i in range(iterations):
@@ -45,7 +51,7 @@ def setup_exdir():
     # testpath = tmpdir / "test.exdir"
     if os.path.exists(testpath):
         shutil.rmtree(testpath)
-    f = exdir.File(testpath)
+    f = exdir.File(testpath, name_validation=exdir.validation.none)
     return f, testpath
 
 
@@ -61,7 +67,7 @@ def setup_h5py():
 def benchmark_exdir(function, iterations=100):
     benchmark(
         "exdir_" + function.__name__,
-        lambda f, tmpdir: function(f),
+        lambda f: function(f),
         setup_exdir,
         teardown_exdir,
         iterations=iterations
@@ -71,7 +77,7 @@ def benchmark_exdir(function, iterations=100):
 def benchmark_h5py(function, iterations=100):
     benchmark(
         "h5py_" + function.__name__,
-        lambda f, tmpdir: function(f),
+        lambda f: function(f),
         setup_h5py,
         teardown_h5py,
         iterations=iterations
@@ -93,9 +99,11 @@ def add_few_attributes(obj):
 
 
 def add_many_attributes(obj):
-    for i in range(100):
+    for i in range(200):
         obj.attrs["hello" + str(i)] = "world"
 
+def add_many_attributes_single_operation(obj):
+    obj.attrs = one_hundred_attributes
 
 def add_attribute_tree(obj):
     tree = {}
@@ -177,6 +185,7 @@ for function, iterations in benchmarks:
     benchmark_h5py(function, iterations)
 
 benchmark_exdir(add_attribute_tree)
+benchmark_exdir(add_many_attributes_single_operation)
 
 def create_setup_many_objects(setup_function):
     def setup():

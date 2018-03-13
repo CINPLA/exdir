@@ -17,7 +17,7 @@ import numpy as np
 from collections.abc import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
-import exdir.core.filename_validation as fv
+from exdir import validation as fv
 from conftest import remove
 
 # tests for Group class
@@ -377,7 +377,7 @@ def test_eq(setup_teardown_file):
 # Feature: Test different naming rules
 def test_validate_name_simple(setup_teardown_folder):
     """Test naming rule simple."""
-    f = File(setup_teardown_folder[1], validate_name=fv.thorough)
+    f = File(setup_teardown_folder[1], name_validation=fv.thorough)
     grp = f.create_group("test")
 
     grp.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
@@ -388,7 +388,7 @@ def test_validate_name_simple(setup_teardown_folder):
     f.close()
     remove(setup_teardown_folder[1])
 
-    f = File(setup_teardown_folder[1], validate_name=fv.thorough)
+    f = File(setup_teardown_folder[1], name_validation=fv.thorough)
     grp = f.create_group("test")
     grp.create_group("aa")
 
@@ -398,7 +398,7 @@ def test_validate_name_simple(setup_teardown_folder):
 
 def test_validate_name_strict(setup_teardown_folder):
     """Test naming rule strict."""
-    f = File(setup_teardown_folder[1], validate_name=fv.strict)
+    f = File(setup_teardown_folder[1], name_validation=fv.strict)
     f.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
 
     with pytest.raises(NameError):
@@ -409,7 +409,7 @@ def test_validate_name_strict(setup_teardown_folder):
 
 def test_validate_name_none(setup_teardown_folder):
     """Test naming rule with error."""
-    f = File(setup_teardown_folder[1], validate_name=fv.none)
+    f = File(setup_teardown_folder[1], name_validation=fv.none)
     f.create_group("abcdefghijklmnopqrstuvwxyz1234567890_-")
     f.create_group("ABNCUIY&z()(d()&")
 

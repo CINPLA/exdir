@@ -36,20 +36,16 @@ class Dataset(exob.Object):
              code if said code expects this to fail.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None, plugin_manager=None):
+                 name_validation=None, plugin_manager=None):
         super(Dataset, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
             io_mode=io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
         self._data_memmap = None
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            self._mmap_mode = "r"
-        else:
-            self._mmap_mode = "r+"
 
         self.data_filename = str(_dataset_filename(self.directory))
 
@@ -60,12 +56,13 @@ class Dataset(exob.Object):
             values = self._data[args]
 
         enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
-        for plugin_name in self.meta["plugins"].keys():
-            if not plugin_name in enabled_plugins:
-                raise Exception((
-                    "Plugin '{}' was used to write '{}', "
-                    "but is not enabled."
-                ).format(plugin_name, self.name))
+        if "plugins" in self.meta:
+            for plugin_name in self.meta["plugins"].keys():
+                if not plugin_name in enabled_plugins:
+                    raise Exception((
+                        "Plugin '{}' was used to write '{}', "
+                        "but is not enabled."
+                    ).format(plugin_name, self.name))
 
         for plugin in self.plugin_manager.dataset_plugins.read_order:
             values = plugin.prepare_read(values, self.attrs)
@@ -84,17 +81,35 @@ class Dataset(exob.Object):
         self._data[args] = value
 
     def _reload_data(self):
-        self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            mmap_mode = "r"
+        else:
+            mmap_mode = "r+"
 
-    def _reset_data(self, value):
-        # TODO DRY violation, same as Group.create_dataset, but we have already called _prepare_write
-        value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+        self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode)
 
-        np.save(self.data_filename, value)
+    def _reset_data(self, value, attrs, meta):
+        self._data_memmap = np.lib.format.open_memmap(
+            self.data_filename,
+            mode="w+",
+            dtype=value.dtype,
+            shape=value.shape
+        )
 
-        self.attrs.update(attrs)
-        self.meta["plugins"] = meta
-        self._reload_data()
+        if len(value.shape) == 0:
+            # scalars need to be set with itemset
+            self._data_memmap.itemset(value)
+        else:
+            # replace the contents with the value
+            self._data_memmap[:] = value
+
+        # update attributes and plugin metadata
+        if attrs:
+            self.attrs.update(attrs)
+
+        if meta:
+            self.meta["plugins"] = meta
+
         return
 
     def set_data(self, data):
@@ -129,8 +144,9 @@ class Dataset(exob.Object):
 
     @value.setter
     def value(self, value):
-        if self._data.shape != value.shape:
-            self._reset_data(value)
+        if self._data.shape != value.shape or self._data.dtype != value.dtype:
+            value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+            self._reset_data(value, attrs, meta)
             return
 
         self[:] = value
