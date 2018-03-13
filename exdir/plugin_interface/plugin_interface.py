@@ -60,7 +60,7 @@ class Dataset:
         The returned value should be exdir.plugin_interface.DatasetData.
         """
 
-        return data
+        return dataset_data
 
     def prepare_write(self, dataset_data):
         """
