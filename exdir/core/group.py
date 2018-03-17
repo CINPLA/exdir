@@ -62,7 +62,9 @@ class Group(Object):
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         """
-        Create a dataset.
+        Create a dataset. This will create a folder on the filesystem with the given
+        name, an exdir.yaml file that identifies the folder as an Exdir Dataset,
+        and a data.npy file that contains the data.
 
         Parameters
         ----------
@@ -86,13 +88,16 @@ class Group(Object):
 
         Returns
         -------
-        A reference to the newly created dataset.
+        The newly created Dataset.
 
         Raises
         ------
         FileExistsError
             If an object with the same `name` already exists.
 
+        See also
+        --------
+        require_dataset
         """
         exob._assert_valid_name(name, self)
 
@@ -133,6 +138,24 @@ class Group(Object):
         return dataset
 
     def create_group(self, name):
+        """
+        Create a group. This will create a folder on the filesystem with the
+        given name and an exdir.yaml file that identifies the folder as a
+        group. A group can contain multiple groups and datasets.
+
+        Parameters
+        ----------
+        name: str
+            Name of the group to be created.
+
+        Returns
+        -------
+        The newly created Group.
+
+        See also
+        --------
+        require_group
+        """
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ("r") mode")
 
@@ -164,6 +187,22 @@ class Group(Object):
         )
 
     def require_group(self, name):
+        """
+        Open an existing group or create it if it does not exist.
+
+        Parameters
+        ----------
+        name: str
+            Name of the group. Must follow the naming convention of the parent Exdir File.
+
+        Returns
+        -------
+        The existing or created group.
+
+        See also
+        --------
+        create_group
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -274,6 +313,14 @@ class Group(Object):
         return current_object
 
     def __contains__(self, name):
+        """
+        Checks the existence of an object with the given name in the group.
+
+        Parameters
+        ----------
+        name: str
+            the case-sensitive name of the object
+        """
         if name == ".":
             return True
         if name == "":
@@ -283,6 +330,19 @@ class Group(Object):
         return exob.is_exdir_object(directory)
 
     def __getitem__(self, name):
+        """
+        Retrieves the object with the given name if it exists in the group.
+
+        Parameters
+        ----------
+        name: str
+            the case-sensitive name of the object to retrieve
+
+        Raises
+        ------
+        KeyError:
+            if the name does not correspond to an exdir object in the group
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]
@@ -334,6 +394,17 @@ class Group(Object):
         )
 
     def __setitem__(self, name, value):
+        """
+        Set or create a dataset with the given name from the given value.
+
+        Parameters
+        ----------
+        name: str
+            name of the existing or new dataset
+        value: object
+            value that will be used to create a new or set
+            the contents of an existing dataset
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
@@ -351,15 +422,27 @@ class Group(Object):
         self[name].value = value
 
     def keys(self):
+        """
+        Names of all the objects in the group.
+        """
         return abc.KeysView(self)
 
     def items(self):
+        """
+        Names and values of all the objects in the group.
+        """
         return abc.ItemsView(self)
 
     def values(self):
+        """
+        All the objects in the group.
+        """
         return abc.ValuesView(self)
 
     def __iter__(self):
+        """
+        Iterate over all the objects in the group.
+        """
         # NOTE os.walk is way faster than os.listdir + os.path.isdir
         directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):
