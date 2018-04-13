@@ -167,7 +167,10 @@ class Object(object):
         self.object_name = str(object_name)  # NOTE could be path, so convert to str
         self.parent_path = parent_path
         self.relative_path = self.parent_path / self.object_name
-        self.name = "/" + str(self.relative_path)
+        relative_name = str(self.relative_path)
+        if relative_name == ".":
+            relative_name = ""
+        self.name = "/" + relative_name
         self.io_mode = io_mode
         self.plugin_manager = plugin_manager
 
