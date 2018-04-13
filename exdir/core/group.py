@@ -133,6 +133,24 @@ class Group(Object):
         return dataset
 
     def create_group(self, name):
+        """
+        Create a subgroup with the given name.
+        This will create a subfolder on the file system.
+
+        Parameters
+        ----------
+        name: str
+            Name of the subgroup. Must follow the naming convention of the parent Exdir File.
+
+        Raises
+        ------
+        FileExistsError
+            If an object with the same `name` already exists.
+
+        Returns
+        -------
+        A reference to the newly created group.
+        """
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ("r") mode")
 
@@ -164,6 +182,19 @@ class Group(Object):
         )
 
     def require_group(self, name):
+        """
+        Open an existing subgroup or create if it does not exist.
+        This might create a new subfolder on the file system.
+
+        Parameters
+        ----------
+        name: str
+            Name of the subgroup. Must follow the naming convention of the parent Exdir File.
+
+        Returns
+        -------
+        A reference to the newly created group.
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -351,12 +382,30 @@ class Group(Object):
         self[name].value = value
 
     def keys(self):
+        """
+        Returns
+        -------
+        KeysView
+            A view of the names of the objects in the group.
+        """
         return abc.KeysView(self)
 
     def items(self):
+        """
+        Returns
+        -------
+        ItemsView
+            A view of the keys and objects in the group.
+        """
         return abc.ItemsView(self)
 
     def values(self):
+        """
+        Returns
+        -------
+        ValuesView
+            A view of the objects in the group.
+        """
         return abc.ValuesView(self)
 
     def __iter__(self):

@@ -151,8 +151,16 @@ def open_object(path):
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
+# Meta class to make subclasses pick up on Groups documentation
+class ObjectMeta(type):
+    def __new__(mcls, classname, bases, cls_dict):
+        cls = super().__new__(mcls, classname, bases, cls_dict)
+        for name, member in cls_dict.items():
+            if not getattr(member, '__doc__') and hasattr(bases[-1], name) and getattr(getattr(bases[-1], name), "__doc__"):
+                member.__doc__ = getattr(bases[-1], name).__doc__
+        return cls
 
-class Object(object):
+class Object(object, metaclass=ObjectMeta):
     """
     Parent class for exdir Group and exdir dataset objects
     """
