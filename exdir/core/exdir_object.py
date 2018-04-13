@@ -216,7 +216,7 @@ class Object(object, metaclass=ObjectMeta):
     def attrs(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.ATTRIBUTES,
+            mode=Attribute._Mode.ATTRIBUTES,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )
@@ -229,7 +229,7 @@ class Object(object, metaclass=ObjectMeta):
     def meta(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.METADATA,
+            mode=Attribute._Mode.METADATA,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )

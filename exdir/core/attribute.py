@@ -24,7 +24,7 @@ def _quote_strings(value):
 class Attribute(object):
     """Attribute class."""
 
-    class Mode(Enum):
+    class _Mode(Enum):
         ATTRIBUTES = 1
         METADATA = 2
 
@@ -135,7 +135,7 @@ class Attribute(object):
 
     @property
     def filename(self):
-        if self.mode == self.Mode.METADATA:
+        if self.mode == self._Mode.METADATA:
             return self.parent.meta_filename
         else:
             return self.parent.attributes_filename
