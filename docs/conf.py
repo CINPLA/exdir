@@ -23,10 +23,9 @@
 
 import os
 import re
-import exdir
-
 import sys
-sys.path.insert(0, os.path.abspath("../exdir/core"))
+sys.path.insert(0, os.path.abspath("../"))
+import exdir
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
@@ -58,12 +57,19 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
               'sphinx.ext.napoleon']
 
+viewcode_import = True
+
+# Napoleon options
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = True
+napoleon_include_init_with_doc = False
 napoleon_use_param = False
 napoleon_use_ivar = True
-viewcode_enable_epub = True
+
+autosummary_generate = True
+
+napoleon_include_special_with_doc = False
+napoleon_use_admonition_for_notes = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
