@@ -26,7 +26,6 @@ Exdir is described in detail in our reasearch paper:
    group
    dataset
    attributes
-   specification
 
 Specification
 -------------
@@ -70,7 +69,6 @@ A dash (-) indicates that the object doesn't have a separate internal
 representation in the format, but is used indirectly.
 It is however explicitly stored in the file system.
 
-For more details see :ref:`specification`.
 
 Install
 -------
