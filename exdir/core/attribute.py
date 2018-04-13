@@ -4,8 +4,6 @@ import os
 import numpy as np
 import exdir
 
-from . import exdir_object as exob
-
 
 def _quote_strings(value):
     if isinstance(value, str):
@@ -104,7 +102,10 @@ class Attribute(object):
         return meta_data.values()
 
     def _set_data(self, meta_data):
-        if self.io_mode == exob.Object.OpenMode.READ_ONLY:
+        # TODO consider moving the OpenMode definitions to a separate file to avoid workaround
+        from .exdir_object import Object # importing here is a workaround for Python 2.7
+
+        if self.io_mode == Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
 
         for plugin in self.plugin_manager.attribute_plugins.write_order:

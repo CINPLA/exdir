@@ -1,7 +1,7 @@
 from enum import Enum
 import os
 import pathlib
-from . import exdir_object as exob
+from . import constants as exob
 
 VALID_CHARACTERS = ("abcdefghijklmnopqrstuvwxyz1234567890_-.")
 
@@ -83,7 +83,7 @@ def thorough(parent_path, name):
         return
 
     # os.listdir is much faster here than os.walk or parent_path.iterdir
-    for item in os.listdir(parent_path):
+    for item in os.listdir(str(parent_path)):
         if name_lower == item.lower():
             raise FileExistsError(
                 "A directory with name (case independent) '{}' already exists "

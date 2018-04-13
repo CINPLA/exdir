@@ -1,3 +1,5 @@
+from six import with_metaclass
+
 from enum import Enum
 import os
 import ruamel_yaml as yaml
@@ -5,24 +7,9 @@ import warnings
 import pathlib
 from . import validation
 
-from . import exdir_object
 from .. import utils
 from .attribute import Attribute
-
-# metadata
-EXDIR_METANAME = "exdir"
-TYPE_METANAME = "type"
-VERSION_METANAME = "version"
-
-# filenames
-META_FILENAME = "exdir.yaml"
-ATTRIBUTES_FILENAME = "attributes.yaml"
-RAW_FOLDER_NAME = "__raw__"
-
-# typenames
-DATASET_TYPENAME = "dataset"
-GROUP_TYPENAME = "group"
-FILE_TYPENAME = "file"
+from .constants import *
 
 def _resolve_path(path):
     return pathlib.Path(path).resolve()
@@ -151,16 +138,7 @@ def open_object(path):
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
-# Meta class to make subclasses pick up on Groups documentation
-class ObjectMeta(type):
-    def __new__(mcls, classname, bases, cls_dict):
-        cls = super().__new__(mcls, classname, bases, cls_dict)
-        for name, member in cls_dict.items():
-            if not getattr(member, '__doc__') and hasattr(bases[-1], name) and getattr(getattr(bases[-1], name), "__doc__"):
-                member.__doc__ = getattr(bases[-1], name).__doc__
-        return cls
-
-class Object(object, metaclass=ObjectMeta):
+class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
     """

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # This file is part of Exdir, the Experimental Directory Structure.
 #
 # Copyright 2017 Simen Tennøe

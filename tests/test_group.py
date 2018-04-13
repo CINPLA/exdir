@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of Exdir, the Experimental Directory Structure.
 #
 # Copyright 2017 Simen Tennøe, Svenn-Arne Dragly
@@ -14,7 +16,10 @@ import os
 import pytest
 import pathlib
 import numpy as np
-from collections.abc import KeysView, ValuesView, ItemsView
+try:
+    from collections.abc import KeysView, ValuesView, ItemsView
+except:
+    from collections import KeysView, ValuesView, ItemsView
 
 from exdir.core import Group, File
 from exdir import validation as fv

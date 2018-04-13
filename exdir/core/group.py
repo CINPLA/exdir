@@ -4,7 +4,10 @@ import ruamel_yaml as yaml
 import pathlib
 import numpy as np
 import exdir
-from collections import abc
+try:
+    from collections import abc
+except ImportError:
+    import collections as abc
 
 from .exdir_object import Object
 from . import exdir_object as exob
@@ -193,7 +196,7 @@ class Group(Object):
 
     def require_group(self, name):
         """
-        Open an existing subgroup or create if it does not exist.
+        Open an existing subgroup or create one if it does not exist.
         This might create a new subfolder on the file system.
 
         Parameters

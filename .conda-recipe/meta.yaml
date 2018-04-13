@@ -20,6 +20,8 @@ requirements:
     - numpy
     - scipy
     - ruamel_yaml
+    - enum34  # for Python 2.7
+    - six  # for Python 2.7
 
 test:
   requires:
