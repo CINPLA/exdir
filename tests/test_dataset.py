@@ -102,6 +102,17 @@ def test_create_scalar_data(setup_teardown_file):
     assert dset.shape == data.shape
 
 
+def test_create_list_data(setup_teardown_file):
+    """Create a scalar dataset from existing array."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    data = [1, 2, 3]
+    dset = grp.create_dataset('foo', data=data)
+    assert dset.shape == (3,)
+    assert np.array_equal(dset.data, np.array(data))
+
+
 def test_create_extended_data(setup_teardown_file):
     """Create an extended dataset from existing data."""
     f = setup_teardown_file[3]
