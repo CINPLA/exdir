@@ -1,6 +1,9 @@
 channels:
-- conda-forge
-- cinpla
+  - conda-forge
+
 dependencies:
-- exdir
-- python=3.5
+  - python=3.5
+  - setuptools
+  - numpy
+  - scipy
+  - ruamel_yaml

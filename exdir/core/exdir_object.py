@@ -151,8 +151,16 @@ def open_object(path):
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
+# Meta class to make subclasses pick up on Groups documentation
+class ObjectMeta(type):
+    def __new__(mcls, classname, bases, cls_dict):
+        cls = super().__new__(mcls, classname, bases, cls_dict)
+        for name, member in cls_dict.items():
+            if not getattr(member, '__doc__') and hasattr(bases[-1], name) and getattr(getattr(bases[-1], name), "__doc__"):
+                member.__doc__ = getattr(bases[-1], name).__doc__
+        return cls
 
-class Object(object):
+class Object(object, metaclass=ObjectMeta):
     """
     Parent class for exdir Group and exdir dataset objects
     """
@@ -167,7 +175,10 @@ class Object(object):
         self.object_name = str(object_name)  # NOTE could be path, so convert to str
         self.parent_path = parent_path
         self.relative_path = self.parent_path / self.object_name
-        self.name = "/" + str(self.relative_path)
+        relative_name = str(self.relative_path)
+        if relative_name == ".":
+            relative_name = ""
+        self.name = "/" + relative_name
         self.io_mode = io_mode
         self.plugin_manager = plugin_manager
 
@@ -205,7 +216,7 @@ class Object(object):
     def attrs(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.ATTRIBUTES,
+            mode=Attribute._Mode.ATTRIBUTES,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )
@@ -218,7 +229,7 @@ class Object(object):
     def meta(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.METADATA,
+            mode=Attribute._Mode.METADATA,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )

@@ -1,10 +1,7 @@
 import numbers
-import exdir
-
 import numpy as np
 
 from . import exdir_object as exob
-
 
 def _prepare_write(data, dataset_plugins):
     attrs = {}
@@ -29,11 +26,10 @@ class Dataset(exob.Object):
     """
     Dataset class
 
-    Warning: This class modifies the view, which is different from h5py.
-    Warning: Possible to overwrite existing dataset.
-             This differs from the h5py API. However,
-             it should only cause issues with existing
-             code if said code expects this to fail.
+    Warnings
+    --------
+        This class modifies the view and it is possible to overwrite
+        an existing dataset, which is different from the behavior in h5py.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  name_validation=None, plugin_manager=None):
@@ -113,13 +109,28 @@ class Dataset(exob.Object):
         return
 
     def set_data(self, data):
+        """
+        Warning
+        -------
+        Deprecated convenience function.
+        Use :code:`dataset.data = data` instead.
+        """
         raise DeprecationWarning(
-            "set_data is deprecated. Use `dataset.value = data` instead."
+            "set_data is deprecated. Use `dataset.data = data` instead."
         )
         self.value = data
 
     @property
     def data(self):
+        """
+        Property that gives access the entire dataset.
+        Equivalent to calling :code:`dataset[:]`.
+
+        Returns
+        -------
+        numpy.memmap
+            The entire dataset.
+        """
         return self[:]
 
     @data.setter
@@ -128,22 +139,59 @@ class Dataset(exob.Object):
 
     @property
     def shape(self):
+        """
+        The shape of the dataset.
+        Equivalent to calling :code:`dataset[:].shape`.
+
+        Returns
+        -------
+        tuple
+            The shape of the dataset.
+        """
         return self[:].shape
 
     @property
     def size(self):
+        """
+        The size of the dataset.
+        Equivalent to calling :code:`dataset[:].size`.
+
+        Returns
+        -------
+        np.int64
+            The size of the dataset.
+        """
         return self[:].size
 
     @property
     def dtype(self):
+        """
+        The NumPy data type of the dataset.
+        Equivalent to calling :code:`dataset[:].dtype`.
+
+        Returns
+        -------
+        numpy.dtype
+            The NumPy data type of the dataset.
+        """
         return self[:].dtype
 
     @property
     def value(self):
+        """
+        Convenience alias for the :code:`data` property.
+
+        Warning
+        -------
+        This property is only provided as a convenience to make the API
+        interoperable with h5py.
+        We recommend to use :code:`data` instead of :code:`value`.
+        """
         return self[:]
 
     @value.setter
     def value(self, value):
+        # TODO this should be in data, since value is deprecated
         if self._data.shape != value.shape or self._data.dtype != value.dtype:
             value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
             self._reset_data(value, attrs, meta)
