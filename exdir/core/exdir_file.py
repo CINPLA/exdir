@@ -155,7 +155,7 @@ class File(Group):
         """
         path = utils.path.remove_root(name)
 
-        return super().create_group(path)
+        return super(File, self).create_group(path)
 
     def require_group(self, name):
         """
@@ -170,14 +170,14 @@ class File(Group):
         """
         path = utils.path.remove_root(name)
 
-        return super().require_group(path)
+        return super(File, self).require_group(path)
 
     def __getitem__(self, name):
         path = utils.path.remove_root(name)
         if len(path.parts) < 1:
             return self
-        return super().__getitem__(path)
+        return super(File, self).__getitem__(path)
 
     def __contains__(self, name):
         path = utils.path.remove_root(name)
-        return super().__contains__(path)
+        return super(File, self).__contains__(path)
