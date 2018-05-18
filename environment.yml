@@ -1,0 +1,17 @@
+channels:
+    - conda-forge
+    - defaults
+
+dependencies:
+    - python
+    - setuptools
+    - pip
+    - numpy
+    - scipy
+    - pyyaml
+    - ruamel_yaml
+    - pytest
+    - pytest-benchmark
+    - h5py
+    - six
+    - pandas

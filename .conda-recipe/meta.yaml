@@ -6,14 +6,9 @@ source:
   git_url: ..
 
 build:
-  # noarch: python  # TODO Add back noarch when it works properly on Windows,
-                    # we are converting packages manually now
-  script:
-    # TODO remove this and add back quantities as conda package once its updated with the new numpy API
-    - pip install git+https://github.com/python-quantities/python-quantities.git
-    - python setup.py install
-    # - coverage run --source exdir -m py.test -s --doctest-glob='*.rst'
-    # - coverage report
+  noarch: python
+  script: python setup.py install
+
 requirements:
   build:
     - python
@@ -22,7 +17,6 @@ requirements:
   run:
     - python
     - setuptools
-    - pip
     - numpy
     - scipy
     - ruamel_yaml
@@ -33,13 +27,22 @@ test:
     - pytest-benchmark
     - h5py
     - six
+    - coverage
+    - codecov
+    - sphinx
+    - quantities
+
   source_files:
     - tests
+    - docs
   imports:
     - exdir
   commands:
     - python -c "import exdir; print(exdir.__version__)"
-    - pytest -s
+    - coverage run --source tests -m py.test -s
+    - coverage report
+    - codecov
+    - cd docs ; make doctest
 
 about:
   home: https://github.com/CINPLA/exdir/

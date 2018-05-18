@@ -57,7 +57,7 @@ def test_object_meta(setup_teardown_file):
     obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
 
     assert isinstance(obj.meta, Attribute)
-    assert obj.meta.mode == exdir.core.Attribute.Mode.METADATA
+    assert obj.meta.mode == exdir.core.Attribute._Mode.METADATA
     with pytest.raises(AttributeError):
         obj.meta = "test value"
 

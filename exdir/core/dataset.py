@@ -1,10 +1,7 @@
 import numbers
-import exdir
-
 import numpy as np
 
 from . import exdir_object as exob
-
 
 def _prepare_write(data, dataset_plugins):
     attrs = {}
@@ -33,27 +30,22 @@ class Dataset(exob.Object):
     """
     Dataset class
 
-    Warning: This class modifies the view, which is different from h5py.
-    Warning: Possible to overwrite existing dataset.
-             This differs from the h5py API. However,
-             it should only cause issues with existing
-             code if said code expects this to fail.
+    Warnings
+    --------
+        This class modifies the view and it is possible to overwrite
+        an existing dataset, which is different from the behavior in h5py.
     """
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None, plugin_manager=None):
+                 name_validation=None, plugin_manager=None):
         super(Dataset, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
             io_mode=io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
         self._data_memmap = None
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            self._mmap_mode = "r"
-        else:
-            self._mmap_mode = "r+"
 
         self.data_filename = str(_dataset_filename(self.directory))
 
@@ -64,12 +56,14 @@ class Dataset(exob.Object):
             values = self._data[args]
 
         enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
-        for plugin_name in self.meta["plugins"].keys():
-            if plugin_name not in enabled_plugins:
-                raise Exception((
-                    "Plugin '{}' was used to write '{}', "
-                    "but is not enabled."
-                ).format(plugin_name, self.name))
+
+        if "plugins" in self.meta:
+            for plugin_name in self.meta["plugins"].keys():
+                if plugin_name not in enabled_plugins:
+                    raise Exception((
+                        "Plugin '{}' was used to write '{}', "
+                        "but is not enabled."
+                    ).format(plugin_name, self.name))
 
         # QUESTION: Should we give self.meta["plugins"] to the plugin?
         dataset_data = exdir.plugin_interface.DatasetData(data=values,
@@ -91,27 +85,60 @@ class Dataset(exob.Object):
         self._data[args] = value
 
     def _reload_data(self):
-        self._data_memmap = np.load(self.data_filename, mmap_mode=self._mmap_mode)
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            mmap_mode = "r"
+        else:
+            mmap_mode = "r+"
 
-    def _reset_data(self, value):
-        # TODO DRY violation, same as Group.create_dataset, but we have already called _prepare_write
-        value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+        self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode)
 
-        np.save(self.data_filename, value)
+    def _reset_data(self, value, attrs, meta):
+        self._data_memmap = np.lib.format.open_memmap(
+            self.data_filename,
+            mode="w+",
+            dtype=value.dtype,
+            shape=value.shape
+        )
 
-        self.attrs.update(attrs)
-        self.meta["plugins"] = meta
-        self._reload_data()
+        if len(value.shape) == 0:
+            # scalars need to be set with itemset
+            self._data_memmap.itemset(value)
+        else:
+            # replace the contents with the value
+            self._data_memmap[:] = value
+
+        # update attributes and plugin metadata
+        if attrs:
+            self.attrs.update(attrs)
+
+        if meta:
+            self.meta["plugins"] = meta
+
         return
 
     def set_data(self, data):
+        """
+        Warning
+        -------
+        Deprecated convenience function.
+        Use :code:`dataset.data = data` instead.
+        """
         raise DeprecationWarning(
-            "set_data is deprecated. Use `dataset.value = data` instead."
+            "set_data is deprecated. Use `dataset.data = data` instead."
         )
         self.value = data
 
     @property
     def data(self):
+        """
+        Property that gives access the entire dataset.
+        Equivalent to calling :code:`dataset[:]`.
+
+        Returns
+        -------
+        numpy.memmap
+            The entire dataset.
+        """
         return self[:]
 
     @data.setter
@@ -120,24 +147,62 @@ class Dataset(exob.Object):
 
     @property
     def shape(self):
+        """
+        The shape of the dataset.
+        Equivalent to calling :code:`dataset[:].shape`.
+
+        Returns
+        -------
+        tuple
+            The shape of the dataset.
+        """
         return self[:].shape
 
     @property
     def size(self):
+        """
+        The size of the dataset.
+        Equivalent to calling :code:`dataset[:].size`.
+
+        Returns
+        -------
+        np.int64
+            The size of the dataset.
+        """
         return self[:].size
 
     @property
     def dtype(self):
+        """
+        The NumPy data type of the dataset.
+        Equivalent to calling :code:`dataset[:].dtype`.
+
+        Returns
+        -------
+        numpy.dtype
+            The NumPy data type of the dataset.
+        """
         return self[:].dtype
 
     @property
     def value(self):
+        """
+        Convenience alias for the :code:`data` property.
+
+        Warning
+        -------
+        This property is only provided as a convenience to make the API
+        interoperable with h5py.
+        We recommend to use :code:`data` instead of :code:`value`.
+        """
         return self[:]
 
     @value.setter
     def value(self, value):
-        if self._data.shape != value.shape:
-            self._reset_data(value)
+        # TODO this should be in data, since value is deprecated
+        if self._data.shape != value.shape or self._data.dtype != value.dtype:
+            value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+            self._reset_data(value, attrs, meta)
             return
 
         self[:] = value

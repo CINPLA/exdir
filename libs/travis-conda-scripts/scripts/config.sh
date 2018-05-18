@@ -5,7 +5,7 @@ export GIT_TAG=$(git describe --always --tags --abbrev=0)
 export TAG_AND_TRAVIS_BUILD=${GIT_TAG}_b${TRAVIS_BUILD_NUMBER}
 export TAG_TRAVIS_BUILD_AND_COMMIT=${TAG_AND_TRAVIS_BUILD}_g${TRAVIS_COMMIT}
 export CONDA_BLD_PATH=/tmp/conda-bld
-export PACKAGE=$(conda build . --output --python "$TRAVIS_PYTHON_VERSION" --old-build-string)
+export PACKAGE=$(conda build . --output --old-build-string --python "$TRAVIS_PYTHON_VERSION" 2> conda-errors.log | tail -1)
 export EXTRA_CONDA_CHANNELS="-c defaults -c conda-forge -c cinpla"
 export GIT_STRING=${GIT_TAG}
 if [ -z $TRAVIS_TAG ]; then
@@ -21,3 +21,5 @@ echo TAG_AND_TRAVIS_BUILD $TAG_AND_TRAVIS_BUILD
 echo TAG_TRAVIS_BUILD_AND_COMMIT $TAG_TRAVIS_BUILD_AND_COMMIT
 echo PACKAGE $PACKAGE
 echo CONDA_CHANNELS $EXTRA_CONDA_CHANNELS
+echo conda-errors:
+cat conda-errors.log

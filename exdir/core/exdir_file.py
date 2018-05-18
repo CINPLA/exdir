@@ -1,6 +1,7 @@
 import os
 import shutil
 import pathlib
+import warnings
 
 import exdir
 from . import exdir_object as exob
@@ -9,43 +10,61 @@ from .. import utils
 
 
 class File(Group):
-    """Exdir file object."""
+    """
+    Exdir file object.
+    A File is a special type of :class:`.Group`.
+    See :class:`.Group` for documentation of inherited functions.
+
+    To create a File, call the File constructor with the name of the File you wish to create:
+
+        >>> import exdir
+        >>> import numpy as np
+        >>> f = exdir.File("mytestfile.exdir")
+
+    The :code:`File` object :code:`f` now points to the root folder in the exdir file
+    structure.
+    You can add groups and datasets to it as follows:
+
+        >>> my_group = f.require_group("my_group")
+        >>> a = np.arange(100)
+        >>> dset = f.require_dataset("my_data", data=a)
+
+    The data is immediately written to disk.
+
+    Parameters
+    ----------
+    directory:
+        Name of the directory to be opened or created as an Exdir File.
+    mode: str, optional
+        A file mode string that defines the read/write behavior.
+        See open() for information about the different modes.
+    allow_remove: bool
+        Set to True if you want mode 'w' to remove existing trees if they
+        exist. This False by default to avoid removing entire directory
+        trees by mistake.
+    name_validation: str, function, optional
+        Set the validation mode for names.
+        Can be a function that takes a name and returns True if the name
+        is valid or one of the following built-in validation modes:
+
+        - 'strict': only allow numbers, lowercase letters, underscore (_) and dash (-)
+        - 'simple': allow numbers, lowercase letters, uppercase letters, underscore (_) and dash (-), check if any file exists with same name in any case.
+        - 'thorough': verify if name is safe on all platforms, check if any file exists with same name in any case.
+        - 'none': allows any filename
+
+        The default is 'thorough'.
+    plugins: list, optional
+        A list of instantiated plugins or modules with a plugins()
+        function that returns a list of plugins.
+
+    """
 
     def __init__(self, directory, mode=None, allow_remove=False,
-                 validate_name=None, plugins=None):
-        """
-        Create or open a directory as an Exdir File.
+                 name_validation=None, plugins=None, validate_name=None):
+        if validate_name is not None:
+            warnings.warn("validate_name is deprecated. Use name_validation instead.")
+            name_validation = name_validation or validate_name
 
-        Parameters
-        ----------
-        directory:
-            Name of the directory to be opened or created as an Exdir File.
-        mode: str, optional
-            A file mode string that defines the read/write behavior.
-            See open() for information about the different modes.
-        allow_remove: bool
-            Set to True if you want mode 'w' to remove existing trees if they
-            exist. This False by default to avoid removing entire directory
-            trees by mistake.
-        validate_name: str, function, optional
-            Set the validation mode for names.
-            Can be a function that takes a name and returns True if the name
-            is valid or one of the following built-in validation modes:
-
-                'strict': only allow numbers, lowercase letters, underscore (_)
-                    and dash (-)
-                'simple': allow numbers, lowercase letters, uppercase letters,
-                    underscore (_) and dash (-), check if any file exists with
-                    same name in any case.
-                'thorough': verify if name is safe on all platforms, check if
-                    any file exists with same name in any case.
-                'none': allows any filename
-
-            The default is 'thorough'.
-        plugins: list, optional
-            A list of instantiated plugins or modules with a plugins()
-            function that returns a list of plugins.
-        """
         directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
@@ -69,10 +88,9 @@ class File(Group):
             parent_path=pathlib.PurePosixPath(""),
             object_name="",
             io_mode=self.io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
-        self.validate_name(directory.parent, directory.name)
 
         already_exists = directory.exists()
         if already_exists:
@@ -113,18 +131,43 @@ class File(Group):
                 should_create_directory = True
 
         if should_create_directory:
+            self.name_validation(directory.parent, directory.name)
             exob._create_object_directory(directory, exob.FILE_TYPENAME)
 
     def close(self):
+        """
+        Closes the File object.
+        Currently, this has no effect because all data is immediately written to disk.
+        """
         # yeah right, as if we would create a real file format
         pass
 
     def create_group(self, name):
+        """
+        Create a group with the given name or absolute path.
+
+        See :class:`.Group` for more details.
+
+        Note
+        ----
+        Creating groups with absolute paths is only allowed on File objects and
+        not on Group objects in general.
+        """
         path = utils.path.remove_root(name)
 
         return super().create_group(path)
 
     def require_group(self, name):
+        """
+        Open an existing subgroup or create one if it does not exist.
+
+        See :class:`.Group` for more details.
+
+        Note
+        ----
+        Creating groups with absolute paths is only allowed on File objects and
+        not on Group objects in general.
+        """
         path = utils.path.remove_root(name)
 
         return super().require_group(path)

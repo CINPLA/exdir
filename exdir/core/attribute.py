@@ -22,9 +22,17 @@ def _quote_strings(value):
 
 
 class Attribute(object):
-    """Attribute class."""
+    """
+    The attribute object is a dictionary-like object that is used to access
+    the attributes stored in the :code:`attributes.yaml` file for a given
+    Exdir Object.
 
-    class Mode(Enum):
+    The Attribute object should not be created, but retrieved by accessing
+    the :code:`.attrs` property of any Exdir Object, such as a Dataset,
+    Group or File.
+    """
+
+    class _Mode(Enum):
         ATTRIBUTES = 1
         METADATA = 2
 
@@ -77,12 +85,20 @@ class Attribute(object):
         return name in attrs
 
     def keys(self):
+        """
+        Returns
+        -------
+        a new view of the Attribute's keys.
+        """
         attrs = self._open_or_create()
         for i in self.path:
             attrs = attrs[i]
         return attrs.keys()
 
-    def to_dict(self):
+    def to_dict(self)
+        """
+        Convert the Attribute into a standard Python dictionary.
+        """
         attrs = self._open_or_create()
         for i in self.path:  # TODO check if this is necesary
             attrs = attrs[i]
@@ -93,12 +109,22 @@ class Attribute(object):
         return attrs
 
     def items(self):
+        """
+        Returns
+        -------
+        a new view of the Attribute's items.
+        """
         attrs = self._open_or_create()
         for i in self.path:
             attrs = attrs[i]
         return attrs.items()
 
     def values(self):
+        """
+        Returns
+        -------
+        a new view of the Attribute's values.
+        """
         attrs = self._open_or_create()
         for i in self.path:
             attrs = attrs[i]
@@ -145,7 +171,12 @@ class Attribute(object):
 
     @property
     def filename(self):
-        if self.mode == self.Mode.METADATA:
+        """
+        Returns
+        -------
+        The filename of the :code:`attributes.yaml` file.
+        """
+        if self.mode == self._Mode.METADATA:
             return self.parent.meta_filename
         else:
             return self.parent.attributes_filename
@@ -154,6 +185,11 @@ class Attribute(object):
         return len(self.keys())
 
     def update(self, value):
+        """
+        Update the Attribute with the key/value pairs from :code:`value`, overwriting existing keys.
+
+        This function accepts either another Attribute object, a dictionary object or an iterable of key/value pairs
+        """
         for key in value:
             self[key] = value[key]
 

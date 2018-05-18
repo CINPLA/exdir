@@ -3,7 +3,7 @@ import os
 import ruamel_yaml as yaml
 import warnings
 import pathlib
-from . import filename_validation
+from . import validation
 
 from . import exdir_object
 from .. import utils
@@ -30,7 +30,7 @@ def _resolve_path(path):
 
 def _assert_valid_name(name, container):
     """Check if name (dataset or group) is valid."""
-    container.validate_name(container.directory, name)
+    container.name_validation(container.directory, name)
 
 
 def _create_object_directory(directory, typename):
@@ -46,15 +46,18 @@ def _create_object_directory(directory, typename):
     directory.mkdir()
     meta_filename = directory / META_FILENAME
     with meta_filename.open("w", encoding="utf-8") as meta_file:
-        metadata = {
-            EXDIR_METANAME: {
-                TYPE_METANAME: typename,
-                VERSION_METANAME: 1}
-        }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
+        metadata = """
+{exdir_meta}:
+    {type_meta}: "{typename}"
+    {version_meta}: {version}
+""".format(
+        exdir_meta=EXDIR_METANAME,
+        type_meta=TYPE_METANAME,
+        typename=typename,
+        version_meta=VERSION_METANAME,
+        version=1
+    )
+        meta_file.write(metadata)
 
 
 def is_exdir_object(directory):
@@ -148,8 +151,16 @@ def open_object(path):
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
+# Meta class to make subclasses pick up on Groups documentation
+class ObjectMeta(type):
+    def __new__(mcls, classname, bases, cls_dict):
+        cls = super().__new__(mcls, classname, bases, cls_dict)
+        for name, member in cls_dict.items():
+            if not getattr(member, '__doc__') and hasattr(bases[-1], name) and getattr(getattr(bases[-1], name), "__doc__"):
+                member.__doc__ = getattr(bases[-1], name).__doc__
+        return cls
 
-class Object(object):
+class Object(object, metaclass=ObjectMeta):
     """
     Parent class for exdir Group and exdir dataset objects
     """
@@ -158,41 +169,44 @@ class Object(object):
         READ_ONLY = 2
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None, plugin_manager=None):
-        # TODO put io_mode, validate_name, plugin_types into a configuration object
+                 name_validation=None, plugin_manager=None):
+        # TODO put io_mode, name_validation, plugin_types into a configuration object
         self.root_directory = root_directory
         self.object_name = str(object_name)  # NOTE could be path, so convert to str
         self.parent_path = parent_path
         self.relative_path = self.parent_path / self.object_name
-        self.name = "/" + str(self.relative_path)
+        relative_name = str(self.relative_path)
+        if relative_name == ".":
+            relative_name = ""
+        self.name = "/" + relative_name
         self.io_mode = io_mode
         self.plugin_manager = plugin_manager
 
-        validate_name = validate_name or filename_validation.thorough
+        name_validation = name_validation or validation.thorough
 
-        if isinstance(validate_name, str):
-            if validate_name == 'simple':
-                validate_name = filename_validation.thorough
-            elif validate_name == 'thorough':
-                validate_name = filename_validation.thorough
-            elif validate_name == 'strict':
-                validate_name = filename_validation.strict
-            elif validate_name == 'none':
-                validate_name = filename_validation.none
+        if isinstance(name_validation, str):
+            if name_validation == 'simple':
+                name_validation = validation.thorough
+            elif name_validation == 'thorough':
+                name_validation = validation.thorough
+            elif name_validation == 'strict':
+                name_validation = validation.strict
+            elif name_validation == 'none':
+                name_validation = validation.none
             else:
                 raise ValueError(
                     'IO name rule "{}" not recognized, '
                     'name rule must be one of "strict", "simple", '
-                    '"thorough", "none"'.format(validate_name)
+                    '"thorough", "none"'.format(name_validation)
                 )
 
             warnings.warn(
-                "WARNING: validate_name should be set to one of the functions in "
-                "the exdir.filename_validation module. "
+                "WARNING: name_validation should be set to one of the functions in "
+                "the exdir.validation module. "
                 "Defining naming rule by string is no longer supported."
             )
 
-        self.validate_name = validate_name
+        self.name_validation = name_validation
 
     @property
     def directory(self):
@@ -202,7 +216,7 @@ class Object(object):
     def attrs(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.ATTRIBUTES,
+            mode=Attribute._Mode.ATTRIBUTES,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )
@@ -215,7 +229,7 @@ class Object(object):
     def meta(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.METADATA,
+            mode=Attribute._Mode.METADATA,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )
@@ -271,7 +285,7 @@ class Object(object):
             parent_path=parent_parent_path,
             object_name=parent_name,
             io_mode=self.io_mode,
-            validate_name=self.validate_name,
+            name_validation=self.name_validation,
             plugin_manager=self.plugin_manager
         )
 

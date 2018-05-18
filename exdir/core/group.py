@@ -46,7 +46,7 @@ class Group(Object):
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 validate_name=None, plugin_manager=None):
+                 name_validation=None, plugin_manager=None):
         """
         WARNING: Internal. Should only be called from require_group.
         """
@@ -55,14 +55,16 @@ class Group(Object):
             parent_path=parent_path,
             object_name=object_name,
             io_mode=io_mode,
-            validate_name=validate_name,
+            name_validation=name_validation,
             plugin_manager=plugin_manager
         )
 
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         """
-        Create a dataset.
+        Create a dataset. This will create a folder on the filesystem with the given
+        name, an exdir.yaml file that identifies the folder as an Exdir Dataset,
+        and a data.npy file that contains the data.
 
         Parameters
         ----------
@@ -86,60 +88,79 @@ class Group(Object):
 
         Returns
         -------
-        A reference to the newly created dataset.
+        The newly created Dataset.
 
         Raises
         ------
         FileExistsError
             If an object with the same `name` already exists.
 
+        See also
+        --------
+        require_dataset
         """
         exob._assert_valid_name(name, self)
 
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ('r') mode")
 
-        if name in self:
-            raise FileExistsError(
-                "'{}' already exists in '{}'".format(name, self.name)
-            )
+        exob._assert_valid_name(name, self)
 
-        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
-
-        _assert_data_shape_dtype_match(data, shape, dtype)
         if data is None and shape is None:
             raise TypeError(
                 "Cannot create dataset. Missing shape or data keyword."
             )
 
-        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
+        prepared_data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
 
-        if data is not None:
-            if shape is not None and data.shape != shape:
-                data = np.reshape(data, shape)
+        _assert_data_shape_dtype_match(prepared_data, shape, dtype)
+
+        shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
+
+        if prepared_data is not None:
+            if shape is not None and prepared_data.shape != shape:
+                prepared_data = np.reshape(prepared_data, shape)
         else:
             if shape is None:
-                data = None
+                prepared_data = None
             else:
                 fillvalue = fillvalue or 0.0
-                data = np.full(shape, fillvalue, dtype=dtype)
+                prepared_data = np.full(shape, fillvalue, dtype=dtype)
 
-        if data is None:
+        if prepared_data is None:
             raise TypeError("Could not create a meaningful dataset.")
 
         dataset_directory = self.directory / name
-
         exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
 
-        # TODO DRY violation, same as dataset._reset_data, but we have already called _prepare_write
-        dataset = self[name]
-        np.save(dataset.data_filename, data)
-        dataset.attrs = attrs
-        dataset.meta["plugins"] = meta
-        dataset._reload_data()
+        dataset = self._dataset(name)
+        dataset._reset_data(prepared_data, attrs, meta)
         return dataset
 
     def create_group(self, name):
+        """
+        Create a group. This will create a folder on the filesystem with the
+        given name and an exdir.yaml file that identifies the folder as a
+        group. A group can contain multiple groups and datasets.
+
+        Parameters
+        ----------
+        name: str
+            Name of the subgroup. Must follow the naming convention of the parent Exdir File.
+
+        Raises
+        ------
+        FileExistsError
+            If an object with the same `name` already exists.
+
+        Returns
+        -------
+        The newly created Group.
+
+        See also
+        --------
+        require_group
+        """
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError("Cannot write data to file in read only ("r") mode")
 
@@ -158,9 +179,36 @@ class Group(Object):
 
         group_directory = self.directory / path
         exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
-        return self[name]
+        return self._group(name)
+
+    def _group(self, name):
+        return Group(
+            root_directory=self.root_directory,
+            parent_path=self.relative_path,
+            object_name=name,
+            io_mode=self.io_mode,
+            name_validation=self.name_validation,
+            plugin_manager=self.plugin_manager
+        )
 
     def require_group(self, name):
+        """
+        Open an existing subgroup or create if it does not exist.
+        This might create a new subfolder on the file system.
+
+        Parameters
+        ----------
+        name: str
+            Name of the subgroup. Must follow the naming convention of the parent Exdir File.
+
+        Returns
+        -------
+        The existing or created group.
+
+        See also
+        --------
+        create_group
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -271,6 +319,14 @@ class Group(Object):
         return current_object
 
     def __contains__(self, name):
+        """
+        Checks the existence of an object with the given name in the group.
+
+        Parameters
+        ----------
+        name: str
+            the case-sensitive name of the object
+        """
         if name == ".":
             return True
         if name == "":
@@ -280,6 +336,19 @@ class Group(Object):
         return exob.is_exdir_object(directory)
 
     def __getitem__(self, name):
+        """
+        Retrieves the object with the given name if it exists in the group.
+
+        Parameters
+        ----------
+        name: str
+            the case-sensitive name of the object to retrieve
+
+        Raises
+        ------
+        KeyError:
+            if the name does not correspond to an exdir object in the group
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]
@@ -310,23 +379,9 @@ class Group(Object):
         with meta_filename.open("r", encoding="utf-8") as meta_file:
             meta_data = yaml.safe_load(meta_file)
         if meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.DATASET_TYPENAME:
-            return ds.Dataset(
-                root_directory=self.root_directory,
-                parent_path=self.relative_path,
-                object_name=name,
-                io_mode=self.io_mode,
-                validate_name=self.validate_name,
-                plugin_manager=self.plugin_manager
-            )
+            return self._dataset(name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
-            return Group(
-                root_directory=self.root_directory,
-                parent_path=self.relative_path,
-                object_name=name,
-                io_mode=self.io_mode,
-                validate_name=self.validate_name,
-                plugin_manager=self.plugin_manager
-            )
+            return self._group(name)
         else:
             print(
                 "Object", name, "has data type",
@@ -334,7 +389,28 @@ class Group(Object):
             )
             raise NotImplementedError("Cannot open objects of this type")
 
+    def _dataset(self, name):
+        return ds.Dataset(
+            root_directory=self.root_directory,
+            parent_path=self.relative_path,
+            object_name=name,
+            io_mode=self.io_mode,
+            name_validation=self.name_validation,
+            plugin_manager=self.plugin_manager
+        )
+
     def __setitem__(self, name, value):
+        """
+        Set or create a dataset with the given name from the given value.
+
+        Parameters
+        ----------
+        name: str
+            name of the existing or new dataset
+        value: object
+            value that will be used to create a new or set
+            the contents of an existing dataset
+        """
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
@@ -352,15 +428,36 @@ class Group(Object):
         self[name].value = value
 
     def keys(self):
+        """
+        Returns
+        -------
+        KeysView
+            A view of the names of the objects in the group.
+        """
         return abc.KeysView(self)
 
     def items(self):
+        """
+        Returns
+        -------
+        ItemsView
+            A view of the keys and objects in the group.
+        """
         return abc.ItemsView(self)
 
     def values(self):
+        """
+        Returns
+        -------
+        ValuesView
+            A view of the objects in the group.
+        """
         return abc.ValuesView(self)
 
     def __iter__(self):
+        """
+        Iterate over all the objects in the group.
+        """
         # NOTE os.walk is way faster than os.listdir + os.path.isdir
         directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):

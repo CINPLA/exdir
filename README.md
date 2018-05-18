@@ -2,6 +2,7 @@
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![Anaconda-Server Badge](https://anaconda.org/cinpla/exdir/badges/installer/conda.svg)](https://conda.anaconda.org/cinpla)
 [![codecov](https://codecov.io/gh/CINPLA/exdir/branch/dev/graph/badge.svg)](https://codecov.io/gh/CINPLA/exdir)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/CINPLA/exdir/dev?filepath=tests%2Fbenchmarks%2Fbenchmarks.ipynb)
 
 *Important*: The reference implementation contained in this repository is intended for
 feedback and as a basis for future library implementations.
@@ -58,6 +59,13 @@ dataset.attrs["recoring_date"] = "2018-02-04"
 ```
 
 See the [documentation](https://exdir.readthedocs.io) for more information.
+
+## Benchmarks ##
+
+See [benchmarks.ipynb](tests/benchmarks/benchmarks.ipynb).
+
+A [live version](https://mybinder.org/v2/gh/CINPLA/exdir/dev?filepath=tests%2Fbenchmarks%2Fbenchmarks.ipynb)
+can be explored using Binder.
 
 ## Quick introduction ##
 

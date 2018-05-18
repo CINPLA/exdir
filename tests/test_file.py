@@ -16,7 +16,7 @@ import pathlib
 
 from exdir.core import File, Group
 from exdir.core.exdir_object import _create_object_directory, is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
-import exdir.core.filename_validation as fv
+from exdir import validation as fv
 
 import numpy as np
 
@@ -175,46 +175,46 @@ def test_file_close(setup_teardown_folder):
 
 def test_validate_name_thorough(setup_teardown_folder):
     """Test naming rule thorough."""
-    f = File(setup_teardown_folder[0] / "test.exdir", validate_name=fv.thorough)
+    f = File(setup_teardown_folder[0] / "test.exdir", name_validation=fv.thorough)
     f.close()
 
     with pytest.raises(FileExistsError):
-        File(setup_teardown_folder[0] / "Test.exdir", validate_name=fv.thorough)
+        File(setup_teardown_folder[0] / "Test.exdir", name_validation=fv.thorough)
     with pytest.raises(NameError):
-        File(setup_teardown_folder[0] / "tes#.exdir", validate_name=fv.thorough)
+        File(setup_teardown_folder[0] / "tes#.exdir", name_validation=fv.thorough)
 
 
 def test_validate_name_strict(setup_teardown_folder):
     """Test naming rule strict."""
-    f = File(setup_teardown_folder[1], validate_name=fv.strict)
+    f = File(setup_teardown_folder[1], name_validation=fv.strict)
     f.close()
 
     with pytest.raises(NameError):
-        File(setup_teardown_folder[1].with_suffix(".exdirA"), validate_name=fv.strict)
+        File(setup_teardown_folder[1].with_suffix(".exdirA"), name_validation=fv.strict)
 
 
 def test_validate_name_error(setup_teardown_folder):
     """Test naming rule with error."""
 
     with pytest.raises(ValueError):
-        File(setup_teardown_folder[1], validate_name='Error rule')
+        File(setup_teardown_folder[1], name_validation='Error rule')
 
 
 def test_validate_name_none(setup_teardown_folder):
     """Test naming rule with error."""
 
-    File(setup_teardown_folder[1].with_name("test&().exdir"), validate_name=fv.none)
+    File(setup_teardown_folder[1].with_name("test&().exdir"), name_validation=fv.none)
 
 
 def test_opening_with_different_validate_name(setup_teardown_folder):
     """Test opening with wrong naming rule."""
 
-    f = File(setup_teardown_folder[1], "w", validate_name=fv.none)
+    f = File(setup_teardown_folder[1], "w", name_validation=fv.none)
     f.create_group("AAA")
     f.close()
 
     # TODO changing name validation should result in warning/error
-    f = File(setup_teardown_folder[1], "a", validate_name=fv.thorough)
+    f = File(setup_teardown_folder[1], "a", name_validation=fv.thorough)
     with pytest.raises(FileExistsError):
         f.create_group("aaa")
     f.close()
