@@ -111,7 +111,12 @@ class Group(Object):
                 "Cannot create dataset. Missing shape or data keyword."
             )
 
-        prepared_data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
+        prepared_data, attrs, meta = ds._prepare_write(
+            data,
+            self.plugin_manager.dataset_plugins.write_order,
+            attrs={},
+            meta=exob._default_metadata(exob.DATASET_TYPENAME)
+        )
 
         _assert_data_shape_dtype_match(prepared_data, shape, dtype)
 
@@ -131,10 +136,10 @@ class Group(Object):
             raise TypeError("Could not create a meaningful dataset.")
 
         dataset_directory = self.directory / name
-        exob._create_object_directory(dataset_directory, exob.DATASET_TYPENAME)
+        exob._create_object_directory(dataset_directory, meta)
 
         dataset = self._dataset(name)
-        dataset._reset_data(prepared_data, attrs, meta)
+        dataset._reset_data(prepared_data, attrs, None)  # meta already set above
         return dataset
 
     def create_group(self, name):
@@ -178,7 +183,7 @@ class Group(Object):
             )
 
         group_directory = self.directory / path
-        exob._create_object_directory(group_directory, exob.GROUP_TYPENAME)
+        exob._create_object_directory(group_directory, exob._default_metadata(exob.GROUP_TYPENAME))
         return self._group(name)
 
     def _group(self, name):
@@ -288,7 +293,13 @@ class Group(Object):
                 )
             )
 
-        data, attrs, meta = ds._prepare_write(data, self.plugin_manager.dataset_plugins.write_order)
+        data, attrs, meta = ds._prepare_write(
+            data,
+            plugins=self.plugin_manager.dataset_plugins.write_order,
+            attrs={},
+            meta={}
+        )
+
 
         # TODO verify proper attributes
 

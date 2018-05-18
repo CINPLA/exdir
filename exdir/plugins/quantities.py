@@ -2,6 +2,8 @@ import exdir
 import quantities as pq
 import numpy as np
 
+from collections import defaultdict
+
 
 def convert_back_quantities(value):
     """Convert quantities back from dictionary."""
@@ -86,12 +88,18 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
     def prepare_write(self, dataset_data):
         data = dataset_data.data
         attrs = {}
-        meta = {
-            "required": False
-        }
+
+        meta = dataset_data.meta
 
         if isinstance(data, pq.Quantity):
-            meta["required"] = True
+            # TODO consider adding a helper class that wraps defaultdict and converts back again
+            if "plugins" not in meta:
+                meta["plugins"] = {}
+
+            if "quantities" not in meta["plugins"]:
+                meta["plugins"]["quantities"] = {}
+
+            meta["plugins"]["quantities"]["required"] = True
             result = data.magnitude
             attrs["unit"] = data.dimensionality.string
             if isinstance(data, pq.UncertainQuantity):
@@ -101,7 +109,7 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
 
         dataset_data.data = data
         dataset_data.attrs = attrs
-        dataset_data.meta = meta
+        dataset_data.meta = dict(meta)
 
         return dataset_data
 

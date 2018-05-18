@@ -32,6 +32,7 @@ class Attribute(object):
     Group or File.
     """
 
+    # TODO remove METADATA mode and read/write metadata directly as YAML instead
     class _Mode(Enum):
         ATTRIBUTES = 1
         METADATA = 2
@@ -46,14 +47,17 @@ class Attribute(object):
     def __getitem__(self, name=None):
         attrs = self._open_or_create()
 
-        meta = {}
-        attribute_data = exdir.plugin_interface.AttributeData(attrs=attrs,
-                                                              meta=meta)
+        if self.mode == self._Mode.ATTRIBUTES:
+            meta = self.parent.meta.to_dict()
+            for plugin in self.plugin_manager.attribute_plugins.read_order:
+                attribute_data = exdir.plugin_interface.AttributeData(
+                    attrs=attrs,
+                    meta=meta
+                )
 
-        for plugin in self.plugin_manager.attribute_plugins.read_order:
-            attribute_data = plugin.prepare_read(attribute_data)
-            attrs = attribute_data.attrs
-            meta.update(attribute_data.meta)
+                attribute_data = plugin.prepare_read(attribute_data)
+                attrs = attribute_data.attrs
+                meta.update(attribute_data.meta)
 
         for i in self.path:
             attrs = attrs[i]
@@ -95,7 +99,7 @@ class Attribute(object):
             attrs = attrs[i]
         return attrs.keys()
 
-    def to_dict(self)
+    def to_dict(self):
         """
         Convert the Attribute into a standard Python dictionary.
         """
@@ -103,8 +107,16 @@ class Attribute(object):
         for i in self.path:  # TODO check if this is necesary
             attrs = attrs[i]
 
-        for plugin in self.plugin_manager.attribute_plugins.read_order:
-            attrs = plugin.prepare_read(attrs)
+        if self.mode == self._Mode.ATTRIBUTES:
+            meta = self.parent.meta.to_dict()
+            attribute_data = exdir.plugin_interface.AttributeData(
+                attrs=attrs,
+                meta=meta
+            )
+            for plugin in self.plugin_manager.attribute_plugins.read_order:
+                attribute_data = plugin.prepare_read(attribute_data)
+
+                attrs = attribute_data.attrs
 
         return attrs
 
@@ -134,24 +146,29 @@ class Attribute(object):
         if self.io_mode == exob.Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
 
-        meta = {}
-        attribute_data = exdir.plugin_interface.AttributeData(attrs=attrs,
-                                                              meta=meta)
+        plugins = self.plugin_manager.attribute_plugins.write_order
 
-        for plugin in self.plugin_manager.attribute_plugins.write_order:
-            attribute_data = plugin.prepare_write(attribute_data)
+        if self.mode == self._Mode.ATTRIBUTES and len(plugins) > 0:
+            meta = self.parent.meta.to_dict()
+            for plugin in plugins:
+                attribute_data = exdir.plugin_interface.AttributeData(
+                    attrs=attrs,
+                    meta=meta
+                )
 
-            if "required" in attribute_data.meta and attribute_data.meta["required"] is True:
-                meta[plugin._plugin_module.name] = attribute_data.meta
+                attribute_data = plugin.prepare_write(attribute_data)
+                meta = attribute_data.meta
+                attrs = attribute_data.attrs
 
-        # QUESTION: Should we add plugin meta data to parent.meta here?
+            attribute_data_quoted = _quote_strings(attribute_data.attrs)
+            self.parent.meta._set_data(meta)
+        else:
+            attribute_data_quoted = attrs
 
-        meta_data_quoted = _quote_strings(attribute_data.attrs)
-
-        with self.filename.open("w", encoding="utf-8") as meta_file:
+        with self.filename.open("w", encoding="utf-8") as attribute_file:
             yaml.dump(
-                meta_data_quoted,
-                meta_file,
+                attribute_data_quoted,
+                attribute_file,
                 default_flow_style=False,
                 allow_unicode=True,
                 Dumper=yaml.RoundTripDumper
