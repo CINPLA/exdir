@@ -383,11 +383,14 @@ class Group(Object):
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return self._group(name)
         else:
-            print(
-                "Object", name, "has data type",
-                meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
+            error_string = (
+                "Object {name} has data type {type}.\n"
+                "We cannot open objects of this type."
+            ).format(
+                name=name,
+                type=meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
             )
-            raise NotImplementedError("Cannot open objects of this type")
+            raise NotImplementedError(error_string)
 
     def _dataset(self, name):
         return ds.Dataset(
