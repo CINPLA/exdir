@@ -1,1 +1,1 @@
-from .plugin_interface import (Plugin, Dataset, Attribute, Group, File, Raw)
+from .plugin_interface import (Plugin, DatasetData, AttributeData, Dataset, Attribute, Group, File, Raw)

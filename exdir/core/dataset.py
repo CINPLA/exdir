@@ -1,16 +1,22 @@
 import numbers
 import numpy as np
+import exdir
 
 from . import exdir_object as exob
 
-def _prepare_write(data, dataset_plugins):
-    attrs = {}
-    meta = {}
-    for plugin in dataset_plugins:
-        data, plugin_attrs, plugin_meta = plugin.prepare_write(data)
-        attrs.update(plugin_attrs)
-        if "required" in plugin_meta and plugin_meta["required"] == True:
-            meta[plugin._plugin_module.name] = plugin_meta
+
+def _prepare_write(data, plugins, attrs, meta):
+    for plugin in plugins:
+        dataset_data = exdir.plugin_interface.DatasetData(
+            data=data,
+            attrs=attrs,
+            meta=meta
+        )
+        dataset_data = plugin.prepare_write(dataset_data)
+
+        data = dataset_data.data
+        attrs = dataset_data.attrs
+        meta = dataset_data.meta
 
     if isinstance(data, (numbers.Number, tuple, str)):
         data = np.asarray(data, order="C")
@@ -52,29 +58,49 @@ class Dataset(exob.Object):
             values = self._data[args]
 
         enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
+
+        data = values
+
         if "plugins" in self.meta:
-            for plugin_name in self.meta["plugins"].keys():
-                if not plugin_name in enabled_plugins:
+            for plugin_name in self.meta["plugins"]:
+                if ("required" in self.meta["plugins"][plugin_name]
+                    and self.meta["plugins"][plugin_name]["required"] == True
+                    and plugin_name not in enabled_plugins):
                     raise Exception((
                         "Plugin '{}' was used to write '{}', "
                         "but is not enabled."
                     ).format(plugin_name, self.name))
 
-        for plugin in self.plugin_manager.dataset_plugins.read_order:
-            values = plugin.prepare_read(values, self.attrs)
+        plugins = self.plugin_manager.dataset_plugins.read_order
 
+        if len(plugins) > 0:
+            meta = self.meta.to_dict()
+            atts = self.attrs.to_dict()
 
-        return values
+            for plugin in plugins:
+                dataset_data = exdir.plugin_interface.DatasetData(data=values,
+                                                                  attrs=self.attrs.to_dict(),
+                                                                  meta=meta)
+
+                dataset_data = plugin.prepare_read(dataset_data)
+                data = dataset_data.data
+
+        return data
+
 
     def __setitem__(self, args, value):
         if self.io_mode == self.OpenMode.READ_ONLY:
             raise IOError('Cannot write data to file in read only ("r") mode')
 
-        value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
-        self.attrs.update(attrs)
-        self.meta["plugins"] = meta
-
+        value, attrs, meta = _prepare_write(
+            data=value,
+            plugins=self.plugin_manager.dataset_plugins.write_order,
+            attrs=self.attrs.to_dict(),
+            meta=self.meta.to_dict()
+        )
         self._data[args] = value
+        self.attrs = attrs
+        self.meta._set_data(meta)
 
     def _reload_data(self):
         if self.io_mode == self.OpenMode.READ_ONLY:
@@ -101,10 +127,10 @@ class Dataset(exob.Object):
 
         # update attributes and plugin metadata
         if attrs:
-            self.attrs.update(attrs)
+            self.attrs = attrs
 
         if meta:
-            self.meta["plugins"] = meta
+            self.meta._set_data(meta)
 
         return
 
@@ -193,7 +219,12 @@ class Dataset(exob.Object):
     def value(self, value):
         # TODO this should be in data, since value is deprecated
         if self._data.shape != value.shape or self._data.dtype != value.dtype:
-            value, attrs, meta = _prepare_write(value, self.plugin_manager.dataset_plugins.write_order)
+            value, attrs, meta = _prepare_write(
+                data=value,
+                plugins=self.plugin_manager.dataset_plugins.write_order,
+                attrs=self.attrs.to_dict(),
+                meta=self.meta.to_dict()
+            )
             self._reset_data(value, attrs, meta)
             return
 

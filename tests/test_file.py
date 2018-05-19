@@ -16,6 +16,7 @@ import pathlib
 
 from exdir.core import File, Group
 from exdir.core.exdir_object import _create_object_directory, is_nonraw_object_directory, DATASET_TYPENAME, FILE_TYPENAME
+import exdir.core.exdir_object as exob
 from exdir import validation as fv
 
 import numpy as np
@@ -52,7 +53,7 @@ def test_file_init(setup_teardown_folder):
 
     remove(setup_teardown_folder[1])
 
-    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), DATASET_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(DATASET_TYPENAME))
     with pytest.raises(FileExistsError):
         f = File(setup_teardown_folder[1], mode="w")
 
@@ -63,18 +64,18 @@ def test_file_init(setup_teardown_folder):
     with pytest.raises(IOError):
         f = File(setup_teardown_folder[1], mode="r+")
 
-    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), FILE_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(FILE_TYPENAME))
 
     with pytest.raises(FileExistsError):
         f = File(setup_teardown_folder[1], mode="w")
 
     remove(setup_teardown_folder[1])
 
-    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), FILE_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(FILE_TYPENAME))
     f = File(setup_teardown_folder[1], mode="w", allow_remove=True)
     remove(setup_teardown_folder[1])
 
-    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), FILE_TYPENAME)
+    _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(FILE_TYPENAME))
 
     with pytest.raises(IOError):
         f = File(setup_teardown_folder[1], mode="w-")

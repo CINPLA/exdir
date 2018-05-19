@@ -31,32 +31,60 @@ class Plugin:
                 setattr(plugin, "_plugin_module", self)
 
 
+class DatasetData:
+    """
+    Container class for dataset plugin data
+
+    Parameters
+    ----------
+    data : numeric or numpy.ndarray
+    attrs : dictionary or dictionary-like
+    meta : dictionary or dictionary-like
+
+    """
+    def __init__(self, data, attrs, meta):
+        self.data = data
+        self.attrs = attrs
+        self.meta = meta
+
+
+class AttributeData:
+    """
+    Container class for attribute plugin data
+
+    Parameters
+    ----------
+    attrs : dictionary or dictionary-like
+    meta : dictionary or dictionary-like
+
+    """
+    def __init__(self, attrs, meta):
+        self.attrs = attrs
+        self.meta = meta
+
+
 class Dataset:
-    def prepare_read(self, value, attrs):
+    def prepare_read(self, dataset_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the data from the NumPy file and the attributes from the
-        YAML file.
-        The plugin parses these and returns them in a reasonable format  to be
+        It receives a exdir.plugin_interface.DatasetData which has its data
+        from the NumPy file and the attributes from the YAML file.
+        The plugin parses these and returns them in a reasonable format to be
         used by the user.
-        The returned value should be numeric or numpy.ndarray.
+
+        The returned value should be exdir.plugin_interface.DatasetData.
         """
 
-        return value
+        return dataset_data
 
-    def prepare_write(self, value):
+    def prepare_write(self, dataset_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the value to be parsed by the plugin and returns a value and
-        attributes that are ready to be written to file.
-        The returned value should be numeric or numpy.ndarray and the returned
-        attributes should be a dictionary or dictionary-like.
+        It receives the value to be parsed by the plugin and returns an exdir.plugin_interface.DatasetData that is ready to be written to file.
         """
-
-        attrs = {}
-        return value, attrs
+        return dataset_data
 
     def write_before(self):
         """
@@ -88,25 +116,25 @@ class Dataset:
 
 
 class Attribute:
-    def prepare_read(self, meta_data):
+    def prepare_read(self, attribute_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the meta_data from the YAML file and returns the parsed
-        version of this data to be used by the user.
-        The returned value should be a dictionary or dictionary-like.
-        """
-        return meta_data
+        It receives a exdir.plugin_interface.AttributeData which has its attributes
+        from the YAML file. The plugin parses these and returns them in a reasonable
+        format to be used by the user.
 
-    def prepare_write(self, meta_data):
+        The returned value should be exdir.plugin_interface.DatasetData.
+        """
+        return attribute_data
+
+    def prepare_write(self, attribute_data):
         """
         Overload this function in your plugin implementation.
 
-        It receives the meta_data as provided by the user and should be parsed
-        by the plugin into a basic dictionary that is YAML-compatible.
-        This dictionary is returned by the function.
+        It receives the attribute data to be parsed by the plugin and returns an exdir.plugin_interface.AttributeData that is ready to be written to file.
         """
-        return meta_data
+        return attribute_data
 
     def write_before(self):
         """

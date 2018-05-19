@@ -2,6 +2,8 @@ import exdir
 import quantities as pq
 import numpy as np
 
+from collections import defaultdict
+
 
 def convert_back_quantities(value):
     """Convert quantities back from dictionary."""
@@ -65,7 +67,10 @@ def convert_quantities(value):
 
 
 class DatasetPlugin(exdir.plugin_interface.Dataset):
-    def prepare_read(self, values, attrs):
+    def prepare_read(self, dataset_data):
+        values = dataset_data.data
+        attrs = dataset_data.attrs
+
         if "unit" in attrs:
             item_dict = {
                 "value": values,
@@ -75,15 +80,26 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
                 item_dict["uncertainty"] = attrs["uncertainty"]
 
             values = convert_back_quantities(item_dict)
-        return values
 
-    def prepare_write(self, data):
-        plugin_meta = {
-            "required": False
-        }
+        dataset_data.data = values
+
+        return dataset_data
+
+    def prepare_write(self, dataset_data):
+        data = dataset_data.data
         attrs = {}
+
+        meta = dataset_data.meta
+
         if isinstance(data, pq.Quantity):
-            plugin_meta["required"] = True
+            # TODO consider adding a helper class that wraps defaultdict and converts back again
+            if "plugins" not in meta:
+                meta["plugins"] = {}
+
+            if "quantities" not in meta["plugins"]:
+                meta["plugins"]["quantities"] = {}
+
+            meta["plugins"]["quantities"]["required"] = True
             result = data.magnitude
             attrs["unit"] = data.dimensionality.string
             if isinstance(data, pq.UncertainQuantity):
@@ -91,16 +107,21 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
         else:
             result = data
 
-        return result, attrs, plugin_meta
+        dataset_data.data = data
+        dataset_data.attrs = attrs
+        dataset_data.meta = dict(meta)
 
+        return dataset_data
 
 
 class AttributePlugin(exdir.plugin_interface.Attribute):
-    def prepare_read(self, meta_data):
-        return convert_back_quantities(meta_data)
+    def prepare_read(self, attribute_data):
+        attribute_data.attrs = convert_back_quantities(attribute_data.attrs)
+        return attribute_data
 
-    def prepare_write(self, meta_data):
-        return convert_quantities(meta_data)
+    def prepare_write(self, attribute_data):
+        attribute_data.attrs = convert_quantities(attribute_data.attrs)
+        return attribute_data
 
 
 def plugins():

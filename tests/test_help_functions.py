@@ -87,9 +87,9 @@ def test_assert_valid_name_none(setup_teardown_folder):
 
 def test_create_object_directory(setup_teardown_folder):
     with pytest.raises(ValueError):
-        exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), "wrong_typename")
+        exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob._default_metadata("wrong_typename"))
 
-    exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob.DATASET_TYPENAME)
+    exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob._default_metadata(exob.DATASET_TYPENAME))
 
     assert setup_teardown_folder[2].is_dir()
 
@@ -170,7 +170,7 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
 
     remove(setup_teardown_folder[2])
 
-    exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob.DATASET_TYPENAME)
+    exob._create_object_directory(pathlib.Path(setup_teardown_folder[2]), exob._default_metadata(exob.DATASET_TYPENAME))
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is True
 
