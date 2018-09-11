@@ -12,7 +12,7 @@
 
 import pytest
 import numpy as np
-import ruamel_yaml as yaml
+import ruamel.yaml as yaml
 
 from exdir.core import Attribute, File
 import six
