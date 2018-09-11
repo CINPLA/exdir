@@ -1,6 +1,6 @@
 import os
 import re
-import ruamel_yaml as yaml
+import ruamel.yaml as yaml
 import pathlib
 import numpy as np
 import exdir

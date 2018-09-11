@@ -19,7 +19,7 @@ requirements:
     - setuptools
     - numpy
     - scipy
-    - ruamel_yaml
+    - ruamel.yaml
     - pyyaml
 
 test:

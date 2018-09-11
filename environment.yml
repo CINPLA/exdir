@@ -9,7 +9,7 @@ dependencies:
     - numpy
     - scipy
     - pyyaml
-    - ruamel_yaml
+    - ruamel.yaml
     - pytest
     - pytest-benchmark
     - h5py

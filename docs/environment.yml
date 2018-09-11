@@ -6,4 +6,4 @@ dependencies:
   - setuptools
   - numpy
   - scipy
-  - ruamel_yaml
+  - ruamel.yaml
