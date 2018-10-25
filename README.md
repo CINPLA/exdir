@@ -21,7 +21,7 @@ and attempts to solve some of the problems assosciated with these while
 retaining their benefits.
 The development of exdir owes a great deal to the efforts of others to standardize
 data formats in science in general and neuroscience in particular, among them
-the Klusta Kwik Team and Neuroscience Without Borders.
+the Klusta Kwik Team and Neurodata Without Borders.
 
 ## Installation
 
