@@ -177,7 +177,7 @@ fit the experimental pipeline.
 While researching the different options, we found that the neuroscience
 community had several formats for storing experimental data.
 A large effort at standardizing the format in the community was spawned by
-Neuroscience Without Borders (NWB).
+Neurodata Without Borders (NWB).
 An initial version of the NWB format was published, based on the HDF5 format.
 However, shortly after the first publication of NWB, concerns were voiced
 about HDF5 format from the developers of the klusta project[1].
