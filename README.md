@@ -21,7 +21,7 @@ and attempts to solve some of the problems assosciated with these while
 retaining their benefits.
 The development of exdir owes a great deal to the efforts of others to standardize
 data formats in science in general and neuroscience in particular, among them
-the Klusta Kwik Team and Neuroscience Without Borders.
+the Klusta Kwik Team and Neurodata Without Borders.
 
 ## Installation
 
@@ -177,7 +177,7 @@ fit the experimental pipeline.
 While researching the different options, we found that the neuroscience
 community had several formats for storing experimental data.
 A large effort at standardizing the format in the community was spawned by
-Neuroscience Without Borders (NWB).
+Neurodata Without Borders (NWB).
 An initial version of the NWB format was published, based on the HDF5 format.
 However, shortly after the first publication of NWB, concerns were voiced
 about HDF5 format from the developers of the klusta project[1].

@@ -1,10 +1,10 @@
 language: python
-python:
-  # We don't actually use the Travis Python, but this keeps it organized.
-  # - "3.5" # NOTE an issue with pathlib.resolve breaks our tests on 3.5
-  - "2.7"
-  - "3.6"
-  - "3.7"
+python: 3.6
+matrix:
+  include:
+    - env: "PYTHON_VERSION=2.7"
+    - env: "PYTHON_VERSION=3.6"
+    - env: "PYTHON_VERSION=3.7"
 install:
   - bash -ex libs/travis-conda-scripts/scripts/travis_install.sh
 script:
