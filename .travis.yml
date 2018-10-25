@@ -3,6 +3,7 @@ python:
   # We don't actually use the Travis Python, but this keeps it organized.
   # - "3.5" # NOTE an issue with pathlib.resolve breaks our tests on 3.5
   - "3.6"
+  - "3.7"
 install:
   - bash -ex libs/travis-conda-scripts/scripts/travis_install.sh
 script:
