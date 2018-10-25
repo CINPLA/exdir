@@ -356,7 +356,11 @@ class Group(Object):
             return self[top_directory][sub_name]
 
         if name not in self:
-            raise KeyError("No such object: '" + str(name) + "'")
+            error_message = "No such object: '{name}' in path '{path}'".format(
+                name=name,
+                path=str(self.directory)
+            )
+            raise KeyError(error_message)
 
         directory = self.directory / path
 
