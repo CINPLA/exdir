@@ -65,7 +65,7 @@ def test_create_group_absolute(setup_teardown_file):
 
 def test_create_existing_twice(exdir_tmpfile):
     exdir_tmpfile.create_group("test")
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         exdir_tmpfile.create_group("test")
 
 
@@ -89,7 +89,7 @@ def test_create_exception(setup_teardown_file):
 
     grp.create_group("foo")
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         grp.create_group("foo")
         grp.create_group("foo/")
 
@@ -397,7 +397,7 @@ def test_validate_name_simple(setup_teardown_folder):
     grp = f.create_group("test")
     grp.create_group("aa")
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         grp.create_group("AA")
 
 

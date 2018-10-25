@@ -46,7 +46,7 @@ def test_require_raw(setup_teardown_file):
 
 def test_create_raw_twice(exdir_tmpfile):
     exdir_tmpfile.create_raw("test")
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         exdir_tmpfile.create_raw("test")
 
 

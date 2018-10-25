@@ -52,7 +52,11 @@ def _create_object_directory(directory, metadata):
         else:
             metadata_string = yaml.dump(metadata)
 
-        meta_file.write(metadata_string)
+        try:
+            meta_file.write(metadata_string)
+        except TypeError:
+            # NOTE workaround for Python 2.7
+            meta_file.write(metadata_string.decode('utf8'))
 
 
 def _default_metadata(typename):
@@ -137,7 +141,7 @@ def is_inside_exdir(path):
 def assert_inside_exdir(path):
     path = _resolve_path(path)
     if not is_inside_exdir(path):
-        raise FileNotFoundError("Path " + str(path) + " is not inside an Exdir repository.")
+        raise RuntimeError("Path " + str(path) + " is not inside an Exdir repository.")
 
 
 def open_object(path):
