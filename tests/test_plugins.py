@@ -21,13 +21,14 @@ import quantities as pq
 import exdir
 import exdir.core
 
+
 def test_plugin_order():
     class DatasetPlugin(exdir.plugin_interface.Dataset):
-        def prepare_read(self, values, attrs):
+        def prepare_read(self, dataset_data):
             return values
 
-        def prepare_write(self, data):
-            return data, {}, {}
+        def prepare_write(self, dataset_data):
+            return dataset_data
 
     first = exdir.plugin_interface.Plugin(
         "first",
@@ -77,13 +78,11 @@ def test_plugin_order():
 
 def test_noop(setup_teardown_folder):
     class DatasetPlugin(exdir.plugin_interface.Dataset):
-        def prepare_read(self, values, attrs):
-            return values
+        def prepare_read(self, dataset_data):
+            return dataset_data
 
-        def prepare_write(self, data):
-            plugin_meta = {}
-            attrs = {}
-            return data, attrs, plugin_meta
+        def prepare_write(self, dataset_data):
+            return dataset_data
 
     noop = exdir.plugin_interface.Plugin(
         "noop",
@@ -98,15 +97,15 @@ def test_noop(setup_teardown_folder):
 
 def test_fail_reading_without_required(setup_teardown_folder):
     class DatasetPlugin(exdir.plugin_interface.Dataset):
-        def prepare_read(self, values, attrs):
-            return values
+        def prepare_read(self, dataset_data):
+            return dataset_data
 
-        def prepare_write(self, data):
-            plugin_meta = {
-                "required": True
-            }
-            attrs = {}
-            return data, attrs, plugin_meta
+        def prepare_write(self, dataset_data):
+            if "plugins" not in dataset_data.meta:
+                dataset_data.meta["plugins"] = {}
+            if "required" not in dataset_data.meta["plugins"]:
+                dataset_data.meta["plugins"]["required"] = {"required": True}
+            return dataset_data
 
     required = exdir.plugin_interface.Plugin(
         "required",
@@ -129,24 +128,25 @@ def test_fail_reading_without_required(setup_teardown_folder):
 
 def test_one_way_scaling(setup_teardown_folder):
     class DatasetPlugin(exdir.plugin_interface.Dataset):
-        def prepare_read(self, values, attrs):
-            return values
+        def prepare_read(self, dataset_data):
+            return dataset_data
 
-        def prepare_write(self, data):
-            plugin_meta = {
-                "required": False
-            }
-            attrs = {}
-            return data * 2, attrs, plugin_meta
+        def prepare_write(self, dataset_data):
+            if "plugins" not in dataset_data.meta:
+                dataset_data.meta["plugins"] = {}
+            if "scaling" not in dataset_data.meta["plugins"]:
+                dataset_data.meta["plugins"]["scaling"] = {"required": True}
+            dataset_data.data *= 2
+            return dataset_data
 
     one_way_scaling = exdir.plugin_interface.Plugin(
-        "one_way_scaling",
+        "scaling",
         dataset_plugins=[DatasetPlugin()]
     )
 
     f = exdir.File(setup_teardown_folder[1], 'w', plugins=[one_way_scaling])
     assert f
-    d = f.create_dataset("foo", data=np.array([1, 2, 3]))
+    d = f.create_dataset("scaling", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([2, 4, 6]))
     f.close()
 
@@ -154,15 +154,19 @@ def test_one_way_scaling(setup_teardown_folder):
 def test_scaling(setup_teardown_folder):
 
     class DatasetPlugin(exdir.plugin_interface.Dataset):
-        def prepare_read(self, values, attrs):
-            return values / 2
+        def prepare_read(self, dataset_data):
+            meta = dataset_data.meta
+            dataset_data.data = dataset_data.data / 2
+            return dataset_data
 
-        def prepare_write(self, data):
-            plugin_meta = {
-                "required": True
-            }
-            attrs = {}
-            return data * 2, attrs, plugin_meta
+        def prepare_write(self, dataset_data):
+            dataset_data.data *= 2
+            if "plugins" not in dataset_data.meta:
+                dataset_data.meta["plugins"] = {}
+            if "scaling" not in dataset_data.meta["plugins"]:
+                dataset_data.meta["plugins"]["scaling"] = {"required": True}
+            dataset_data.meta
+            return dataset_data
 
     scaling = exdir.plugin_interface.Plugin(
         "scaling",
@@ -171,6 +175,39 @@ def test_scaling(setup_teardown_folder):
 
     f = exdir.File(setup_teardown_folder[1], 'w', plugins=[scaling])
     assert f
-    d = f.create_dataset("foo", data=np.array([1, 2, 3]))
+    d = f.create_dataset("scaling", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([1, 2, 3]))
     f.close()
+
+
+def test_attribute_plugin(setup_teardown_folder):
+    class AttributePlugin(exdir.plugin_interface.Attribute):
+        def prepare_read(self, attribute_data):
+            attribute_data.attrs["value"] = attribute_data.attrs["value"]["value"]
+            return attribute_data
+
+        def prepare_write(self, attribute_data):
+            meta = attribute_data.meta
+            if "plugins" not in meta:
+                meta["plugins"] = {}
+            if "scaling" not in meta["plugins"]:
+                meta["plugins"]["scaling"] = {"required": True}
+            old_value = attribute_data.attrs["value"]
+            attribute_data.attrs["value"] = {
+                "unit": "m",
+                "value": old_value * 2
+            }
+            return attribute_data
+
+    scaling_unit = exdir.plugin_interface.Plugin(
+        "scaling",
+        attribute_plugins=[AttributePlugin()]
+    )
+
+    f = exdir.File(setup_teardown_folder[1], "w", plugins=[scaling_unit])
+    assert f
+    d = f.create_dataset("foo", data=np.array([1, 2, 3]))
+    d.attrs["value"] = 42
+    assert d.attrs["value"] == 84
+    f.close()
+

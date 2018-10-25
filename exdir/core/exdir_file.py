@@ -132,7 +132,7 @@ class File(Group):
 
         if should_create_directory:
             self.name_validation(directory.parent, directory.name)
-            exob._create_object_directory(directory, exob.FILE_TYPENAME)
+            exob._create_object_directory(directory, exob._default_metadata(exob.FILE_TYPENAME))
 
     def close(self):
         """

@@ -1,7 +1,7 @@
 from . import core
 from . import plugin_interface
 from . import plugins
-from .core import File, validation
+from .core import File, validation, Attribute, Dataset, Group, Raw, Object
 
 # TODO remove versioneer
 from ._version import get_versions

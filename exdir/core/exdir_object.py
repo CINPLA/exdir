@@ -22,7 +22,7 @@ def _assert_valid_name(name, container):
     container.name_validation(container.directory, name)
 
 
-def _create_object_directory(directory, typename):
+def _create_object_directory(directory, metadata):
     """
     Create object directory and meta file if directory
     don't already exist.
@@ -30,23 +30,38 @@ def _create_object_directory(directory, typename):
     if directory.exists():
         raise IOError("The directory '" + str(directory) + "' already exists")
     valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
+    typename = metadata[EXDIR_METANAME][TYPE_METANAME]
     if typename not in valid_types:
         raise ValueError("{typename} is not a valid typename".format(typename=typename))
     directory.mkdir()
     meta_filename = directory / META_FILENAME
     with meta_filename.open("w", encoding="utf-8") as meta_file:
-        metadata = """
-{exdir_meta}:
-    {type_meta}: "{typename}"
-    {version_meta}: {version}
-""".format(
-        exdir_meta=EXDIR_METANAME,
-        type_meta=TYPE_METANAME,
-        typename=typename,
-        version_meta=VERSION_METANAME,
-        version=1
-    )
-        meta_file.write(metadata)
+        if metadata == _default_metadata(typename):
+            # if it is the default, we know how to print it fast
+            metadata_string = (''
+                '{exdir_meta}:\n'
+                '   {type_meta}: "{typename}"\n'
+                '   {version_meta}: {version}\n'
+            '').format(
+                exdir_meta=EXDIR_METANAME,
+                type_meta=TYPE_METANAME,
+                typename=typename,
+                version_meta=VERSION_METANAME,
+                version=1
+            )
+        else:
+            metadata_string = yaml.dump(metadata)
+
+        meta_file.write(metadata_string)
+
+
+def _default_metadata(typename):
+    return {
+        EXDIR_METANAME: {
+            TYPE_METANAME: typename,
+            VERSION_METANAME: 1
+        }
+    }
 
 
 def is_exdir_object(directory):
@@ -196,7 +211,7 @@ class Object(object):
     def attrs(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.ATTRIBUTES,
+            mode=Attribute._Mode.ATTRIBUTES,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )
@@ -209,7 +224,7 @@ class Object(object):
     def meta(self):
         return Attribute(
             self,
-            mode=Attribute.Mode.METADATA,
+            mode=Attribute._Mode.METADATA,
             io_mode=self.io_mode,
             plugin_manager=self.plugin_manager
         )
