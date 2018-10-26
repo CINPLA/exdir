@@ -2,14 +2,15 @@ language: python
 python: 3.6
 matrix:
   include:
-    - env: "PYTHON_VERSION=3.6"
-    - env: "PYTHON_VERSION=3.7"
+  - env: PYTHON_VERSION=3.6
+  - env: PYTHON_VERSION=3.7
 install:
-  - bash -ex libs/travis-conda-scripts/scripts/travis_install.sh
+- bash -ex libs/travis-conda-scripts/scripts/travis_install.sh
 script:
-  - source libs/travis-conda-scripts/scripts/config.sh
-  - bash -ex libs/travis-conda-scripts/scripts/build.sh
+- source libs/travis-conda-scripts/scripts/config.sh
+- bash -ex libs/travis-conda-scripts/scripts/build.sh
 deploy:
+  matrix:
   - provider: script
     skip_cleanup: true
     script: bash -ex libs/travis-conda-scripts/scripts/upload.sh cinpla main
@@ -20,3 +21,10 @@ deploy:
     script: bash -ex libs/travis-conda-scripts/scripts/upload.sh cinpla dev
     on:
       branch: dev
+  - provider: pypi
+    server: https://test.pypi.org/index
+    on:
+      tags: true
+    user: dragly
+    password:
+      secure: W14+M6tpBrajbsUprYQChdUURYob0T4L1yp77kELusI5hkTubDBLc7gqQ4AE5DAF3NPGgYuTQ4ntdv+Sji8ZinIyMPt/kVbKbtH0AJusKEH/y+F1AFlxUJ82V7j++5Lu5kuz4uFAHmkdlkh5ARfbJC2fb49aBsWrd6e4g3d87O5kFt0GsLtOUXuXRkhZ9cVQo7FIH9KbjG4v70su3ijJa3NdG02kp9SujsX44CQJI8aAfU17nLUhbOVyHtmTrVhH/Ao22trk1rn9UeKqc0/Upbmm0yegRk0FBcm+t7cEJvW2zWx0BuF9mWyvgvsm5HkvqcYbv/USEzvalCOcGWxs2FGqnzFKmKDSRF1zix9bhyI7wab+zPRW67Al1YK+7Yt1FtEh/AVJqWdzevYcOihHderhS4OnRFtwqEBXRK9Av8hWnVkCqR7fit3f27m3sEqsCTMqcXoaZLRiJXKuLM9hY+uWPq+mM5yTJ5tBhdudsfXY3lLRTIyrQSYmh1zRge8OWqME3nMnccO6Mvatl+c2/aimUTFe7pfdEgseddkLkKyk0z+sE7Z43o18yBKL1K6BvyQth9yKF8uHq7aSjR1rfGb5qj3632Zjf1Zzp+4pETJ3bkLggfQmRc8s4hFo/riCOwMrnrJ/VITg23hO5Me4grh8bPh8S9E4ydSb4KPbtu4=
