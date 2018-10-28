@@ -12,8 +12,9 @@ install_requires = []
 
 setup(
     name="exdir",
+    description=long_description,
     packages=find_packages(),
-    include_package_data=True, 
+    include_package_data=True,
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass()
 )
