@@ -7,8 +7,11 @@ import os
 import ruamel_yaml as yaml
 import warnings
 import pathlib
-from . import validation
 
+import exdir
+
+from . import validation
+from . import exdir_object
 from .. import utils
 from .attribute import Attribute
 from .constants import *
@@ -295,3 +298,6 @@ class Object(object):
             self.relative_path == other.relative_path and
             self.root_directory == other.root_directory
         )
+
+    def _repr_html_(self):
+        return exdir.utils.display.html_tree(self)

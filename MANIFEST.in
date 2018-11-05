@@ -1,2 +1,4 @@
 include versioneer.py
 include exdir/_version.py
+recursive-include jupyter-config *.json
+recursive-include exdir/static *.js
