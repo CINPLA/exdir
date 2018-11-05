@@ -1,3 +1,6 @@
+# Needed for quantities
+from __future__ import absolute_import
+
 import exdir
 import quantities as pq
 import numpy as np

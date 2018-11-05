@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of Exdir, the Experimental Directory Structure.
 #
 # Copyright 2017 Simen Tennøe
@@ -48,25 +50,25 @@ def test_file_init(setup_teardown_folder):
     remove(setup_teardown_folder[1])
 
     setup_teardown_folder[1].mkdir(parents=True)
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="w")
 
     remove(setup_teardown_folder[1])
 
     _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(DATASET_TYPENAME))
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="w")
 
     remove(setup_teardown_folder[1])
 
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="r")
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="r+")
 
     _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(FILE_TYPENAME))
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="w")
 
     remove(setup_teardown_folder[1])
@@ -77,10 +79,10 @@ def test_file_init(setup_teardown_folder):
 
     _create_object_directory(pathlib.Path(setup_teardown_folder[1]), exob._default_metadata(FILE_TYPENAME))
 
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="w-")
 
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], mode="x")
 
     with pytest.raises(ValueError):
@@ -97,7 +99,7 @@ def test_create(setup_teardown_folder):
     f = File(setup_teardown_folder[1], 'w', allow_remove=True)
     assert 'foo' not in f
     f.close()
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         f = File(setup_teardown_folder[1], 'w')
 
 
@@ -107,7 +109,7 @@ def test_create_exclusive(setup_teardown_folder):
     f = File(setup_teardown_folder[1], 'w-')
     assert f
     f.close()
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         File(setup_teardown_folder[1], 'w-')
 
 
@@ -156,9 +158,9 @@ def test_readwrite(setup_teardown_folder):
 def test_nonexistent_file(setup_teardown_folder):
     """Modes 'r' and 'r+' do not create files."""
 
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         File(setup_teardown_folder[1], 'r')
-    with pytest.raises(IOError):
+    with pytest.raises(RuntimeError):
         File(setup_teardown_folder[1], 'r+')
 
 
@@ -179,7 +181,7 @@ def test_validate_name_thorough(setup_teardown_folder):
     f = File(setup_teardown_folder[0] / "test.exdir", name_validation=fv.thorough)
     f.close()
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         File(setup_teardown_folder[0] / "Test.exdir", name_validation=fv.thorough)
     with pytest.raises(NameError):
         File(setup_teardown_folder[0] / "tes#.exdir", name_validation=fv.thorough)
@@ -216,7 +218,7 @@ def test_opening_with_different_validate_name(setup_teardown_folder):
 
     # TODO changing name validation should result in warning/error
     f = File(setup_teardown_folder[1], "a", name_validation=fv.thorough)
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         f.create_group("aaa")
     f.close()
 
@@ -264,7 +266,7 @@ def test_open(setup_teardown_file):
 def test_open_mode(setup_teardown_folder):
     # must exist
     for mode in ["r+", "r"]:
-        with pytest.raises(IOError):
+        with pytest.raises(RuntimeError):
             f = File(setup_teardown_folder[1], mode)
     # create if not exist
     for mode in ["a", "w", "w-"]:

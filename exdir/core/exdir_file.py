@@ -95,12 +95,7 @@ class File(Group):
         already_exists = directory.exists()
         if already_exists:
             if not exob.is_nonraw_object_directory(directory):
-                raise FileExistsError(
-                    "Path '{}' already exists, but is not a valid exdir file.".format(directory)
-                )
-            # TODO consider extracting this function to avoid cyclic imports
-            if self.meta[exob.EXDIR_METANAME][exob.TYPE_METANAME] != exob.FILE_TYPENAME:
-                raise FileExistsError(
+                raise RuntimeError(
                     "Path '{}' already exists, but is not a valid exdir file.".format(directory)
                 )
 
@@ -108,23 +103,23 @@ class File(Group):
 
         if mode == "r":
             if not already_exists:
-                raise IOError("File " + str(directory) + " does not exist.")
+                raise RuntimeError("File " + str(directory) + " does not exist.")
         elif mode == "r+":
             if not already_exists:
-                raise IOError("File " + str(directory) + " does not exist.")
+                raise RuntimeError("File " + str(directory) + " does not exist.")
         elif mode == "w":
             if already_exists:
                 if allow_remove:
                     shutil.rmtree(str(directory))  # NOTE str needed for Python 3.5
                 else:
-                    raise FileExistsError(
+                    raise RuntimeError(
                         "File {} already exists. We won't delete the entire tree "
                         "by default. Add allow_remove=True to override.".format(directory)
                     )
             should_create_directory = True
         elif mode == "w-" or mode == "x":
             if already_exists:
-                raise IOError("File " + str(directory) + " already exists.")
+                raise RuntimeError("File " + str(directory) + " already exists.")
             should_create_directory = True
         elif mode == "a":
             if not already_exists:
@@ -155,7 +150,7 @@ class File(Group):
         """
         path = utils.path.remove_root(name)
 
-        return super().create_group(path)
+        return super(File, self).create_group(path)
 
     def require_group(self, name):
         """
@@ -170,14 +165,14 @@ class File(Group):
         """
         path = utils.path.remove_root(name)
 
-        return super().require_group(path)
+        return super(File, self).require_group(path)
 
     def __getitem__(self, name):
         path = utils.path.remove_root(name)
         if len(path.parts) < 1:
             return self
-        return super().__getitem__(path)
+        return super(File, self).__getitem__(path)
 
     def __contains__(self, name):
         path = utils.path.remove_root(name)
-        return super().__contains__(path)
+        return super(File, self).__contains__(path)

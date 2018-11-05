@@ -4,9 +4,6 @@ import os
 import numpy as np
 import exdir
 
-from . import exdir_object as exob
-
-
 def _quote_strings(value):
     if isinstance(value, str):
         return yaml.scalarstring.DoubleQuotedScalarString(value)
@@ -143,7 +140,11 @@ class Attribute(object):
         return attrs.values()
 
     def _set_data(self, attrs):
-        if self.io_mode == exob.Object.OpenMode.READ_ONLY:
+        # Importing here is a workaround for Python 2.7. It could be avoided if OpenMode was
+        # in a separate file
+        from exdir.core.exdir_object import Object
+
+        if self.io_mode == Object.OpenMode.READ_ONLY:
             raise IOError("Cannot write in read only ("r") mode")
 
         plugins = self.plugin_manager.attribute_plugins.write_order

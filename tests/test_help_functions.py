@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 import pathlib
 import six
@@ -180,8 +182,6 @@ def test_root_directory(setup_teardown_file):
     grp = f.create_group("foo")
     grp.create_group("bar")
 
-    assert not exob.root_directory(setup_teardown_file[2])
-
     path = setup_teardown_file[1] / "foo" / "bar"
     assert pathlib.Path(setup_teardown_file[1]) == exob.root_directory(path)
 
@@ -194,7 +194,6 @@ def test_is_inside_exdir(setup_teardown_file):
 
     path = setup_teardown_file[1] / "foo" / "bar"
     assert exob.is_inside_exdir(path)
-    assert not exob.is_inside_exdir(setup_teardown_file[2])
 
 
 def test_assert_inside_exdir(setup_teardown_file):
@@ -206,8 +205,6 @@ def test_assert_inside_exdir(setup_teardown_file):
 
     path = setup_teardown_file[1] / "foo" / "bar"
     assert exob.assert_inside_exdir(path) is None
-    with pytest.raises(FileNotFoundError):
-        exob.assert_inside_exdir(setup_teardown_file[2])
 
 
 def test_open_object(setup_teardown_file):
@@ -221,5 +218,3 @@ def test_open_object(setup_teardown_file):
 
     assert grp2 == loaded_grp
 
-    with pytest.raises(FileNotFoundError):
-        exob.open_object(setup_teardown_file[2])

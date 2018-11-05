@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+from six import with_metaclass
+
 from enum import Enum
 import os
 import ruamel_yaml as yaml
@@ -5,24 +9,9 @@ import warnings
 import pathlib
 from . import validation
 
-from . import exdir_object
 from .. import utils
 from .attribute import Attribute
-
-# metadata
-EXDIR_METANAME = "exdir"
-TYPE_METANAME = "type"
-VERSION_METANAME = "version"
-
-# filenames
-META_FILENAME = "exdir.yaml"
-ATTRIBUTES_FILENAME = "attributes.yaml"
-RAW_FOLDER_NAME = "__raw__"
-
-# typenames
-DATASET_TYPENAME = "dataset"
-GROUP_TYPENAME = "group"
-FILE_TYPENAME = "file"
+from .constants import *
 
 def _resolve_path(path):
     return pathlib.Path(path).resolve()
@@ -63,7 +52,11 @@ def _create_object_directory(directory, metadata):
         else:
             metadata_string = yaml.dump(metadata)
 
-        meta_file.write(metadata_string)
+        try:
+            meta_file.write(metadata_string)
+        except TypeError:
+            # NOTE workaround for Python 2.7
+            meta_file.write(metadata_string.decode('utf8'))
 
 
 def _default_metadata(typename):
@@ -148,7 +141,7 @@ def is_inside_exdir(path):
 def assert_inside_exdir(path):
     path = _resolve_path(path)
     if not is_inside_exdir(path):
-        raise FileNotFoundError("Path " + str(path) + " is not inside an Exdir repository.")
+        raise RuntimeError("Path " + str(path) + " is not inside an Exdir repository.")
 
 
 def open_object(path):
@@ -166,16 +159,7 @@ def open_object(path):
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
-# Meta class to make subclasses pick up on Groups documentation
-class ObjectMeta(type):
-    def __new__(mcls, classname, bases, cls_dict):
-        cls = super().__new__(mcls, classname, bases, cls_dict)
-        for name, member in cls_dict.items():
-            if not getattr(member, '__doc__') and hasattr(bases[-1], name) and getattr(getattr(bases[-1], name), "__doc__"):
-                member.__doc__ = getattr(bases[-1], name).__doc__
-        return cls
-
-class Object(object, metaclass=ObjectMeta):
+class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
     """

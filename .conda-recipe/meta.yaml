@@ -21,6 +21,9 @@ requirements:
     - scipy
     - ruamel_yaml
     - pyyaml
+    - pathlib # [py2k]
+    - enum34  # [py2k]
+    - six  # [py2k]
 
 test:
   requires:
@@ -41,9 +44,9 @@ test:
   commands:
     - python -c "import exdir; print(exdir.__version__)"
     - coverage run --source tests -m py.test -s
-    - coverage report
-    - codecov
-    - cd docs ; make doctest
+    - coverage report # [py3k]
+    - codecov # [py3k]
+    - cd docs ; make doctest # [py3k]
 
 about:
   home: https://github.com/CINPLA/exdir/

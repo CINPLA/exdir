@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+#
 # This file is part of Exdir, the Experimental Directory Structure.
 #
 # Copyright 2017 Simen Tennøe, Svenn-Arne Dragly
@@ -74,5 +76,5 @@ def test_object_create_raw(setup_teardown_file):
     obj.create_raw("test_raw")
     assert (setup_teardown_file[1] / "test_object" / "test_raw").is_dir()
 
-    with pytest.raises(FileExistsError):
+    with pytest.raises(RuntimeError):
         obj.create_raw("test_raw")
