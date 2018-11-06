@@ -1,6 +1,7 @@
 import pathlib
 import exdir
 
+
 def _build_tree(o):
     contents = "<li>"
     if isinstance(o, exdir.core.File):
@@ -60,4 +61,26 @@ li.collapsibleListClosed{
               "").format(style=style, ulid=ulid, contents=_build_tree(obj), script=script)
 
     return result
+
+
+def _build_attrs_tree(key, value):
+    contents = "<li>"
+    contents += "{}: ".format(key)
+    try:
+        items = value.items()
+        inner_contents = ""
+        for subkey, subvalue in items:
+            inner_contents += _build_attrs_tree(subkey, subvalue)
+        if inner_contents != "":
+            contents += "<ul>{}</ul>".format(inner_contents)
+    except AttributeError:
+        contents += "{}".format(value)
+
+    contents += "</li>"
+
+    return contents
+
+
+def html_attrs(attributes):
+    return "<ul>{}</ul>".format(_build_attrs_tree("Attributes", attributes))
 

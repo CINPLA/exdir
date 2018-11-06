@@ -216,3 +216,6 @@ class Attribute(object):
         for key in self:
             string += "{}: {},".format(key, self[key])
         return "Attribute({}, {{{}}})".format(self.parent.name, string)
+
+    def _repr_html_(self):
+        return exdir.utils.display.html_attrs(self)
