@@ -10,10 +10,12 @@ build:
   script: python -m pip install --no-deps --ignore-installed .
 
 requirements:
-  build:
+  host:
     - python
     - setuptools
+    - pip
     - jupyter
+    - notebook
 
   run:
     - python
@@ -25,6 +27,7 @@ requirements:
     - pathlib # [py2k]
     - enum34  # [py2k]
     - six  # [py2k]
+    - notebook
 
 test:
   requires:
@@ -36,6 +39,8 @@ test:
     - codecov
     - sphinx
     - quantities
+    - jupyter
+    - notebook
 
   source_files:
     - tests
