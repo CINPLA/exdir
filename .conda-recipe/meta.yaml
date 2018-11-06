@@ -7,12 +7,13 @@ source:
 
 build:
   noarch: python
-  script: python setup.py install
+  script: python -m pip install --no-deps --ignore-installed .
 
 requirements:
   build:
     - python
     - setuptools
+    - jupyter
 
   run:
     - python
