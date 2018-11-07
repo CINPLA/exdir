@@ -1,8 +1,12 @@
 from enum import Enum
 import os
-import ruamel_yaml as yaml
 import warnings
 import pathlib
+try:
+    import ruamel_yaml as yaml
+except ImportError:
+    import ruamel.yaml as yaml
+
 from . import validation
 
 from . import exdir_object
