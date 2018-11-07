@@ -1,9 +1,12 @@
 import os
 import re
-import ruamel_yaml as yaml
 import pathlib
 import numpy as np
 import exdir
+try:
+    import ruamel_yaml as yaml
+except ImportError:
+    import ruamel.yaml as yaml
 try:
     from collections import abc
 except ImportError:

@@ -14,9 +14,12 @@
 
 import pytest
 import os
-import ruamel_yaml as yaml
 import pathlib
 import exdir
+try:
+    import ruamel_yaml as yaml
+except ImportError:
+    import ruamel.yaml as yaml
 
 from exdir.core import Object, Attribute
 # TODO Remove this import and use import <> as <> instead
