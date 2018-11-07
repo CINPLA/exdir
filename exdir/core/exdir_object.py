@@ -4,9 +4,12 @@ from six import with_metaclass
 
 from enum import Enum
 import os
-import ruamel_yaml as yaml
 import warnings
 import pathlib
+try:
+    import ruamel_yaml as yaml
+except ImportError:
+    import ruamel.yaml as yaml
 
 import exdir
 
