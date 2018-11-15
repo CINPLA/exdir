@@ -103,6 +103,9 @@ class Dataset(exob.Object):
         self.meta._set_data(meta)
 
     def _reload_data(self):
+        for plugin in self.plugin_manager.dataset_plugins.write_order:
+            plugin.before_load(self.data_filename)
+
         if self.io_mode == self.OpenMode.READ_ONLY:
             mmap_mode = "r"
         else:

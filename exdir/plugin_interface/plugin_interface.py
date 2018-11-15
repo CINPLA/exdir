@@ -64,6 +64,17 @@ class AttributeData:
 
 
 class Dataset:
+    def before_load(self, dataset_path):
+        """
+        Overload this function in your plugin implementation.
+
+        It receives the path to the dataset NumPy file and allows you to
+        perform operations before Exdir attempts loading the file.
+
+        The function should not return anything.
+        """
+        pass
+
     def prepare_read(self, dataset_data):
         """
         Overload this function in your plugin implementation.
