@@ -108,7 +108,19 @@ class Dataset(exob.Object):
         else:
             mmap_mode = "r+"
 
-        self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode)
+        try:
+            self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode, allow_pickle=False)
+        except ValueError as e:
+            # Could be that it is a Git LFS file. Let's see if that is the case and warn if so.
+            with open(self.data_filename, "r") as f:
+                test_string = "version https://git-lfs.github.com/spec/v1"
+                contents = f.read(len(test_string))
+                if contents == test_string:
+                    raise IOError("The file '{}' is a Git LFS placeholder. "
+                        "Open the the Exdir File with the Git LFS plugin or run "
+                        "`git lfs fetch` first. ".format(self.data_filename))
+                else:
+                    raise e
 
     def _reset_data(self, value, attrs, meta):
         self._data_memmap = np.lib.format.open_memmap(
