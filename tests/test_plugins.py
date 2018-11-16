@@ -211,3 +211,29 @@ def test_attribute_plugin(setup_teardown_folder):
     assert d.attrs["value"] == 84
     f.close()
 
+def test_reading_in_order(setup_teardown_folder):
+    class DatasetPlugin1(exdir.plugin_interface.Dataset):
+        def prepare_read(self, dataset_data):
+            dataset_data.data = dataset_data.data * 2
+            return dataset_data
+
+    class DatasetPlugin2(exdir.plugin_interface.Dataset):
+        def prepare_read(self, dataset_data):
+            dataset_data.data = dataset_data.data * 3
+            return dataset_data
+
+    plugin1 = exdir.plugin_interface.Plugin(
+        "plugin1",
+        dataset_plugins=[DatasetPlugin1()]
+    )
+    plugin2 = exdir.plugin_interface.Plugin(
+        "plugin2",
+        dataset_plugins=[DatasetPlugin2()]
+    )
+
+    f = exdir.File(setup_teardown_folder[1], "w", plugins=[plugin1, plugin2])
+    assert f
+    d = f.create_dataset("foo", data=np.array([1, 2, 3]))
+    assert all(d.data == np.array([6, 12, 18]))
+    f.close()
+
