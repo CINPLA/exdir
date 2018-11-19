@@ -77,13 +77,13 @@ class Dataset(exob.Object):
             meta = self.meta.to_dict()
             atts = self.attrs.to_dict()
 
+            dataset_data = exdir.plugin_interface.DatasetData(data=values,
+                                                              attrs=self.attrs.to_dict(),
+                                                              meta=meta)
             for plugin in plugins:
-                dataset_data = exdir.plugin_interface.DatasetData(data=values,
-                                                                  attrs=self.attrs.to_dict(),
-                                                                  meta=meta)
-
                 dataset_data = plugin.prepare_read(dataset_data)
-                data = dataset_data.data
+
+            data = dataset_data.data
 
         return data
 
