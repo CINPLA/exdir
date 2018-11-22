@@ -14,7 +14,7 @@ except ImportError:
 import exdir
 
 from . import validation
-from . import exdir_object
+# from . import exdir_object
 from .. import utils
 from .attribute import Attribute
 from .constants import *
