@@ -1,8 +1,11 @@
 from enum import Enum
-import ruamel_yaml as yaml
 import os
 import numpy as np
 import exdir
+try:
+    import ruamel_yaml as yaml
+except ImportError:
+    import ruamel.yaml as yaml
 
 from . import exdir_object as exob
 

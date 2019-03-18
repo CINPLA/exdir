@@ -1,10 +1,13 @@
 import os
 import pathlib
 import six
-import ruamel_yaml as yaml
 import quantities as pq
 import numpy as np
 import pytest
+try:
+    import ruamel_yaml as yaml
+except ImportError:
+    import ruamel.yaml as yaml
 
 import exdir
 import exdir.core
