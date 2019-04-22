@@ -28,7 +28,7 @@ One of the built-in plugins provides experimental support for units using the `q
     array([ 1.,  2.,  3.]) * mV
 
 As shown in the above example, a plugin is enabled when creating a File object by passing the
-plugin to the plugin argument.
+plugin to the plugins argument.
 
 To create a custom plugin, one of the handler classes in `exdir.plugin_interface` must be inherited.
 The abstract handler classes are named after the object type you want to create a handler for.
