@@ -1,6 +1,12 @@
 import os
 import pytest
-import pathlib
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 from exdir.core import Raw
 
 def test_raw_init(setup_teardown_folder):

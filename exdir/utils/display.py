@@ -1,4 +1,10 @@
-import pathlib
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 import exdir
 
 
@@ -83,4 +89,3 @@ def _build_attrs_tree(key, value):
 
 def html_attrs(attributes):
     return "<ul>{}</ul>".format(_build_attrs_tree("Attributes", attributes))
-
