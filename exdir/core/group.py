@@ -492,3 +492,20 @@ class Group(Object):
         Number of objects in the group.
         """
         return len([a for a in self])
+
+
+    def get(self, key):
+        """
+        Get an object in the group.
+        Parameters
+        ----------
+        key : str
+            The key of the desired object
+        Returns
+        -------
+        Value or None if object does not exist.
+        """
+        if key in self:
+            return self[key]
+        else:
+            return None

@@ -68,6 +68,22 @@ def test_len(setup_teardown_file):
     assert len(grp3) == 0
 
 
+def test_get(setup_teardown_file):
+    """Simple .create_group call."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    grp2 = grp.create_group("a")
+
+    grp2_get = grp.get('a')
+
+    grp3_get = grp.get('b')
+
+    assert grp2 == grp2_get
+    assert grp3_get is None
+
+
 def test_create_group_absolute(setup_teardown_file):
     """Starting .create_group argument with /."""
 
