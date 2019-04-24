@@ -53,6 +53,21 @@ def test_create_group(setup_teardown_file):
     assert isinstance(grp3, Group)
 
 
+def test_len(setup_teardown_file):
+    """Simple .create_group call."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    grp2 = grp.create_group("a")
+
+    grp3 = grp.create_group("b")
+
+    assert len(grp) == 2
+    assert len(grp2) == 0
+    assert len(grp3) == 0
+
+
 def test_create_group_absolute(setup_teardown_file):
     """Starting .create_group argument with /."""
 

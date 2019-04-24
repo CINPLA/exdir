@@ -486,3 +486,9 @@ class Group(Object):
         directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):
             yield name
+
+    def __len__(self):
+        """
+        Number of objects in the group.
+        """
+        return len([a for a in self])
