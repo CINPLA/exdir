@@ -487,6 +487,5 @@ class Group(Object):
         for name in sorted(directories):
             yield name
 
-
     def _ipython_key_completions_(self):
         return self.keys()
