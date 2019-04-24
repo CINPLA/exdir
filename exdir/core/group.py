@@ -486,3 +486,7 @@ class Group(Object):
         directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):
             yield name
+
+
+    def _ipython_key_completions_(self):
+        return self.keys()
