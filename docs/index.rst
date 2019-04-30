@@ -25,7 +25,9 @@ Exdir is described in detail in our reasearch paper:
    file
    group
    dataset
+   raw
    attributes
+   plugins
 
 Specification
 -------------
