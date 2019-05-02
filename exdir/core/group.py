@@ -509,3 +509,6 @@ class Group(Object):
             return self[key]
         else:
             return None
+
+    def _ipython_key_completions_(self):
+        return self.keys()
