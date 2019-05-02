@@ -113,13 +113,13 @@ def test_fail_reading_without_required(setup_teardown_folder):
     )
 
     f = exdir.File(setup_teardown_folder[1], 'w', plugins=required)
-    assert f
+    assert isinstance(f, exdir.File)
     d = f.create_dataset("foo", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([1, 2, 3]))
     f.close()
 
     f = exdir.File(setup_teardown_folder[1], 'r+')
-    assert f
+    assert isinstance(f, exdir.File)
     d = f["foo"]
     with pytest.raises(Exception):
         print(d.data)
@@ -145,7 +145,7 @@ def test_one_way_scaling(setup_teardown_folder):
     )
 
     f = exdir.File(setup_teardown_folder[1], 'w', plugins=[one_way_scaling])
-    assert f
+    assert isinstance(f, exdir.File)
     d = f.create_dataset("scaling", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([2, 4, 6]))
     f.close()
@@ -174,7 +174,7 @@ def test_scaling(setup_teardown_folder):
     )
 
     f = exdir.File(setup_teardown_folder[1], 'w', plugins=[scaling])
-    assert f
+    assert isinstance(f, exdir.File)
     d = f.create_dataset("scaling", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([1, 2, 3]))
     f.close()
@@ -205,7 +205,7 @@ def test_attribute_plugin(setup_teardown_folder):
     )
 
     f = exdir.File(setup_teardown_folder[1], "w", plugins=[scaling_unit])
-    assert f
+    assert isinstance(f, exdir.File)
     d = f.create_dataset("foo", data=np.array([1, 2, 3]))
     d.attrs["value"] = 42
     assert d.attrs["value"] == 84
@@ -232,8 +232,7 @@ def test_reading_in_order(setup_teardown_folder):
     )
 
     f = exdir.File(setup_teardown_folder[1], "w", plugins=[plugin1, plugin2])
-    assert f
+    assert isinstance(f, exdir.File)
     d = f.create_dataset("foo", data=np.array([1, 2, 3]))
     assert all(d.data == np.array([6, 12, 18]))
     f.close()
-
