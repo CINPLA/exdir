@@ -487,5 +487,28 @@ class Group(Object):
         for name in sorted(directories):
             yield name
 
+    def __len__(self):
+        """
+        Number of objects in the group.
+        """
+        return len([a for a in self])
+
+
+    def get(self, key):
+        """
+        Get an object in the group.
+        Parameters
+        ----------
+        key : str
+            The key of the desired object
+        Returns
+        -------
+        Value or None if object does not exist.
+        """
+        if key in self:
+            return self[key]
+        else:
+            return None
+
     def _ipython_key_completions_(self):
         return self.keys()
