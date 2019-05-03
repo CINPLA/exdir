@@ -23,11 +23,19 @@ class File(Group):
 
     The :code:`File` object :code:`f` now points to the root folder in the exdir file
     structure.
-    You can add groups and datasets to it as follows:
+    You can add groups, datasets and raw to it as follows:
 
-        >>> my_group = f.require_group("my_group")
-        >>> a = np.arange(100)
-        >>> dset = f.require_dataset("my_data", data=a)
+        >>> grp = f.require_group('my_group')
+        >>> dset = f.require_dataset("my_dataset", data=np.arange(100))
+        >>> raw = f.require_raw('my_raw')
+
+    To loop through all children of a file simply iterate through:
+
+        >>> for key in f:
+                print(key)
+        my_group
+        my_raw
+        my_dataset
 
     The data is immediately written to disk.
 

@@ -48,7 +48,40 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
 
 class Group(Object):
     """
-    Container of other groups and datasets.
+    A Group is a container of other groups, datasets and raw objects.
+
+    To create a Group it is necessary to have a File object available::
+
+        >>> f = exdir.File('my_file')
+        >>> group = f.create_group('my_group')
+
+    Groups can contain other groups, datasets and raw objects::
+
+        >>> group.create_group('other_group')
+        >>> group.create_dataset('my_dataset', data=[0,1,2])
+        >>> group.create_raw('raw_container')
+
+    Children of groups can be accessed by indexing::
+
+        >>> group['my_dataset']
+        memmap([ 0, 1, 2])
+
+    One may iterate groups similar to maps::
+
+        >>> for key, value in group.items():
+                print(group[key] == value)
+        True
+        True
+        True
+        >>> for key in group:
+                print(key)
+
+    Groups may have attributes::
+
+        >>> group.attr = {'description': 'this is a group'}
+        >>> group.attr['number'] = 1
+        >>> print(group.attr)
+        {'description': 'this is a group', 'number': 1}
     """
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,

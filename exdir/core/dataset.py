@@ -30,7 +30,35 @@ def _dataset_filename(dataset_directory):
 
 class Dataset(exob.Object):
     """
-    Dataset class
+    A Dataset can be created in a File object or a Group object::
+
+        >>> import exdir
+        >>> import numpy as np
+        >>> f = exdir.File("myfile.exdir", "w")
+        >>> grp = f.create_group('my_group')
+        >>> dset_in_file = f.require_dataset("my_dataset", data=np.arange(100))
+        >>> dset_in_group = grp.require_dataset("my_dataset", data=np.arange(100))
+
+    The created object is not an array but :ref:`an exdir dataset<dataset>`.
+    Like NumPy arrays, datasets have a shape::
+
+        >>> dset_in_file.shape
+        (100,)
+
+    Also array-style slicing is supported::
+
+        >>> dset_in_file[0]
+        0
+        >>> dset_in_file[10]
+        10
+        >>> dset_in_file[0:100:10]
+        memmap([ 0, 10, 20, 30, 40, 50, 60, 70, 80, 90])
+
+    Datasets are updated **on file** with::
+
+        >>> dset_in_file[0:100:10] = a[0:100:10][::-1]
+        >>> dset_in_file[0:100:10]
+        memmap([ 90, 80, 70, 60, 50, 40, 30, 20, 10, 0])
 
     Warnings
     --------
