@@ -65,6 +65,16 @@ def _create_object_directory(directory, metadata):
             meta_file.write(metadata_string.decode('utf8'))
 
 
+def _remove_object_directory(directory):
+    """
+    Remove object directory and meta file if directory
+    don't already exist.
+    """
+    if directory.exists():
+        raise IOError("The directory '" + str(directory) + "' already exists")
+    directory.rmdir()
+
+
 def _default_metadata(typename):
     return {
         EXDIR_METANAME: {
@@ -137,6 +147,14 @@ def root_directory(path):
             continue
         found = True
     return path
+
+
+def delete_file(path):
+    path = pathlib.Path(path)
+    if root_directory(path) is None:
+        raise IOError(
+        'The given path is not a path to an exdir object.')
+    path.rmdir()
 
 
 def is_inside_exdir(path):
