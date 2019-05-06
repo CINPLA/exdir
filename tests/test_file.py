@@ -98,7 +98,7 @@ def test_file_init(setup_teardown_folder):
 def test_create(setup_teardown_folder):
     """Mode 'w' opens file in overwrite mode."""
     f = File(setup_teardown_folder[1], 'w')
-    assert f
+    assert isinstance(f, File)
     f.create_group('foo')
     f.close()
 
@@ -113,7 +113,7 @@ def test_create_exclusive(setup_teardown_folder):
     """Mode 'w-' opens file in exclusive mode."""
 
     f = File(setup_teardown_folder[1], 'w-')
-    assert f
+    assert isinstance(f, File)
     f.close()
     with pytest.raises(RuntimeError):
         File(setup_teardown_folder[1], 'w-')
@@ -123,7 +123,7 @@ def test_append(setup_teardown_folder):
     """Mode 'a' opens file in append/readwrite mode, creating if necessary."""
 
     f = File(setup_teardown_folder[1], 'a')
-    assert f
+    assert isinstance(f, File)
     f.create_group('foo')
     assert 'foo' in f
 
@@ -141,7 +141,7 @@ def test_readonly(setup_teardown_folder):
     # TODO comment in when close is implemented
     # assert not f
     f = File(setup_teardown_folder[1], 'r')
-    assert f
+    assert isinstance(f, File)
     with pytest.raises(IOError):
         f.create_group('foo')
         f.create_dataset("bar", (2))
@@ -317,6 +317,6 @@ def test_open_two_attrs(setup_teardown_file):
 #     no_exdir = pytest.TESTPATH / "no_exdir"
 
 #     with File(no_exdir, mode="w") as f:
-#         assert f
+#         assert isinstance(f, File)
 
 #     assert not f

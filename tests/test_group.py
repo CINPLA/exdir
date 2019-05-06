@@ -59,6 +59,37 @@ def test_create_group(setup_teardown_file):
     assert isinstance(grp3, Group)
 
 
+def test_len(setup_teardown_file):
+    """Simple .create_group call."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    grp2 = grp.create_group("a")
+
+    grp3 = grp.create_group("b")
+
+    assert len(grp) == 2
+    assert len(grp2) == 0
+    assert len(grp3) == 0
+
+
+def test_get(setup_teardown_file):
+    """Simple .create_group call."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    grp2 = grp.create_group("a")
+
+    grp2_get = grp.get('a')
+
+    grp3_get = grp.get('b')
+
+    assert grp2 == grp2_get
+    assert grp3_get is None
+
+
 def test_create_group_absolute(setup_teardown_file):
     """Starting .create_group argument with /."""
 
@@ -83,7 +114,7 @@ def test_create_intermediate(setup_teardown_file):
 
     grp.create_group("foo/bar/baz")
 
-    assert grp["foo/bar/baz"]
+    assert isinstance(grp["foo/bar/baz"], Group)
 
     # assert grp.name == "/foo/bar/baz"
 
