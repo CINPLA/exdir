@@ -262,6 +262,9 @@ class Dataset(exob.Object):
         for i in range(self.shape[0]):
             yield self[i]
 
+    def __str__(self):
+        return self.data.__str__()
+
     @property
     def _data(self):
         if self._data_memmap is None:

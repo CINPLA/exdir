@@ -6,6 +6,7 @@ from enum import Enum
 import os
 import warnings
 import pathlib
+import shutil
 try:
     import ruamel_yaml as yaml
 except ImportError:
@@ -67,12 +68,12 @@ def _create_object_directory(directory, metadata):
 
 def _remove_object_directory(directory):
     """
-    Remove object directory and meta file if directory
-    don't already exist.
+    Remove object directory and meta file if directory exist.
     """
-    if directory.exists():
-        raise IOError("The directory '" + str(directory) + "' already exists")
-    directory.rmdir()
+    if not directory.exists():
+        raise IOError("The directory '" + str(directory) + "' does not exist")
+    assert is_inside_exdir(directory)
+    shutil.rmtree(directory)
 
 
 def _default_metadata(typename):
@@ -147,14 +148,6 @@ def root_directory(path):
             continue
         found = True
     return path
-
-
-def delete_file(path):
-    path = pathlib.Path(path)
-    if root_directory(path) is None:
-        raise IOError(
-        'The given path is not a path to an exdir object.')
-    path.rmdir()
 
 
 def is_inside_exdir(path):

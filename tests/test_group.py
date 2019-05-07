@@ -21,7 +21,7 @@ try:
 except:
     from collections import KeysView, ValuesView, ItemsView
 
-from exdir.core import Group, File
+from exdir.core import Group, File, Dataset
 from exdir import validation as fv
 from conftest import remove
 
@@ -170,37 +170,75 @@ def test_set_item_intermediate(exdir_tmpfile):
     assert np.array_equal(exdir_tmpfile["group1/group2/group3/dataset"].data, np.array([1, 2, 3]))
 
 
-# TODO uncomment when deletion is implemented
 # Feature: Objects can be unlinked via "del" operator
-# def test_delete(setup_teardown_file):
-#     """Object deletion via "del"."""
-#
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#     grp.create_group("foo")
-#
-#     assert "foo" in grp
-#     del grp["foo"]
-#     assert "foo" not in grp
-#
-# def test_nonexisting(setup_teardown_file):
-#     """Deleting non-existent object raises KeyError."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     with pytest.raises(KeyError):
-#         del grp["foo"]
-#
-# def test_readonly_delete_exception(setup_teardown_file):
-#     """Deleting object in readonly file raises KeyError."""
-#     f = setup_teardown_file[3]
-#     f.close()
-#
-#     f = File(setup_teardown_folder[1], "r")
-#
-#     with pytest.raises(KeyError):
-#         del f["foo"]
+def test_delete_group(setup_teardown_file):
+    """Object deletion via "del"."""
 
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    grp.create_group("foo")
+
+    assert "foo" in grp
+    del grp["foo"]
+    assert "foo" not in grp
+
+
+def test_delete_raw(setup_teardown_file):
+    """Object deletion via "del"."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    grp.create_raw("foo")
+
+    assert "foo" in grp
+    del grp["foo"]
+    assert "foo" not in grp
+
+
+def test_nonexisting(setup_teardown_file):
+    """Deleting non-existent object raises KeyError."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    with pytest.raises(KeyError):
+        del grp["foo"]
+
+
+def test_readonly_delete_exception(setup_teardown_file):
+    """Deleting object in readonly file raises KeyError."""
+    f = setup_teardown_file[3]
+    f.close()
+
+    f = File(setup_teardown_file[1], "r")
+
+    with pytest.raises(IOError):
+        del f["foo"]
+
+
+def test_delete_dataset(setup_teardown_file):
+    """Create new dataset with no conflicts."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    foo = grp.create_dataset('foo', (10, 3), 'f')
+    assert isinstance(grp['foo'], Dataset)
+    assert foo.shape == (10, 3)
+    bar = grp.require_dataset('bar', data=(3, 10))
+    del foo
+    assert 'foo' in grp
+    del grp['foo']
+    with pytest.raises(KeyError):
+        grp['foo']
+    # the "bar" dataset is intact
+    assert isinstance(grp['bar'], Dataset)
+    assert np.all(bar[:] == (3, 10))
+    # even though the dataset is deleted on file, the memmap stays open until
+    # garbage collected
+    del grp['bar']
+    assert bar.shape == (2,)
+    assert np.all(bar[:] == (3, 10))
+    with pytest.raises(KeyError):
+        grp['bar']
 
 # Feature: Objects can be opened via indexing syntax obj[name]
 

@@ -148,66 +148,6 @@ class Group(Object):
         dataset._reset_data(prepared_data, attrs, None)  # meta already set above
         return dataset
 
-    def delete_dataset(self, name):
-        """
-        Delete a dataset. This will remove the a folder on the filesystem with the given
-        name.
-
-        Parameters
-        ----------
-        name: str
-            Name of the dataset to be created.
-        Raises
-        ------
-        FileExistsError
-            If an object with the same `name` already exists.
-        """
-        exob._assert_valid_name(name, self)
-
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ('r') mode")
-        exob._remove_object_directory(self[name].directory)
-
-    def delete_group(self, name):
-        """
-        Delete a group. This will remove the a folder on the filesystem with the given
-        name.
-
-        Parameters
-        ----------
-        name: str
-            Name of the dataset to be created.
-        Raises
-        ------
-        FileExistsError
-            If an object with the same `name` already exists.
-        """
-        exob._assert_valid_name(name, self)
-
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ('r') mode")
-        exob._remove_object_directory(self[name].directory)
-
-    def delete_raw(self, name):
-        """
-        Delete a raw object. This will remove the a folder on the filesystem with the given
-        name.
-
-        Parameters
-        ----------
-        name: str
-            Name of the dataset to be created.
-        Raises
-        ------
-        FileExistsError
-            If an object with the same `name` already exists.
-        """
-        exob._assert_valid_name(name, self)
-
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ('r') mode")
-        exob._remove_object_directory(self[name].directory)
-
     def create_group(self, name):
         """
         Create a group. This will create a folder on the filesystem with the
@@ -510,6 +450,19 @@ class Group(Object):
             )
 
         self[name].value = value
+
+    def __delitem__(self, name):
+        """
+        Delete a child (an object contained in group).
+
+        Parameters
+        ----------
+        name: str
+            name of the existing child
+        """
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            raise IOError("Cannot change data on file in read only ('r') mode")
+        exob._remove_object_directory(self[name].directory)
 
     def keys(self):
         """
