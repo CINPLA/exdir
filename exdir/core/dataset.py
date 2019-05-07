@@ -290,6 +290,9 @@ class Dataset(exob.Object):
         for i in range(self.shape[0]):
             yield self[i]
 
+    def __repr__(self):
+        return self.data.__repr__()
+
     @property
     def _data(self):
         if self._data_memmap is None:

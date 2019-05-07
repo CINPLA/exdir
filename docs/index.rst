@@ -140,7 +140,7 @@ Datasets are updated **on file** with:
 
     >>> dset[0:100:10] = a[0:100:10][::-1]
     >>> dset[0:100:10]
-    memmap([ 90, 80, 70, 60, 50, 40, 30, 20, 10, 0])
+    memmap([90, 80, 70, 60, 50, 40, 30, 20, 10,  0])
 
 Attributes can be added to files, groups and datasets:
 

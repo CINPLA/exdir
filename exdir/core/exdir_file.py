@@ -15,7 +15,7 @@ class File(Group):
     A File is a special type of :class:`.Group`.
     See :class:`.Group` for documentation of inherited functions.
 
-    To create a File, call the File constructor with the name of the File you wish to create:
+    To create a File, call the File constructor with the name of the File you wish to create::
 
         >>> import exdir
         >>> import numpy as np
@@ -23,16 +23,16 @@ class File(Group):
 
     The :code:`File` object :code:`f` now points to the root folder in the exdir file
     structure.
-    You can add groups, datasets and raw to it as follows:
+    You can add groups, datasets and raw to it as follows::
 
         >>> grp = f.require_group('my_group')
         >>> dset = f.require_dataset("my_dataset", data=np.arange(100))
         >>> raw = f.require_raw('my_raw')
 
-    To loop through all children of a file simply iterate through:
+    To loop through all children of a file simply iterate through::
 
         >>> for key in f:
-                print(key)
+        ...     print(key)
         my_group
         my_raw
         my_dataset

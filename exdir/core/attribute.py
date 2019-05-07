@@ -33,6 +33,11 @@ class Attribute(object):
     Attributes are accessed through the ``attrs`` proxy object, which again
     implements the dictionary interface:
 
+        >>> import exdir
+        >>> import numpy as np
+        >>> f = exdir.File("mytestfile.exdir")
+        >>> grp = f.require_group('my_group')
+        >>> dset = f.require_dataset("my_dataset", data=np.arange(100))
         >>> dset.attrs['temperature'] = 99.5
         >>> dset.attrs['temperature']
         99.5
