@@ -183,6 +183,17 @@ def test_delete_group(setup_teardown_file):
     assert "foo" not in grp
 
 
+def test_delete_group_from_file(setup_teardown_file):
+    """Object deletion via "del"."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    assert "test" in f
+    del f["test"]
+    assert "test" not in f
+
+
 def test_delete_raw(setup_teardown_file):
     """Object deletion via "del"."""
 
