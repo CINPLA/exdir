@@ -14,7 +14,13 @@
 
 import pytest
 import os
-import pathlib
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 import exdir
 try:
     import ruamel_yaml as yaml

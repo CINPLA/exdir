@@ -1,6 +1,12 @@
 from enum import Enum
 import os
-import pathlib
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 from . import constants as exob
 
 VALID_CHARACTERS = ("abcdefghijklmnopqrstuvwxyz1234567890_-.")
