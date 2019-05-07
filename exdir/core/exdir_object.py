@@ -5,8 +5,14 @@ from six import with_metaclass
 from enum import Enum
 import os
 import warnings
-import pathlib
 import shutil
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 try:
     import ruamel_yaml as yaml
 except ImportError:

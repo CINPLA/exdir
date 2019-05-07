@@ -1,6 +1,12 @@
 import os
 import re
-import pathlib
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 import numpy as np
 import exdir
 try:

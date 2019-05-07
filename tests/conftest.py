@@ -4,7 +4,13 @@ import pytest
 import shutil
 import os
 import h5py
-import pathlib
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 import time
 
 import exdir
