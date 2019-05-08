@@ -3,7 +3,7 @@ import numpy as np
 import exdir
 
 from . import exdir_object as exob
-from .mode import assert_file_open, OpenMode
+from .mode import assert_file_open, OpenMode, assert_file_writable
 
 def _prepare_write(data, plugins, attrs, meta):
     for plugin in plugins:
@@ -85,10 +85,8 @@ class Dataset(exob.Object):
 
         return data
 
-    @assert_file_open
+    @assert_file_writable
     def __setitem__(self, args, value):
-        if self.file.io_mode == OpenMode.READ_ONLY:
-            raise IOError('Cannot write data to file in read only ("r") mode')
 
         value, attrs, meta = _prepare_write(
             data=value,

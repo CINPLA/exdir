@@ -19,7 +19,7 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
-from .mode import assert_file_open, OpenMode
+from .mode import assert_file_open, OpenMode, assert_file_writable
 from . import exdir_object as exob
 from . import dataset as ds
 from . import raw
@@ -69,7 +69,7 @@ class Group(Object):
             file=file
         )
 
-    @assert_file_open
+    @assert_file_writable
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         """
@@ -112,11 +112,6 @@ class Group(Object):
         """
         exob._assert_valid_name(name, self)
 
-        if self.file.io_mode == OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ('r') mode")
-
-        exob._assert_valid_name(name, self)
-
         if data is None and shape is None:
             raise TypeError(
                 "Cannot create dataset. Missing shape or data keyword."
@@ -153,7 +148,7 @@ class Group(Object):
         dataset._reset_data(prepared_data, attrs, None)  # meta already set above
         return dataset
 
-    @assert_file_open
+    @assert_file_writable
     def create_group(self, name):
         """
         Create a group. This will create a folder on the filesystem with the
@@ -178,9 +173,6 @@ class Group(Object):
         --------
         require_group
         """
-        if self.file.io_mode == OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ("r") mode")
-
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -458,7 +450,7 @@ class Group(Object):
 
         self[name].value = value
 
-    @assert_file_open
+    @assert_file_writable
     def __delitem__(self, name):
         """
         Delete a child (an object contained in group).
@@ -468,8 +460,6 @@ class Group(Object):
         name: str
             name of the existing child
         """
-        if self.file.io_mode == OpenMode.READ_ONLY:
-            raise IOError("Cannot change data on file in read only 'r' mode")
         exob._remove_object_directory(self[name].directory)
 
     @assert_file_open

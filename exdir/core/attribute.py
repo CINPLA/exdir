@@ -7,7 +7,7 @@ try:
 except ImportError:
     import ruamel.yaml as yaml
 
-from .mode import assert_file_open, OpenMode
+from .mode import assert_file_open, OpenMode, assert_file_writable
 
 def _quote_strings(value):
     if isinstance(value, str):
@@ -144,11 +144,8 @@ class Attribute(object):
             attrs = attrs[i]
         return attrs.values()
 
-    @assert_file_open
+    @assert_file_writable
     def _set_data(self, attrs):
-        if self.file.io_mode == OpenMode.READ_ONLY:
-            raise IOError("Cannot write in read only ("r") mode")
-
         plugins = self.file.plugin_manager.attribute_plugins.write_order
 
         if self.mode == self._Mode.ATTRIBUTES and len(plugins) > 0:
