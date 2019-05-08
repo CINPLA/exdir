@@ -189,6 +189,7 @@ class Object(object):
     class OpenMode(Enum):
         READ_WRITE = 1
         READ_ONLY = 2
+        FILE_CLOSED = 3
 
     def __init__(self, root_directory, parent_path, object_name, io_mode=None,
                  name_validation=None, plugin_manager=None):

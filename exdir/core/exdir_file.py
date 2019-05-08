@@ -141,7 +141,7 @@ class File(Group):
         Currently, this has no effect because all data is immediately written to disk.
         """
         # yeah right, as if we would create a real file format
-        pass
+        self.io_mode = self.OpenMode.FILE_CLOSED
 
     def create_group(self, name):
         """

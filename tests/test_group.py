@@ -324,14 +324,14 @@ def test_contains_deep(setup_teardown_file):
 
 
 # TODO uncomment this when close is implemented
-# def test_exc(setup_teardown_file):
-#     """'in' on closed group returns False."""
-#     f = setup_teardown_file[3]
-#
-#     f.create_group("a")
-#     f.close()
-#
-#     assert not "a" in f
+def test_exc(setup_teardown_file):
+    """'in' on closed group returns False."""
+    f = setup_teardown_file[3]
+
+    f.create_group("a")
+    f.close()
+
+    assert not "a" in f
 
 
 def test_empty(setup_teardown_file):
