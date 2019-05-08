@@ -291,4 +291,12 @@ class Object(object):
         )
 
     def _repr_html_(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return None
         return exdir.utils.display.html_tree(self)
+
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir Group>"
+        return "<Exdir Group '{}' (mode {})>".format(
+            self.directory, self.user_mode)

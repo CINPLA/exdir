@@ -227,3 +227,9 @@ class Attribute(object):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
             return False
         return exdir.utils.display.html_attrs(self)
+
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Attributes of closed Exdir object>"
+        return "Attributes of Exdir object '{}' at '{}'".format(
+            self.parent.name, id(self))

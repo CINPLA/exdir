@@ -205,3 +205,9 @@ class File(Group):
     def __contains__(self, name):
         path = utils.path.remove_root(name)
         return super(File, self).__contains__(path)
+
+    def __repr__(self):
+        if self.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir File>"
+        return "<Exdir File '{}' (mode {})>".format(
+            self.directory, self.user_mode)
