@@ -10,12 +10,12 @@ except ImportError as e:
 from exdir.core import Raw
 
 def test_raw_init(setup_teardown_folder):
-    raw = Raw(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
+    raw = Raw(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", file=None)
 
     assert raw.root_directory == setup_teardown_folder[2]
     assert raw.object_name == "test_object"
     assert raw.parent_path == pathlib.PurePosixPath("")
-    assert raw.io_mode is None
+    assert raw.file is None
     assert raw.relative_path == pathlib.PurePosixPath("test_object")
     assert raw.name == "/test_object"
 
