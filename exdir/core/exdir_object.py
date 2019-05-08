@@ -5,6 +5,7 @@ from six import with_metaclass
 from enum import Enum
 import os
 import warnings
+import shutil
 try:
     import pathlib
 except ImportError as e:
@@ -69,6 +70,16 @@ def _create_object_directory(directory, metadata):
         except TypeError:
             # NOTE workaround for Python 2.7
             meta_file.write(metadata_string.decode('utf8'))
+
+
+def _remove_object_directory(directory):
+    """
+    Remove object directory and meta file if directory exist.
+    """
+    if not directory.exists():
+        raise IOError("The directory '" + str(directory) + "' does not exist")
+    assert is_inside_exdir(directory)
+    shutil.rmtree(directory)
 
 
 def _default_metadata(typename):

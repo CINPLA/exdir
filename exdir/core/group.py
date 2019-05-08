@@ -457,6 +457,19 @@ class Group(Object):
 
         self[name].value = value
 
+    def __delitem__(self, name):
+        """
+        Delete a child (an object contained in group).
+
+        Parameters
+        ----------
+        name: str
+            name of the existing child
+        """
+        if self.io_mode == self.OpenMode.READ_ONLY:
+            raise IOError("Cannot change data on file in read only 'r' mode")
+        exob._remove_object_directory(self[name].directory)
+
     def keys(self):
         """
         Returns
