@@ -299,4 +299,4 @@ class Object(object):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
             return "<Closed Exdir Group>"
         return "<Exdir Group '{}' (mode {})>".format(
-            self.directory, self.user_mode)
+            self.directory, self.file.user_mode)

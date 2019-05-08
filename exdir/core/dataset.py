@@ -268,6 +268,12 @@ class Dataset(exob.Object):
     def __str__(self):
         return self.data.__str__()
 
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir Dataset>"
+        return "<Exdir Dataset {} shape {} dtype {}>".format(
+            self.name, self.shape, self.dtype)
+
     @property
     @assert_file_open
     def _data(self):
