@@ -176,6 +176,7 @@ class Dataset(exob.Object):
         return self[:]
 
     @data.setter
+    @assert_file_open
     def data(self, value):
         if self._data.shape != value.shape or self._data.dtype != value.dtype:
             value, attrs, meta = _prepare_write(

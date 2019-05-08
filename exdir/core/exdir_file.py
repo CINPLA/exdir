@@ -164,7 +164,13 @@ class File(Group):
         Sets the OpenMode to FILE_CLOSED which denies access to any attribute
         """
         # yeah right, as if we would create a real file format
-        self.io_mode = self.OpenMode.FILE_CLOSED
+        self.io_mode = OpenMode.FILE_CLOSED
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def create_group(self, name):
         """
