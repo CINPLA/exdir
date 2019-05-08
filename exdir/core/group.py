@@ -467,7 +467,7 @@ class Group(Object):
             name of the existing child
         """
         if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot change data on file in read only ('r') mode")
+            raise IOError("Cannot change data on file in read only 'r' mode")
         exob._remove_object_directory(self[name].directory)
 
     def keys(self):

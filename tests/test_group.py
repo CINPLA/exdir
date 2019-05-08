@@ -216,8 +216,8 @@ def test_nonexisting(setup_teardown_file):
     """Deleting non-existent object raises KeyError."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")
-
-    with pytest.raises(KeyError):
+    match = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=match):
         del grp["foo"]
 
 
@@ -227,8 +227,8 @@ def test_readonly_delete_exception(setup_teardown_file):
     f.close()
 
     f = File(setup_teardown_file[1], "r")
-
-    with pytest.raises(IOError):
+    match = "Cannot change data on file in read only 'r' mode"
+    with pytest.raises(IOError, match=match):
         del f["foo"]
 
 
@@ -244,7 +244,8 @@ def test_delete_dataset(setup_teardown_file):
     del foo
     assert 'foo' in grp
     del grp['foo']
-    with pytest.raises(KeyError):
+    match = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=match):
         grp['foo']
     # the "bar" dataset is intact
     assert isinstance(grp['bar'], Dataset)
@@ -275,6 +276,7 @@ def test_open(setup_teardown_file):
     with pytest.raises(NotImplementedError):
         grp["/test"]
 
+
 def test_open_deep(setup_teardown_file):
     """Simple obj[name] opening."""
     f = setup_teardown_file[3]
@@ -287,12 +289,11 @@ def test_open_deep(setup_teardown_file):
     assert grp3 == grp4
 
 
-
 def test_nonexistent(setup_teardown_file):
     """Opening missing objects raises KeyError."""
     f = setup_teardown_file[3]
-
-    with pytest.raises(KeyError):
+    match = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=match):
         f["foo"]
 
 
@@ -326,11 +327,12 @@ def test_contains_deep(setup_teardown_file):
 # def test_exc(setup_teardown_file):
 #     """'in' on closed group returns False."""
 #     f = setup_teardown_file[3]
-
+#
 #     f.create_group("a")
 #     f.close()
-
+#
 #     assert not "a" in f
+
 
 def test_empty(setup_teardown_file):
     """Empty strings work properly and aren"t contained."""
@@ -362,9 +364,6 @@ def test_trailing_slash(setup_teardown_file):
     assert "a/" in grp
     assert "a//" in grp
     assert "a////" in grp
-
-
-
 
 # Feature: Standard Python 3 .keys, .values, etc. methods are available
 def test_keys(setup_teardown_file):
