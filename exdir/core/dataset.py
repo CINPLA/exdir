@@ -110,6 +110,7 @@ class Dataset(exob.Object):
 
         try:
             self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode, allow_pickle=False)
+            self.file._open_datasets[self.name] = self._data_memmap
         except ValueError as e:
             # Could be that it is a Git LFS file. Let's see if that is the case and warn if so.
             with open(self.data_filename, "r") as f:
@@ -130,6 +131,7 @@ class Dataset(exob.Object):
             dtype=value.dtype,
             shape=value.shape
         )
+        self.file._open_datasets[self.name] = self._data_memmap
 
         if len(value.shape) == 0:
             # scalars need to be set with itemset
