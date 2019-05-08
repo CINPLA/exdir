@@ -290,6 +290,11 @@ class Object(object):
             self.root_directory == other.root_directory
         )
 
+    def __bool__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return False
+        return True
+
     def _repr_html_(self):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
             return None
