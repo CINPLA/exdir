@@ -177,7 +177,17 @@ class Dataset(exob.Object):
 
     @data.setter
     def data(self, value):
-        self.value = value
+        if self._data.shape != value.shape or self._data.dtype != value.dtype:
+            value, attrs, meta = _prepare_write(
+                data=value,
+                plugins=self.plugin_manager.dataset_plugins.write_order,
+                attrs=self.attrs.to_dict(),
+                meta=self.meta.to_dict()
+            )
+            self._reset_data(value, attrs, meta)
+            return
+
+        self[:] = value
 
     @property
     def shape(self):
@@ -229,22 +239,11 @@ class Dataset(exob.Object):
         interoperable with h5py.
         We recommend to use :code:`data` instead of :code:`value`.
         """
-        return self[:]
+        return self.data
 
     @value.setter
     def value(self, value):
-        # TODO this should be in data, since value is deprecated
-        if self._data.shape != value.shape or self._data.dtype != value.dtype:
-            value, attrs, meta = _prepare_write(
-                data=value,
-                plugins=self.plugin_manager.dataset_plugins.write_order,
-                attrs=self.attrs.to_dict(),
-                meta=self.meta.to_dict()
-            )
-            self._reset_data(value, attrs, meta)
-            return
-
-        self[:] = value
+        self.data = value
 
     @assert_file_open
     def __len__(self):
