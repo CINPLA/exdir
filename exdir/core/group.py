@@ -19,10 +19,13 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
+from .links import Link
 from . import exdir_object as exob
+from . import exdir_file as exfile
 from . import dataset as ds
 from . import raw
 from .. import utils
+
 
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
@@ -34,6 +37,7 @@ def _data_to_shape_and_dtype(data, shape, dtype):
     if dtype is None:
         dtype = np.float32
     return shape, dtype
+
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
@@ -51,6 +55,7 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
                 )
             )
         return
+
 
 class Group(Object):
     """
@@ -387,6 +392,14 @@ class Group(Object):
 
         directory = self.directory / path
 
+        if exob.is_link_object_directory(directory):
+            link_meta = self[name].meta[LINK_METANAME]
+            if link_meta[TYPE_METANAME] == LINK_SOFTNAME:
+                result = self[link_meta[LINK_TARGETNAME]]
+            elif link_meta[TYPE_METANAME] == LINK_EXTERNALNAME:
+                result = exfile.File(link_meta[LINK_FILENAME], 'r')[LINK_TARGETNAME]
+            return result
+
         if exob.is_raw_object_directory(directory):  # TODO create one function that handles all Raw creation
             return raw.Raw(
                 root_directory=self.root_directory,
@@ -444,6 +457,13 @@ class Group(Object):
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
+            return
+
+        if isinstance(value, Link):
+            link_group = self.create_group(name)
+            if value.path not in self.file:
+                return # TODO works when merging with lepmik/close
+            link_group.meta.update(value._link)
             return
 
         if name not in self:
@@ -513,7 +533,7 @@ class Group(Object):
         return len([a for a in self])
 
 
-    def get(self, key):
+    def get(self, key, getLink=False):
         """
         Get an object in the group.
         Parameters

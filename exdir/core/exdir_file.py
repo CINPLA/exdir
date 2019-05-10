@@ -179,6 +179,12 @@ class File(Group):
             return self
         return super(File, self).__getitem__(path)
 
+    def __setitem__(self, name, value):
+        path = utils.path.remove_root(name)
+        if len(path.parts) < 1:
+            return self
+        return super(File, self).__setitem__(path, value)
+
     def __contains__(self, name):
         path = utils.path.remove_root(name)
         return super(File, self).__contains__(path)
