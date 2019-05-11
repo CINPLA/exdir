@@ -440,8 +440,9 @@ class Group(Object):
                     link_meta[exob.LINK_FILENAME],
                     link_meta[exob.LINK_TARGETNAME])
             else:
-                result = exfile.File(
-                    link_meta[exob.LINK_FILENAME], 'r')[exob.LINK_TARGETNAME]
+                external_file = exfile.File(
+                    link_meta[exob.LINK_FILENAME], 'r')
+                result = external_file[link_meta[exob.LINK_TARGETNAME]]
         return result
 
     def _dataset(self, name):

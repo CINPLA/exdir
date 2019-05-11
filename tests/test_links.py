@@ -44,11 +44,11 @@ def test_external_links(setup_teardown_file):
 def test_get_link(setup_teardown_file):
     """ Get link values """
     f = setup_teardown_file[3]
-    g = File(setup_teardown_file[0] / 'mongoose.exdir')
+    g = File(setup_teardown_file[0] / 'somewhere.exdir')
     f.create_group('mongoose')
     g.create_group('mongoose')
     sl = SoftLink('/mongoose')
-    el = ExternalLink('somewhere.hdf5', 'mongoose')
+    el = ExternalLink('somewhere.exdir', 'mongoose')
 
     f['soft'] = sl
     f['external'] = el
@@ -63,16 +63,16 @@ def test_get_link(setup_teardown_file):
 
 
 # Feature: Create and manage soft links with the high-level interface
-def test_spath(setup_teardown_file):
+def test_soft_path(setup_teardown_file):
     """ SoftLink directory attribute """
     sl = SoftLink('/foo')
     assert sl.path == '/foo'
 
 
-# def test_srepr(setup_teardown_file):
-#     """ SoftLink path repr """
-#     sl = SoftLink('/foo')
-#     assertIsInstance(repr(sl), six.string_types)
+def test_soft_repr(setup_teardown_file):
+    """ SoftLink path repr """
+    sl = SoftLink('/foo')
+    assert isinstance(repr(sl), str)
 
 
 def test_linked_group_equal(setup_teardown_file):
@@ -91,39 +91,56 @@ def test_exc(setup_teardown_file):
     f['alias'] = SoftLink('new')
     with pytest.raises(KeyError):
         f['alias']
-#
-#
-# # Feature: Create and manage external links
-# def test_epath(setup_teardown_file):
-#     """ External link paths attributes """
-#     el = ExternalLink('foo.hdf5', '/foo')
-#     assertEqual(el.filename, 'foo.hdf5')
-#     assertEqual(el.path, '/foo')
-#
-# def test_erepr(setup_teardown_file):
-#     """ External link repr """
-#     el = ExternalLink('foo.hdf5','/foo')
-#     assertIsInstance(repr(el), six.string_types)
-#
-# def test_create(setup_teardown_file):
-#     """ Creating external links """
-#     f['ext'] = ExternalLink(ename, '/external')
-#     grp = f['ext']
-#     ef = grp.file
-#     assertNotEqual(ef, f)
-#     assertEqual(grp.name, '/external')
-#
-# def test_exc(setup_teardown_file):
-#     """ KeyError raised when attempting to open broken link """
-#     f['ext'] = ExternalLink(ename, '/missing')
-#     with assertRaises(KeyError):
-#         f['ext']
+
+
+# Feature: Create and manage external links
+def test_external_path(setup_teardown_file):
+    """ External link paths attributes """
+    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
+    egrp = g.create_group('foo')
+    el = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/foo')
+    assert el.filename == 'foo.exdir'
+    assert el.path == '/foo'
+
+
+def test_external_must_exist(setup_teardown_file):
+    """ External link paths attributes """
+    with pytest.raises(FileExistsError):
+        el = ExternalLink('foo.exdir', '/foo')
+
+
+def test_external_repr(setup_teardown_file):
+    """ External link repr """
+    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
+    el = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/foo')
+    assert isinstance(repr(el), str)
+
+
+def test_create(setup_teardown_file):
+    """ Creating external links """
+    f = setup_teardown_file[3]
+    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
+    egrp = g.require_group('external')
+    f['ext'] = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/external')
+    grp = f['ext']
+    ef = grp.file
+    assert ef != f
+    assert grp.name == '/external'
+
+
+def test_broken_external_link(setup_teardown_file):
+    """ KeyError raised when attempting to open broken link """
+    f = setup_teardown_file[3]
+    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
+    f['ext'] = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/missing')
+    with pytest.raises(KeyError):
+        f['ext']
 #
 # # I would prefer IOError but there's no way to fix this as the exception
 # # class is determined by HDF5.
 # def test_exc_missingfile(setup_teardown_file):
 #     """ KeyError raised when attempting to open missing file """
-#     f['ext'] = ExternalLink('mongoose.hdf5','/foo')
+#     f['ext'] = ExternalLink('mongoose.exdir','/foo')
 #     with assertRaises(KeyError):
 #         f['ext']
 #
@@ -143,7 +160,7 @@ def test_exc(setup_teardown_file):
 #     Check that external links encode unicode filenames properly
 #     Testing issue #732
 #     """
-#     ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
+#     ext_filename = os.path.join(mkdtemp(), u"α.exdir")
 #     with File(ext_filename, "w") as ext_file:
 #         ext_file.create_group('external')
 #     f['ext'] = ExternalLink(ext_filename, '/external')
@@ -154,7 +171,7 @@ def test_exc(setup_teardown_file):
 #     Check that external links decode unicode filenames properly
 #     Testing issue #732
 #     """
-#     ext_filename = os.path.join(mkdtemp(), u"α.hdf5")
+#     ext_filename = os.path.join(mkdtemp(), u"α.exdir")
 #     with File(ext_filename, "w") as ext_file:
 #         ext_file.create_group('external')
 #         ext_file["external"].attrs["ext_attr"] = "test"
@@ -162,12 +179,12 @@ def test_exc(setup_teardown_file):
 #     assertEqual(f["ext"].attrs["ext_attr"], "test")
 #
 #
-# def test_unicode_hdf5_path(setup_teardown_file):
+# def test_unicode_exdir_path(setup_teardown_file):
 #     """
-#     Check that external links handle unicode hdf5 paths properly
+#     Check that external links handle unicode exdir paths properly
 #     Testing issue #333
 #     """
-#     ext_filename = os.path.join(mkdtemp(), "external.hdf5")
+#     ext_filename = os.path.join(mkdtemp(), "external.exdir")
 #     with File(ext_filename, "w") as ext_file:
 #         ext_file.create_group(u'α')
 #         ext_file[u"α"].attrs["ext_attr"] = "test"

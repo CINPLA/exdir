@@ -40,13 +40,13 @@ class SoftLink(Link):
 
 
 class ExternalLink(Link):
-    def __init__(self, other_exdir_path, path):
+    def __init__(self, filename, path):
         super(ExternalLink, self).__init__(
             path=path
         )
-        self.other_exdir_path = other_exdir_path
-        # with exdir_file.File(self.other_exdir_path) as f:
-        #     pass
+        self.filename = filename
+        with exdir_file.File(self.filename) as f:
+            pass
 
     @property
     def _link(self):
@@ -55,7 +55,7 @@ class ExternalLink(Link):
             LINK_METANAME: {
                 TYPE_METANAME: LINK_EXTERNALNAME,
                 LINK_TARGETNAME: self.path,
-                LINK_FILENAME: self.other_exdir_path
+                LINK_FILENAME: str(self.filename)
              }
         }
         return result
