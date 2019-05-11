@@ -20,6 +20,7 @@ except ImportError:
 
 from .exdir_object import Object
 from .links import Link, SoftLink, ExternalLink
+from .mode import assert_file_open, OpenMode, assert_file_writable
 from . import exdir_object as exob
 from . import exdir_file as exfile
 from . import dataset as ds
@@ -62,8 +63,7 @@ class Group(Object):
     Container of other groups and datasets.
     """
 
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 name_validation=None, plugin_manager=None):
+    def __init__(self, root_directory, parent_path, object_name, file):
         """
         WARNING: Internal. Should only be called from require_group.
         """
@@ -71,9 +71,7 @@ class Group(Object):
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
-            io_mode=io_mode,
-            name_validation=name_validation,
-            plugin_manager=plugin_manager
+            file=file
         )
 
     def create_dataset(self, name, shape=None, dtype=None,
@@ -116,11 +114,7 @@ class Group(Object):
         --------
         require_dataset
         """
-        exob._assert_valid_name(name, self)
-
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ('r') mode")
-
+        assert_file_writable(self.file)
         exob._assert_valid_name(name, self)
 
         if data is None and shape is None:
@@ -130,7 +124,7 @@ class Group(Object):
 
         prepared_data, attrs, meta = ds._prepare_write(
             data,
-            self.plugin_manager.dataset_plugins.write_order,
+            self.file.plugin_manager.dataset_plugins.write_order,
             attrs={},
             meta=exob._default_metadata(exob.DATASET_TYPENAME)
         )
@@ -183,9 +177,7 @@ class Group(Object):
         --------
         require_group
         """
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot write data to file in read only ("r") mode")
-
+        assert_file_writable(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -208,9 +200,7 @@ class Group(Object):
             root_directory=self.root_directory,
             parent_path=self.relative_path,
             object_name=name,
-            io_mode=self.io_mode,
-            name_validation=self.name_validation,
-            plugin_manager=self.plugin_manager
+            file=self.file
         )
 
     def require_group(self, name):
@@ -231,6 +221,7 @@ class Group(Object):
         --------
         create_group
         """
+        assert_file_open(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -292,6 +283,7 @@ class Group(Object):
             Used to create a dataset with the given `shape` and `type` with the
             initial value of `fillvalue`.
         """
+        assert_file_open(self.file)
         if name not in self:
             return self.create_dataset(
                 name,
@@ -312,7 +304,7 @@ class Group(Object):
 
         data, attrs, meta = ds._prepare_write(
             data,
-            plugins=self.plugin_manager.dataset_plugins.write_order,
+            plugins=self.file.plugin_manager.dataset_plugins.write_order,
             attrs={},
             meta={}
         )
@@ -355,6 +347,8 @@ class Group(Object):
         name: str
             the case-sensitive name of the object
         """
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return False
         if name == ".":
             return True
         if name == "":
@@ -377,6 +371,7 @@ class Group(Object):
         KeyError:
             if the name does not correspond to an exdir object in the group
         """
+        assert_file_open(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]
@@ -397,8 +392,7 @@ class Group(Object):
                 root_directory=self.root_directory,
                 parent_path=self.relative_path,
                 object_name=name,
-                io_mode=self.io_mode # TODO validate name?
-                # TODO plugin manager?
+                file=self.file
             )
 
         if not exob.is_nonraw_object_directory(directory):
@@ -450,9 +444,7 @@ class Group(Object):
             root_directory=self.root_directory,
             parent_path=self.relative_path,
             object_name=name,
-            io_mode=self.io_mode,
-            name_validation=self.name_validation,
-            plugin_manager=self.plugin_manager
+            file=self.file
         )
 
     def __setitem__(self, name, value):
@@ -467,6 +459,7 @@ class Group(Object):
             value that will be used to create a new or set
             the contents of an existing dataset
         """
+        assert_file_open(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
@@ -499,8 +492,7 @@ class Group(Object):
         name: str
             name of the existing child
         """
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError("Cannot change data on file in read only 'r' mode")
+        assert_file_writable(self.file)
         exob._remove_object_directory(self[name].directory)
 
     def keys(self):
@@ -510,6 +502,7 @@ class Group(Object):
         KeysView
             A view of the names of the objects in the group.
         """
+        assert_file_open(self.file)
         return abc.KeysView(self)
 
     def items(self):
@@ -519,6 +512,7 @@ class Group(Object):
         ItemsView
             A view of the keys and objects in the group.
         """
+        assert_file_open(self.file)
         return abc.ItemsView(self)
 
     def values(self):
@@ -528,12 +522,14 @@ class Group(Object):
         ValuesView
             A view of the objects in the group.
         """
+        assert_file_open(self.file)
         return abc.ValuesView(self)
 
     def __iter__(self):
         """
         Iterate over all the objects in the group.
         """
+        assert_file_open(self.file)
         # NOTE os.walk is way faster than os.listdir + os.path.isdir
         directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):
@@ -543,8 +539,8 @@ class Group(Object):
         """
         Number of objects in the group.
         """
+        assert_file_open(self.file)
         return len([a for a in self])
-
 
     def get(self, name, get_link=False):
         """
@@ -557,6 +553,7 @@ class Group(Object):
         -------
         Value or None if object does not exist.
         """
+        assert_file_open(self.file)
         if name in self:
             if get_link:
                 return self._link(name, get_link)

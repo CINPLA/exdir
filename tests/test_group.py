@@ -33,12 +33,12 @@ from conftest import remove
 
 # tests for Group class
 def test_group_init(setup_teardown_folder):
-    group = Group(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
+    group = Group(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", file=None)
 
     assert group.root_directory == setup_teardown_folder[2]
     assert group.object_name == "test_object"
     assert group.parent_path == pathlib.PurePosixPath("")
-    assert group.io_mode is None
+    assert group.file is None
     assert group.relative_path == pathlib.PurePosixPath("test_object")
     assert group.name == "/test_object"
 
@@ -321,17 +321,6 @@ def test_contains_deep(setup_teardown_file):
     grp3 = grp2.create_group("b")
 
     assert "a/b" in grp
-
-
-# TODO uncomment this when close is implemented
-# def test_exc(setup_teardown_file):
-#     """'in' on closed group returns False."""
-#     f = setup_teardown_file[3]
-#
-#     f.create_group("a")
-#     f.close()
-#
-#     assert not "a" in f
 
 
 def test_empty(setup_teardown_file):
