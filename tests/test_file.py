@@ -138,8 +138,7 @@ def test_readonly(setup_teardown_folder):
 
     f = File(setup_teardown_folder[1], 'w')
     f.close()
-    # TODO comment in when close is implemented
-    # assert not f
+    assert not f
     f = File(setup_teardown_folder[1], 'r')
     assert isinstance(f, File)
     with pytest.raises(IOError):
@@ -307,7 +306,6 @@ def test_open_two_attrs(setup_teardown_file):
     f.attrs['another_atribute'] = 14
 
 
-# TODO uncomment this when close is implemented
 def test_exc(setup_teardown_file):
     """'in' on closed group returns False."""
     f = setup_teardown_file[3]

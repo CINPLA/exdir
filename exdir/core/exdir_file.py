@@ -1,5 +1,6 @@
 import os
 import shutil
+import weakref
 try:
     import pathlib
 except ImportError as e:
@@ -69,7 +70,7 @@ class File(Group):
 
     def __init__(self, directory, mode=None, allow_remove=False,
                  name_validation=None, plugins=None):
-        self._open_datasets = {}
+        self._open_datasets = weakref.WeakValueDictionary({})
         directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
@@ -165,13 +166,15 @@ class File(Group):
         child
         """
         import gc
-        # yeah right, as if we would create a real file format
         for name, data_set in self._open_datasets.items():
             # there are no way to close the memmap other than deleting all
             # references to it, thus
-            data_set.flush()
-            data_set.setflags(write=False) # TODO does not work
-        self._open_datasets = {}
+            try:
+                data_set._data_memmap.flush()
+                data_set._data_memmap.setflags(write=False) # TODO does not work
+            except AttributeError:
+                pass
+        # force garbage collection to clean weakrefs
         gc.collect()
         self.io_mode = OpenMode.FILE_CLOSED
 
