@@ -19,7 +19,7 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
-from .links import Link
+from .links import Link, SoftLink, ExternalLink
 from . import exdir_object as exob
 from . import exdir_file as exfile
 from . import dataset as ds
@@ -392,14 +392,6 @@ class Group(Object):
 
         directory = self.directory / path
 
-        if exob.is_link_object_directory(directory):
-            link_meta = self[name].meta[LINK_METANAME]
-            if link_meta[TYPE_METANAME] == LINK_SOFTNAME:
-                result = self[link_meta[LINK_TARGETNAME]]
-            elif link_meta[TYPE_METANAME] == LINK_EXTERNALNAME:
-                result = exfile.File(link_meta[LINK_FILENAME], 'r')[LINK_TARGETNAME]
-            return result
-
         if exob.is_raw_object_directory(directory):  # TODO create one function that handles all Raw creation
             return raw.Raw(
                 root_directory=self.root_directory,
@@ -422,6 +414,8 @@ class Group(Object):
             return self._dataset(name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return self._group(name)
+        elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.LINK_TYPENAME:
+            return self._link(name)
         else:
             error_string = (
                 "Object {name} has data type {type}.\n"
@@ -431,6 +425,24 @@ class Group(Object):
                 type=meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
             )
             raise NotImplementedError(error_string)
+
+    def _link(self, name, get_link=False):
+        link_meta = self._group(name).meta[exob.EXDIR_METANAME][exob.LINK_METANAME]
+        print(link_meta)
+        if link_meta[exob.TYPE_METANAME] == exob.LINK_SOFTNAME:
+            if get_link:
+                result = SoftLink(link_meta[exob.LINK_TARGETNAME])
+            else:
+                result = self[link_meta[exob.LINK_TARGETNAME]]
+        elif link_meta[exob.TYPE_METANAME] == exob.LINK_EXTERNALNAME:
+            if get_link:
+                result = ExternalLink(
+                    link_meta[exob.LINK_FILENAME],
+                    link_meta[exob.LINK_TARGETNAME])
+            else:
+                result = exfile.File(
+                    link_meta[exob.LINK_FILENAME], 'r')[exob.LINK_TARGETNAME]
+        return result
 
     def _dataset(self, name):
         return ds.Dataset(
@@ -461,9 +473,9 @@ class Group(Object):
 
         if isinstance(value, Link):
             link_group = self.create_group(name)
-            if value.path not in self.file:
-                return # TODO works when merging with lepmik/close
-            link_group.meta.update(value._link)
+            # if value.path not in self.file:
+            #     return # TODO works when merging with lepmik/close
+            link_group.meta[exob.EXDIR_METANAME].update(value._link)
             return
 
         if name not in self:
@@ -533,19 +545,21 @@ class Group(Object):
         return len([a for a in self])
 
 
-    def get(self, key, getLink=False):
+    def get(self, name, get_link=False):
         """
         Get an object in the group.
         Parameters
         ----------
-        key : str
-            The key of the desired object
+        name : str
+            The name of the desired object
         Returns
         -------
         Value or None if object does not exist.
         """
-        if key in self:
-            return self[key]
+        if name in self:
+            if get_link:
+                return self._link(name, get_link)
+            return self[name]
         else:
             return None
 

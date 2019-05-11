@@ -15,7 +15,7 @@ class Link(Object):
         return {TYPE_METANAME: LINK_TYPENAME}
 
     def __eq__(self, other):
-        assert self._link.get(LINK_METANAME) == other._link.get(LINK_METANAME)
+        return self._link.get(LINK_METANAME) == other._link.get(LINK_METANAME)
 
 
 class SoftLink(Link):
@@ -34,6 +34,9 @@ class SoftLink(Link):
              }
         }
         return result
+
+    def __repr__(self):
+        return "Exdir SoftLink '{}' at {}".format(self.path, id(self))
 
 
 class ExternalLink(Link):
@@ -56,3 +59,6 @@ class ExternalLink(Link):
              }
         }
         return result
+
+    def __repr__(self):
+        return "Exdir SoftLink '{}' at {}".format(self.path, id(self))

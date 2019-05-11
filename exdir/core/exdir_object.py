@@ -124,29 +124,6 @@ def is_raw_object_directory(directory):
     return is_exdir_object(directory) and not is_nonraw_object_directory(directory)
 
 
-def is_link_object_directory(directory):
-    if not is_exdir_object(directory):
-        return False
-    meta_filename = directory / META_FILENAME
-    if not meta_filename.exists():
-        return False
-    with meta_filename.open("r", encoding="utf-8") as meta_file:
-        meta_data = yaml.safe_load(meta_file)
-
-        if not isinstance(meta_data, dict):
-            return False
-
-        if EXDIR_METANAME not in meta_data:
-            return False
-
-        if TYPE_METANAME not in meta_data[EXDIR_METANAME]:
-            return False
-
-        if meta_data[EXDIR_METANAME][TYPE_METANAME] == LINK_METANAME:
-            return True
-    return False
-
-
 def root_directory(path):
     """
     Iterates upwards until a exdir.File object is found.

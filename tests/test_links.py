@@ -11,7 +11,7 @@
 # with copyright Andrew Collette and contributors.
 # See http://www.h5py.org and the "3rdparty/h5py-LICENSE" file for details.
 
-import exdir
+from exdir import SoftLink, ExternalLink, File
 import pytest
 import numpy as np
 try:
@@ -20,47 +20,52 @@ except ImportError:
     import ruamel.yaml as yaml
 
 
-def test_softlinks(setup_teardown_file):
+def test_soft_links(setup_teardown_file):
     """ Broken softlinks are contained, but their members are not """
     f = setup_teardown_file[3]
-    g = exdir.File(setup_teardown_file[2] / 'mongoose.exdir')
     f.create_group('mongoose')
-    g.create_group('mongoose')
     f.create_group('grp')
-    f['/grp/soft'] = exdir.SoftLink('/mongoose')
-    f['/grp/external'] = exdir.ExternalLink('mongoose.exdir', '/mongoose')
+    f['/grp/soft'] = SoftLink('/mongoose')
     assert '/grp/soft' in f
     assert '/grp/soft/something' not in f
+
+
+def test_external_links(setup_teardown_file):
+    """ Broken softlinks are contained, but their members are not """
+    f = setup_teardown_file[3]
+    g = File(setup_teardown_file[0] / 'mongoose.exdir', 'w')
+    g.create_group('mongoose')
+    f.create_group('grp')
+    f['/grp/external'] = ExternalLink('mongoose.exdir', '/mongoose')
     assert '/grp/external' in f
     assert '/grp/external/something' not in f
 
 
-# def test_get_link(setup_teardown_file):
-#     """ Get link values """
-#     f = setup_teardown_file[3]
-#     g = exdir.File(setup_teardown_file[0] / 'mongoose.exdir')
-#     f.create_group('mongoose')
-#     g.create_group('mongoose')
-#     sl = SoftLink('/mongoose')
-#     el = ExternalLink('somewhere.hdf5', 'mongoose')
-#
-#     f['soft'] = sl
-#     f['external'] = el
-#
-#     out_sl = f.get('soft', getlink=True)
-#     out_el = f.get('external', getlink=True)
-#
-#     #TODO: redo with SoftLink/ExternalLink built-in equality
-#     assertIsInstance(out_sl, SoftLink)
-#     assert out_sl == sl
-#     assertIsInstance(out_el, ExternalLink)
-#     assert out_el == el
-#
-#
+def test_get_link(setup_teardown_file):
+    """ Get link values """
+    f = setup_teardown_file[3]
+    g = File(setup_teardown_file[0] / 'mongoose.exdir')
+    f.create_group('mongoose')
+    g.create_group('mongoose')
+    sl = SoftLink('/mongoose')
+    el = ExternalLink('somewhere.hdf5', 'mongoose')
+
+    f['soft'] = sl
+    f['external'] = el
+
+    out_sl = f.get('soft', get_link=True)
+    out_el = f.get('external', get_link=True)
+
+    assert isinstance(out_sl, SoftLink)
+    assert out_sl == sl
+    assert isinstance(out_el, ExternalLink)
+    assert out_el == el
+
+
 # Feature: Create and manage soft links with the high-level interface
 def test_spath(setup_teardown_file):
     """ SoftLink directory attribute """
-    sl = exdir.SoftLink('/foo')
+    sl = SoftLink('/foo')
     assert sl.path == '/foo'
 
 
@@ -70,11 +75,11 @@ def test_spath(setup_teardown_file):
 #     assertIsInstance(repr(sl), six.string_types)
 
 
-def test_create(setup_teardown_file):
+def test_linked_group_equal(setup_teardown_file):
     """ Create new soft link by assignment """
     f = setup_teardown_file[3]
     g = f.create_group('new')
-    sl = exdir.SoftLink('/new')
+    sl = SoftLink('/new')
     f['alias'] = sl
     g2 = f['alias']
     assert g == g2
@@ -83,7 +88,7 @@ def test_create(setup_teardown_file):
 def test_exc(setup_teardown_file):
     """ Opening dangling soft link results in KeyError """
     f = setup_teardown_file[3]
-    f['alias'] = exdir.SoftLink('new')
+    f['alias'] = SoftLink('new')
     with pytest.raises(KeyError):
         f['alias']
 #
