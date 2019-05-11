@@ -36,12 +36,12 @@ import exdir.core.exdir_object as exob
 # tests for Object class
 
 def test_object_init(setup_teardown_folder):
-    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
+    obj = Object(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", file=None)
 
     assert obj.root_directory == setup_teardown_folder[2]
     assert obj.object_name == "test_object"
     assert obj.parent_path == pathlib.PurePosixPath("")
-    assert obj.io_mode is None
+    assert obj.file is None
     assert obj.relative_path == pathlib.PurePosixPath("test_object")
     assert obj.name == "/test_object"
 

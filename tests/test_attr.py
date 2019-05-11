@@ -23,11 +23,11 @@ from exdir.core import Attribute, File
 import six
 
 def test_attr_init():
-    attribute = Attribute("parent", "mode", "io_mode")
+    attribute = Attribute("parent", "mode", "file")
 
     assert attribute.parent == "parent"
     assert attribute.mode == "mode"
-    assert attribute.io_mode == "io_mode"
+    assert attribute.file == "file"
     assert attribute.path == []
 
 # Attribute creation/retrieval via special methods

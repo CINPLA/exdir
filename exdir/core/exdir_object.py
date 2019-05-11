@@ -20,11 +20,10 @@ except ImportError:
 
 import exdir
 
-from . import validation
-# from . import exdir_object
 from .. import utils
 from .attribute import Attribute
 from .constants import *
+from .mode import assert_file_open, OpenMode
 
 def _resolve_path(path):
     return pathlib.Path(path).resolve()
@@ -32,7 +31,7 @@ def _resolve_path(path):
 
 def _assert_valid_name(name, container):
     """Check if name (dataset or group) is valid."""
-    container.name_validation(container.directory, name)
+    container.file.name_validation(container.directory, name)
 
 
 def _create_object_directory(directory, metadata):
@@ -179,6 +178,7 @@ def open_object(path):
         return exdir_file
     return exdir_file[object_name]
 
+
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
@@ -186,13 +186,7 @@ class Object(object):
     """
     Parent class for exdir Group and exdir dataset objects
     """
-    class OpenMode(Enum):
-        READ_WRITE = 1
-        READ_ONLY = 2
-
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 name_validation=None, plugin_manager=None):
-        # TODO put io_mode, name_validation, plugin_types into a configuration object
+    def __init__(self, root_directory, parent_path, object_name, file):
         self.root_directory = root_directory
         self.object_name = str(object_name)  # NOTE could be path, so convert to str
         self.parent_path = parent_path
@@ -201,71 +195,46 @@ class Object(object):
         if relative_name == ".":
             relative_name = ""
         self.name = "/" + relative_name
-        self.io_mode = io_mode
-        self.plugin_manager = plugin_manager
+        self.file = file
 
-        name_validation = name_validation or validation.thorough
-
-        if isinstance(name_validation, str):
-            if name_validation == 'simple':
-                name_validation = validation.thorough
-            elif name_validation == 'thorough':
-                name_validation = validation.thorough
-            elif name_validation == 'strict':
-                name_validation = validation.strict
-            elif name_validation == 'none':
-                name_validation = validation.none
-            else:
-                raise ValueError(
-                    'IO name rule "{}" not recognized, '
-                    'name rule must be one of "strict", "simple", '
-                    '"thorough", "none"'.format(name_validation)
-                )
-
-            warnings.warn(
-                "WARNING: name_validation should be set to one of the functions in "
-                "the exdir.validation module. "
-                "Defining naming rule by string is no longer supported."
-            )
-
-        self.name_validation = name_validation
-
-    @property
+    @property # TODO consider warning if file is closed
     def directory(self):
         return self.root_directory / self.relative_path
 
     @property
     def attrs(self):
+        assert_file_open(self.file)
         return Attribute(
             self,
             mode=Attribute._Mode.ATTRIBUTES,
-            io_mode=self.io_mode,
-            plugin_manager=self.plugin_manager
+            file=self.file,
         )
 
     @attrs.setter
     def attrs(self, value):
+        assert_file_open(self.file)
         self.attrs._set_data(value)
 
     @property
     def meta(self):
+        assert_file_open(self.file)
         return Attribute(
             self,
             mode=Attribute._Mode.METADATA,
-            io_mode=self.io_mode,
-            plugin_manager=self.plugin_manager
+            file=self.file,
         )
 
-    @property
+    @property # TODO consider warning if file is closed,
     def attributes_filename(self):
         return self.directory / ATTRIBUTES_FILENAME
 
-    @property
+    @property # TODO consider warning if file is closed
     def meta_filename(self):
         return self.directory / META_FILENAME
 
     def create_raw(self, name):
         from .raw import Raw
+        assert_file_open(self.file)
         _assert_valid_name(name, self)
         directory_name = self.directory / name
         if directory_name.exists():
@@ -275,11 +244,12 @@ class Object(object):
             root_directory=self.root_directory,
             parent_path=self.relative_path,
             object_name=name,
-            io_mode=self.io_mode
+            file=self.file
         )
 
     def require_raw(self, name):
         from .raw import Raw
+        assert_file_open(self.file)
         directory_name = self.directory / name
         if directory_name.exists():
             if is_nonraw_object_directory(directory_name):
@@ -290,7 +260,7 @@ class Object(object):
                 root_directory=self.root_directory,
                 parent_path=self.relative_path,
                 object_name=name,
-                io_mode=self.io_mode
+                file=self.file
             )
 
         return self.create_raw(name)
@@ -298,6 +268,7 @@ class Object(object):
     @property
     def parent(self):
         from .group import Group
+        assert_file_open(self.file)
         if len(self.parent_path.parts) < 1:
             return None
         parent_name = self.parent_path.name
@@ -306,12 +277,12 @@ class Object(object):
             root_directory=self.root_directory,
             parent_path=parent_parent_path,
             object_name=parent_name,
-            io_mode=self.io_mode,
-            name_validation=self.name_validation,
-            plugin_manager=self.plugin_manager
+            file=self.file
         )
 
     def __eq__(self, other):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return False
         if not isinstance(other, Object):
             return False
         return (
@@ -319,5 +290,18 @@ class Object(object):
             self.root_directory == other.root_directory
         )
 
+    def __bool__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return False
+        return True
+
     def _repr_html_(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return None
         return exdir.utils.display.html_tree(self)
+
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir Group>"
+        return "<Exdir Group '{}' (mode {})>".format(
+            self.directory, self.file.user_mode)
