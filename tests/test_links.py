@@ -96,32 +96,29 @@ def test_exc(setup_teardown_file):
 # Feature: Create and manage external links
 def test_external_path(setup_teardown_file):
     """ External link paths attributes """
-    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
+    external_path = setup_teardown_file[0] / 'foo.exdir'
+    g = File(external_path, 'w')
     egrp = g.create_group('foo')
-    el = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/foo')
-    assert el.filename == 'foo.exdir'
+    el = ExternalLink(external_path, '/foo')
+    assert el.filename == external_path
     assert el.path == '/foo'
-
-
-def test_external_must_exist(setup_teardown_file):
-    """ External link paths attributes """
-    with pytest.raises(FileExistsError):
-        el = ExternalLink('foo.exdir', '/foo')
 
 
 def test_external_repr(setup_teardown_file):
     """ External link repr """
-    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
-    el = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/foo')
+    external_path = setup_teardown_file[0] / 'foo.exdir'
+    g = File(external_path, 'w')
+    el = ExternalLink(external_path, '/foo')
     assert isinstance(repr(el), str)
 
 
 def test_create(setup_teardown_file):
     """ Creating external links """
+    external_path = setup_teardown_file[0] / 'foo.exdir'
     f = setup_teardown_file[3]
-    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
+    g = File(external_path, 'w')
     egrp = g.require_group('external')
-    f['ext'] = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/external')
+    f['ext'] = ExternalLink(external_path, '/external')
     grp = f['ext']
     ef = grp.file
     assert ef != f
@@ -130,63 +127,64 @@ def test_create(setup_teardown_file):
 
 def test_broken_external_link(setup_teardown_file):
     """ KeyError raised when attempting to open broken link """
+    external_path = setup_teardown_file[0] / 'foo.exdir'
     f = setup_teardown_file[3]
-    g = File(setup_teardown_file[0] / 'foo.exdir', 'w')
-    f['ext'] = ExternalLink(setup_teardown_file[0] / 'foo.exdir', '/missing')
+    g = File(external_path, 'w')
+    f['ext'] = ExternalLink(external_path, '/missing')
     with pytest.raises(KeyError):
         f['ext']
-#
-# # I would prefer IOError but there's no way to fix this as the exception
-# # class is determined by HDF5.
-# def test_exc_missingfile(setup_teardown_file):
-#     """ KeyError raised when attempting to open missing file """
-#     f['ext'] = ExternalLink('mongoose.exdir','/foo')
-#     with assertRaises(KeyError):
-#         f['ext']
-#
-# def test_close_file(setup_teardown_file):
-#     """ Files opened by accessing external links can be closed
-#     Issue 189.
-#     """
-#     f['ext'] = ExternalLink(ename, '/')
-#     grp = f['ext']
-#     f2 = grp.file
-#     f2.close()
-#     assertFalse(f2)
-#
-#
+
+
+def test_exc_missingfile(setup_teardown_file):
+    """ KeyError raised when attempting to open missing file """
+    f = setup_teardown_file[3]
+    f['ext'] = ExternalLink('mongoose.exdir','/foo')
+    with pytest.raises(RuntimeError):
+        f['ext']
+
+
+def test_close_file(setup_teardown_file):
+    """ Files opened by accessing external links can be closed
+    """
+    external_path = setup_teardown_file[0] / 'foo.exdir'
+    f = setup_teardown_file[3]
+    g = File(external_path, 'w')
+    f['ext'] = ExternalLink(external_path, '/')
+    grp = f['ext']
+    f2 = grp.file
+    f2.close()
+    assert not f2
+
+# TODO uncomment if we start accepting unicode names
 # def test_unicode_encode(setup_teardown_file):
 #     """
 #     Check that external links encode unicode filenames properly
-#     Testing issue #732
 #     """
-#     ext_filename = os.path.join(mkdtemp(), u"α.exdir")
-#     with File(ext_filename, "w") as ext_file:
+#     external_path = setup_teardown_file[0] / u"α.exdir"
+#     with File(external_path, "w") as ext_file:
 #         ext_file.create_group('external')
-#     f['ext'] = ExternalLink(ext_filename, '/external')
+#     f['ext'] = ExternalLink(external_path, '/external')
 #
 #
 # def test_unicode_decode(setup_teardown_file):
 #     """
 #     Check that external links decode unicode filenames properly
-#     Testing issue #732
 #     """
-#     ext_filename = os.path.join(mkdtemp(), u"α.exdir")
-#     with File(ext_filename, "w") as ext_file:
+#     external_path = setup_teardown_file[0] / u"α.exdir"
+#     with File(external_path, "w") as ext_file:
 #         ext_file.create_group('external')
 #         ext_file["external"].attrs["ext_attr"] = "test"
-#     f['ext'] = ExternalLink(ext_filename, '/external')
-#     assertEqual(f["ext"].attrs["ext_attr"], "test")
+#     f['ext'] = ExternalLink(external_path, '/external')
+#     assert f["ext"].attrs["ext_attr"] == "test"
 #
 #
 # def test_unicode_exdir_path(setup_teardown_file):
 #     """
 #     Check that external links handle unicode exdir paths properly
-#     Testing issue #333
 #     """
-#     ext_filename = os.path.join(mkdtemp(), "external.exdir")
-#     with File(ext_filename, "w") as ext_file:
+#     external_path = setup_teardown_file[0] / u"external.exdir"
+#     with File(external_path, "w") as ext_file:
 #         ext_file.create_group(u'α')
 #         ext_file[u"α"].attrs["ext_attr"] = "test"
-#     f['ext'] = ExternalLink(ext_filename, u'/α')
+#     f['ext'] = ExternalLink(external_path, u'/α')
 #     assertEqual(f["ext"].attrs["ext_attr"], "test")

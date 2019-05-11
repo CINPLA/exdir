@@ -71,7 +71,7 @@ class File(Group):
     def __init__(self, directory, mode=None, allow_remove=False,
                  name_validation=None, plugins=None):
         self._open_datasets = weakref.WeakValueDictionary({})
-        directory = pathlib.Path(directory) #.resolve()
+        directory = pathlib.Path(directory).absolute() #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
         self.user_mode = mode = mode or 'a'

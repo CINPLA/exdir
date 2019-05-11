@@ -1,5 +1,12 @@
+try:
+    import pathlib
+except ImportError as e:
+    try:
+        import pathlib2 as pathlib
+    except ImportError:
+        raise e
 from . import exdir_file
-from .exdir_object import Object
+from .exdir_object import Object, is_nonraw_object_directory
 from .constants import *
 
 
@@ -45,8 +52,6 @@ class ExternalLink(Link):
             path=path
         )
         self.filename = filename
-        with exdir_file.File(self.filename) as f:
-            pass
 
     @property
     def _link(self):
