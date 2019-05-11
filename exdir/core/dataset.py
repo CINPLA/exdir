@@ -48,8 +48,8 @@ class Dataset(exob.Object):
         self.plugin_manager = file.plugin_manager
         self.data_filename = str(_dataset_filename(self.directory))
 
-    @assert_file_open
     def __getitem__(self, args):
+        assert_file_open(self.file)
         if len(self._data.shape) == 0:
             values = self._data
         else:
@@ -85,8 +85,8 @@ class Dataset(exob.Object):
 
         return data
 
-    @assert_file_writable
     def __setitem__(self, args, value):
+        assert_file_writable(self.file)
 
         value, attrs, meta = _prepare_write(
             data=value,
@@ -98,8 +98,8 @@ class Dataset(exob.Object):
         self.attrs = attrs
         self.meta._set_data(meta)
 
-    @assert_file_open
     def _reload_data(self):
+        assert_file_open(self.file)
         for plugin in self.plugin_manager.dataset_plugins.write_order:
             plugin.before_load(self.data_filename)
 
@@ -110,7 +110,7 @@ class Dataset(exob.Object):
 
         try:
             self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode, allow_pickle=False)
-            self.file._open_datasets[self.name] = self._data_memmap
+            self.file._open_datasets[self.name] = self
         except ValueError as e:
             # Could be that it is a Git LFS file. Let's see if that is the case and warn if so.
             with open(self.data_filename, "r") as f:
@@ -123,15 +123,14 @@ class Dataset(exob.Object):
                 else:
                     raise e
 
-    @assert_file_open
     def _reset_data(self, value, attrs, meta):
+        assert_file_open(self.file)
         self._data_memmap = np.lib.format.open_memmap(
             self.data_filename,
             mode="w+",
             dtype=value.dtype,
             shape=value.shape
         )
-        self.file._open_datasets[self.name] = self._data_memmap
 
         if len(value.shape) == 0:
             # scalars need to be set with itemset
@@ -162,7 +161,6 @@ class Dataset(exob.Object):
         self.value = data
 
     @property
-    @assert_file_open
     def data(self):
         """
         Property that gives access the entire dataset.
@@ -173,11 +171,12 @@ class Dataset(exob.Object):
         numpy.memmap
             The entire dataset.
         """
+        assert_file_open(self.file)
         return self[:]
 
     @data.setter
-    @assert_file_open
     def data(self, value):
+        assert_file_open(self.file)
         if self._data.shape != value.shape or self._data.dtype != value.dtype:
             value, attrs, meta = _prepare_write(
                 data=value,
@@ -246,18 +245,18 @@ class Dataset(exob.Object):
     def value(self, value):
         self.data = value
 
-    @assert_file_open
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar."""
+        assert_file_open(self.file)
         if len(self.shape) == 0:
             raise TypeError("Attempt to take len() of scalar dataset")
         return self.shape[0]
 
-    @assert_file_open
     def __iter__(self):
         """Iterate over the first axis.  TypeError if scalar.
         WARNING: Modifications to the yielded data are *NOT* written to file.
         """
+        assert_file_open(self.file)
 
         if len(self.shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
@@ -275,8 +274,8 @@ class Dataset(exob.Object):
             self.name, self.shape, self.dtype)
 
     @property
-    @assert_file_open
     def _data(self):
+        assert_file_open(self.file)
         if self._data_memmap is None:
             self._reload_data()
         return self._data_memmap

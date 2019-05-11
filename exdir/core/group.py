@@ -69,7 +69,6 @@ class Group(Object):
             file=file
         )
 
-    @assert_file_writable
     def create_dataset(self, name, shape=None, dtype=None,
                        data=None, fillvalue=None):
         """
@@ -110,6 +109,7 @@ class Group(Object):
         --------
         require_dataset
         """
+        assert_file_writable(self.file)
         exob._assert_valid_name(name, self)
 
         if data is None and shape is None:
@@ -148,7 +148,6 @@ class Group(Object):
         dataset._reset_data(prepared_data, attrs, None)  # meta already set above
         return dataset
 
-    @assert_file_writable
     def create_group(self, name):
         """
         Create a group. This will create a folder on the filesystem with the
@@ -173,6 +172,7 @@ class Group(Object):
         --------
         require_group
         """
+        assert_file_writable(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -198,7 +198,6 @@ class Group(Object):
             file=self.file
         )
 
-    @assert_file_open
     def require_group(self, name):
         """
         Open an existing subgroup or create one if it does not exist.
@@ -217,6 +216,7 @@ class Group(Object):
         --------
         create_group
         """
+        assert_file_open(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
@@ -241,7 +241,6 @@ class Group(Object):
 
         return self.create_group(name)
 
-    @assert_file_open
     def require_dataset(self, name, shape=None, dtype=None, exact=False,
                         data=None, fillvalue=None):
         """
@@ -279,6 +278,7 @@ class Group(Object):
             Used to create a dataset with the given `shape` and `type` with the
             initial value of `fillvalue`.
         """
+        assert_file_open(self.file)
         if name not in self:
             return self.create_dataset(
                 name,
@@ -352,7 +352,6 @@ class Group(Object):
         directory = self.directory / path
         return exob.is_exdir_object(directory)
 
-    @assert_file_open
     def __getitem__(self, name):
         """
         Retrieves the object with the given name if it exists in the group.
@@ -367,6 +366,7 @@ class Group(Object):
         KeyError:
             if the name does not correspond to an exdir object in the group
         """
+        assert_file_open(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]
@@ -421,7 +421,6 @@ class Group(Object):
             file=self.file
         )
 
-    @assert_file_open
     def __setitem__(self, name, value):
         """
         Set or create a dataset with the given name from the given value.
@@ -434,6 +433,7 @@ class Group(Object):
             value that will be used to create a new or set
             the contents of an existing dataset
         """
+        assert_file_open(self.file)
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
@@ -450,7 +450,6 @@ class Group(Object):
 
         self[name].value = value
 
-    @assert_file_writable
     def __delitem__(self, name):
         """
         Delete a child (an object contained in group).
@@ -460,9 +459,9 @@ class Group(Object):
         name: str
             name of the existing child
         """
+        assert_file_writable(self.file)
         exob._remove_object_directory(self[name].directory)
 
-    @assert_file_open
     def keys(self):
         """
         Returns
@@ -470,9 +469,9 @@ class Group(Object):
         KeysView
             A view of the names of the objects in the group.
         """
+        assert_file_open(self.file)
         return abc.KeysView(self)
 
-    @assert_file_open
     def items(self):
         """
         Returns
@@ -480,9 +479,9 @@ class Group(Object):
         ItemsView
             A view of the keys and objects in the group.
         """
+        assert_file_open(self.file)
         return abc.ItemsView(self)
 
-    @assert_file_open
     def values(self):
         """
         Returns
@@ -490,26 +489,26 @@ class Group(Object):
         ValuesView
             A view of the objects in the group.
         """
+        assert_file_open(self.file)
         return abc.ValuesView(self)
 
-    @assert_file_open
     def __iter__(self):
         """
         Iterate over all the objects in the group.
         """
+        assert_file_open(self.file)
         # NOTE os.walk is way faster than os.listdir + os.path.isdir
         directories = next(os.walk(str(self.directory)))[1]
         for name in sorted(directories):
             yield name
 
-    @assert_file_open
     def __len__(self):
         """
         Number of objects in the group.
         """
+        assert_file_open(self.file)
         return len([a for a in self])
 
-    @assert_file_open
     def get(self, key):
         """
         Get an object in the group.
@@ -521,6 +520,7 @@ class Group(Object):
         -------
         Value or None if object does not exist.
         """
+        assert_file_open(self.file)
         if key in self:
             return self[key]
         else:

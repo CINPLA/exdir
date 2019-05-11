@@ -144,8 +144,8 @@ class Attribute(object):
             attrs = attrs[i]
         return attrs.values()
 
-    @assert_file_writable
     def _set_data(self, attrs):
+        assert_file_writable(self.file)
         plugins = self.file.plugin_manager.attribute_plugins.write_order
 
         if self.mode == self._Mode.ATTRIBUTES and len(plugins) > 0:
@@ -175,8 +175,8 @@ class Attribute(object):
             )
 
     # TODO only needs filename, make into free function
-    @assert_file_open
     def _open_or_create(self):
+        assert_file_open(self.file)
         attrs = {}
         if self.filename.exists():  # NOTE str for Python 3.5 support
             with self.filename.open("r", encoding="utf-8") as meta_file:
@@ -188,13 +188,13 @@ class Attribute(object):
             yield key
 
     @property
-    @assert_file_open
     def filename(self):
         """
         Returns
         -------
         The filename of the :code:`attributes.yaml` file.
         """
+        assert_file_open(self.file)
         if self.mode == self._Mode.METADATA:
             return self.parent.meta_filename
         else:

@@ -202,8 +202,8 @@ class Object(object):
         return self.root_directory / self.relative_path
 
     @property
-    @assert_file_open
     def attrs(self):
+        assert_file_open(self.file)
         return Attribute(
             self,
             mode=Attribute._Mode.ATTRIBUTES,
@@ -211,13 +211,13 @@ class Object(object):
         )
 
     @attrs.setter
-    @assert_file_open
     def attrs(self, value):
+        assert_file_open(self.file)
         self.attrs._set_data(value)
 
     @property
-    @assert_file_open
     def meta(self):
+        assert_file_open(self.file)
         return Attribute(
             self,
             mode=Attribute._Mode.METADATA,
@@ -232,9 +232,9 @@ class Object(object):
     def meta_filename(self):
         return self.directory / META_FILENAME
 
-    @assert_file_open
     def create_raw(self, name):
         from .raw import Raw
+        assert_file_open(self.file)
         _assert_valid_name(name, self)
         directory_name = self.directory / name
         if directory_name.exists():
@@ -247,9 +247,9 @@ class Object(object):
             file=self.file
         )
 
-    @assert_file_open
     def require_raw(self, name):
         from .raw import Raw
+        assert_file_open(self.file)
         directory_name = self.directory / name
         if directory_name.exists():
             if is_nonraw_object_directory(directory_name):
@@ -266,9 +266,9 @@ class Object(object):
         return self.create_raw(name)
 
     @property
-    @assert_file_open
     def parent(self):
         from .group import Group
+        assert_file_open(self.file)
         if len(self.parent_path.parts) < 1:
             return None
         parent_name = self.parent_path.name
