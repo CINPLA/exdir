@@ -9,6 +9,7 @@ except ImportError as e:
         raise e
 import numpy as np
 import exdir
+import pandas as pd
 try:
     import ruamel_yaml as yaml
 except ImportError:
@@ -129,22 +130,33 @@ class Group(Object):
             meta=exob._default_metadata(exob.DATASET_TYPENAME)
         )
 
-        _assert_data_shape_dtype_match(prepared_data, shape, dtype)
+        if not isinstance(data, pd.DataFrame):
 
-        shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
+            _assert_data_shape_dtype_match(prepared_data, shape, dtype)
 
-        if prepared_data is not None:
-            if shape is not None and prepared_data.shape != shape:
-                prepared_data = np.reshape(prepared_data, shape)
-        else:
-            if shape is None:
-                prepared_data = None
+            shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
+
+            if prepared_data is not None:
+                if shape is not None and prepared_data.shape != shape:
+                    prepared_data = np.reshape(prepared_data, shape)
             else:
-                fillvalue = fillvalue or 0.0
-                prepared_data = np.full(shape, fillvalue, dtype=dtype)
+                if shape is None:
+                    prepared_data = None
+                else:
+                    fillvalue = fillvalue or 0.0
+                    prepared_data = np.full(shape, fillvalue, dtype=dtype)
 
-        if prepared_data is None:
-            raise TypeError("Could not create a meaningful dataset.")
+            if prepared_data is None:
+                raise TypeError("Could not create a meaningful dataset.")
+        else:
+            if dtype is not None:
+                raise NotImplementedError(
+                    'We currently do not support forcing dtype on creating with'
+                    ' DataFrames.')
+            if shape is not None:
+                raise NotImplementedError(
+                    'We currently do not support reshape on creating with '
+                    'DataFrames.')
 
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, meta)
@@ -311,30 +323,30 @@ class Group(Object):
 
 
         # TODO verify proper attributes
+        if not isinstance(data, pd.DataFrame):
+            _assert_data_shape_dtype_match(data, shape, dtype)
+            shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
-        _assert_data_shape_dtype_match(data, shape, dtype)
-        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
-
-        if not np.array_equal(shape, current_object.shape):
-            raise TypeError(
-                "Shapes do not match (existing {} vs "
-                "new {})".format(current_object.shape, shape)
-            )
-
-        if dtype != current_object.dtype:
-            if exact:
+            if not np.array_equal(shape, current_object.shape):
                 raise TypeError(
-                    "Datatypes do not exactly match "
-                    "existing {} vs new {})".format(current_object.dtype, dtype)
+                    "Shapes do not match (existing {} vs "
+                    "new {})".format(current_object.shape, shape)
                 )
 
-            if not np.can_cast(dtype, current_object.dtype):
-                raise TypeError(
-                    "Cannot safely cast from {} to {}".format(
-                        dtype,
-                        current_object.dtype
+            if dtype != current_object.dtype:
+                if exact:
+                    raise TypeError(
+                        "Datatypes do not exactly match "
+                        "existing {} vs new {})".format(current_object.dtype, dtype)
                     )
-                )
+
+                if not np.can_cast(dtype, current_object.dtype):
+                    raise TypeError(
+                        "Cannot safely cast from {} to {}".format(
+                            dtype,
+                            current_object.dtype
+                        )
+                    )
 
         return current_object
 
@@ -480,8 +492,7 @@ class Group(Object):
             raise RuntimeError(
                 "Unable to assign value, {} already exists".format(name)
             )
-
-        self[name].value = value
+        self[name].data = value
 
     def __delitem__(self, name):
         """

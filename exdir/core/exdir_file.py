@@ -170,8 +170,8 @@ class File(Group):
             # there are no way to close the memmap other than deleting all
             # references to it, thus
             try:
-                data_set._data_memmap.flush()
-                data_set._data_memmap.setflags(write=False) # TODO does not work
+                data_set._data_loaded.flush()
+                data_set._data_loaded.setflags(write=False) # TODO does not work
             except AttributeError:
                 pass
         # force garbage collection to clean weakrefs
