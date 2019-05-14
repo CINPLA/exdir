@@ -1,10 +1,3 @@
-try:
-    import pathlib
-except ImportError as e:
-    try:
-        import pathlib2 as pathlib
-    except ImportError:
-        raise e
 from . import exdir_file
 from .exdir_object import Object, is_nonraw_object_directory
 from .constants import *
@@ -67,3 +60,13 @@ class ExternalLink(Link):
 
     def __repr__(self):
         return "Exdir SoftLink '{}' at {}".format(self.path, id(self))
+
+
+class Reference(object):
+    def __init__(self, path):
+        self.path = path
+
+
+class RegionReference(Reference):
+    def __init__(self, path).
+        self.path = path
