@@ -128,6 +128,9 @@ class Dataset(exob.Object):
                 self._data_loaded = feather.read_feather(str(data_filename))
             self.file._open_datasets[self.name] = self
         except ValueError as e:
+            # Could be that numpy needs to pickle, suggest the user to use
+            # dataframe
+            
             # Could be that it is a Git LFS file.
             # Let's see if that is the case and warn if so.
             with open(str(data_filename), "r") as f:
@@ -216,7 +219,7 @@ class Dataset(exob.Object):
             if hasattr(self._data, 'dtype'):
                 new_dtype = self._data.dtype != value.dtype
             else:
-                new_dtype = True # changing from feather to numpy 
+                new_dtype = True # changing from feather to numpy
             if self._data.shape != value.shape or new_dtype:
                 value, attrs, meta = _prepare_write(
                     data=value,

@@ -39,7 +39,27 @@ from exdir.core import Attribute, File, Dataset
 #     return False
 
 
-# Feature: Datasets can be created from a shape only
+# NOTE feather converts integer column names to str
+def dataframe_equal(orig_df, new_df):
+    columns = []
+    for col1, col2 in zip(orig_df.columns, new_df.columns):
+        try:
+            columns.append(int(col2)==int(col1))
+        except:
+            columns.append(col2==col1)
+    index = []
+    for row1, row2 in zip(orig_df.index, new_df.index):
+        try:
+            index.append(int(row2)==int(row1))
+        except:
+            index.append(row2==row1)
+    result = (
+        np.array_equal(orig_df.values, new_df.values) and
+        all(columns) and
+        all(index)
+    )
+    return result
+
 
 def test_create_empty(setup_teardown_file):
     """Create a scalar dataset."""
@@ -59,7 +79,7 @@ def test_create_scalar(setup_teardown_file):
     dset = grp.create_dataset('foo', data=data)
     assert dset.shape == (1,1)
     assert dset.shape == dset.data.shape
-    assert data.values == dset.data.values
+    assert dataframe_equal(data, dset.data)
 
 
 def test_create_extended(setup_teardown_file):
@@ -133,6 +153,7 @@ def test_reshape(setup_teardown_file):
     with pytest.raises(NotImplementedError):
         dset = grp.create_dataset('foo', shape=(10, 3), data=data)
 
+
 # # Feature: Datasets can be created only if they don't exist in the file
 def test_create(setup_teardown_file):
     """Create new dataset with no conflicts."""
@@ -144,8 +165,11 @@ def test_create(setup_teardown_file):
     assert isinstance(dset, Dataset)
     assert dset.shape == (10, 3)
 
+    with pytest.raises(RuntimeError):
+        grp.create_dataset('foo', (10, 3))
 
-def test_create_existing(setup_teardown_file):
+
+def test_create_existing_shape_mismatch(setup_teardown_file):
     """require_dataset yields existing dataset."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")
@@ -155,94 +179,84 @@ def test_create_existing(setup_teardown_file):
     dset2 = grp.require_dataset('bar', data=data2)
     dset3 = grp.require_dataset('bar', data=data3)
     assert isinstance(dset2, Dataset)
-    assert np.array_equal(dset2.data.values, data2.values)
-    assert np.array_equal(dset3.data.values, data2.values)
+    assert dataframe_equal(dset2.data, data2)
+    assert dataframe_equal(dset3.data, data2)
     assert dset2 == dset3
-#
-#
-# def test_shape_conflict(setup_teardown_file):
-#     """require_dataset with shape conflict yields TypeError."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     grp.create_dataset('foo', (10, 3), 'f')
-#     with pytest.raises(TypeError):
-#         grp.require_dataset('foo', (10, 4), 'f')
-#
-#
-# def test_type_confict(setup_teardown_file):
-#     """require_dataset with object type conflict yields TypeError."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     grp.create_group('foo')
-#     with pytest.raises(TypeError):
-#         grp.require_dataset('foo', (10, 3), 'f')
-#
-#
-# def test_dtype_conflict(setup_teardown_file):
-#     """require_dataset with dtype conflict (strict mode) yields TypeError."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     dset = grp.create_dataset('foo', (10, 3), 'f')
-#     with pytest.raises(TypeError):
-#         grp.require_dataset('foo', (10, 3), 'S10')
-#
-#
-# def test_dtype_close(setup_teardown_file):
-#     """require_dataset with convertible type succeeds (non-strict mode)-"""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     dset = grp.create_dataset('foo', (10, 3), 'i4')
-#     dset2 = grp.require_dataset('foo', (10, 3), 'i2', exact=False)
-#     assert dset == dset2
-#     assert dset2.dtype == np.dtype('i4')
-#
-#
-# # Feature: Datasets can be created with fill value
-#
-# def test_create_fillval(setup_teardown_file):
-#     """Fill value is reflected in dataset contents."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     dset = grp.create_dataset('foo', (10,), fillvalue=4.0)
-#     assert dset[0] == 4.0
-#     assert dset[7] == 4.0
-#
-#
-#
-# def test_compound(setup_teardown_file):
-#     """Fill value works with compound types."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     dt = np.dtype([('a', 'f4'), ('b', 'i8')])
-#     v = np.ones((1,), dtype=dt)[0]
-#     dset = grp.create_dataset('foo', (10,), dtype=dt, fillvalue=v)
-#
-#
-# def test_exc(setup_teardown_file):
-#     """Bogus fill value raises TypeError."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     with pytest.raises(TypeError):
-#         grp.create_dataset('foo', (10,), dtype="float32", fillvalue={"a": 2})
-#
-#
-# def test_string(setup_teardown_file):
-#     """Assignement of fixed-length byte string produces a fixed-length
-#     ascii dataset """
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     dset = grp.create_dataset('foo', data="string")
-#     assert dset.data == "string"
-#
-#
+
+
+def test_create_existing_same_shape(setup_teardown_file):
+    """require_dataset yields existing dataset."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    data2 = pd.DataFrame((3, 10))
+    data3 = pd.DataFrame((4, 11))
+    dset2 = grp.require_dataset('bar', data=data2)
+    dset3 = grp.require_dataset('bar', data=data3)
+    assert isinstance(dset2, Dataset)
+    assert dataframe_equal(dset2.data, data2)
+    assert dataframe_equal(dset3.data, data2)
+    assert dset2 == dset3
+
+
+def test_create_existing_df_to_npy(setup_teardown_file):
+    """require_dataset yields existing dataset."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    data2 = pd.DataFrame((3, 10))
+    data3 = np.zeros((1, 2))
+    dset2 = grp.require_dataset('bar', data=data2)
+    with pytest.raises(IOError):
+        grp.require_dataset('bar', data=data3)
+
+
+def test_create_existing_npy_to_df(setup_teardown_file):
+    """require_dataset yields existing dataset."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    data2 = np.zeros((1, 2))
+    data3 = pd.DataFrame((3, 10))
+    dset2 = grp.require_dataset('bar', data=data2)
+    with pytest.raises(IOError):
+        grp.require_dataset('bar', data=data3)
+
+
+def test_compound(setup_teardown_file):
+    """Fill value works with compound types."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    dt = np.dtype([('a', 'f4'), ('b', 'i8')])
+    v = np.ones((1,), dtype=dt)
+    data = pd.DataFrame(v)
+    dset = grp.create_dataset('foo', data=data)
+    assert dataframe_equal(dset.data, data)
+
+
+def test_variable_length_string(setup_teardown_file):
+    """Assignement of variable-length byte string produces a fixed-length
+    ascii dataset """
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    values = np.array(['aaaa', 'aaaaaaaa'])
+    data = pd.DataFrame(values)
+
+    dset = grp.create_dataset('foo', data=data)
+    assert dataframe_equal(dset.data, data)
+
+
+def test_variable_length_string_numpy(setup_teardown_file):
+    """Assignement of variable-length byte string produces a fixed-length
+    ascii dataset """
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    data = np.array(['aaaa', 'aaaaaaaa'])
+    # with pytest.raises(IOError):
+    grp.create_dataset('foo', data=data)
+
+
 #
 # # Feature: Dataset dtype is available as .dtype property
 #
