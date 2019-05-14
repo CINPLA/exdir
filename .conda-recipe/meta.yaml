@@ -23,6 +23,7 @@ requirements:
     - numpy
     - scipy
     - ruamel_yaml
+    - pandas
     - pyyaml
     - pathlib # [py2k]
     - enum34  # [py2k]
@@ -34,6 +35,7 @@ test:
     - pytest
     - pytest-benchmark
     - h5py
+    - pandas
     - six
     - coverage
     - codecov
