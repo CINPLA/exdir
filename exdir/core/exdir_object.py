@@ -112,7 +112,8 @@ def is_nonraw_object_directory(directory):
             return False
         if TYPE_METANAME not in meta_data[EXDIR_METANAME]:
             return False
-        valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
+        valid_types = [
+            DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME, LINK_METANAME]
         if meta_data[EXDIR_METANAME][TYPE_METANAME] not in valid_types:
             return False
     return True
