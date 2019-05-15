@@ -34,9 +34,11 @@ def _dataset_filename(dataset_directory):
     base = dataset_directory / "data"
     if base.with_suffix(FEATHER_SUFFIX).exists():
         filename = base.with_suffix(FEATHER_SUFFIX)
+        is_numpy = False
     else:
         filename = base.with_suffix(NUMPY_SUFFIX)
-    return filename
+        is_numpy = True
+    return filename, is_numpy
 
 
 class Dataset(exob.Object):
@@ -96,6 +98,7 @@ class Dataset(exob.Object):
 
     def __setitem__(self, args, value):
         assert_file_writable(self.file)
+        data_filename, is_numpy = _dataset_filename(self.directory)
 
         value, attrs, meta = _prepare_write(
             data=value,
@@ -103,13 +106,20 @@ class Dataset(exob.Object):
             attrs=self.attrs.to_dict(),
             meta=self.meta.to_dict()
         )
-        self._data[args] = value
+        if is_numpy:
+            self._data[args] = value
+        else:
+            self._data[args] = value
+            self.flush()
         self.attrs = attrs
         self.meta._set_data(meta)
 
+    def flush(self):
+        self.data = self._data
+
     def _reload_data(self):
         assert_file_open(self.file)
-        data_filename = _dataset_filename(self.directory)
+        data_filename, is_numpy = _dataset_filename(self.directory)
         for plugin in self.plugin_manager.dataset_plugins.write_order:
             plugin.before_load(str(data_filename))
 
@@ -120,7 +130,7 @@ class Dataset(exob.Object):
             mmap_mode = "r+"
 
         try:
-            if data_filename.suffix == NUMPY_SUFFIX:
+            if is_numpy:
                 self._data_loaded = np.load(
                     str(data_filename),
                     mmap_mode=mmap_mode, allow_pickle=False)
@@ -130,7 +140,7 @@ class Dataset(exob.Object):
         except ValueError as e:
             # Could be that numpy needs to pickle, suggest the user to use
             # dataframe
-            
+
             # Could be that it is a Git LFS file.
             # Let's see if that is the case and warn if so.
             with open(str(data_filename), "r") as f:
@@ -145,7 +155,7 @@ class Dataset(exob.Object):
 
     def _reset_data(self, value, attrs, meta):
         assert_file_open(self.file)
-        data_filename = _dataset_filename(self.directory)
+        data_filename, _ = _dataset_filename(self.directory)
         if isinstance(value, pd.DataFrame):
             feather.write_feather(
                 value, str(data_filename.with_suffix(FEATHER_SUFFIX)))
@@ -304,8 +314,8 @@ class Dataset(exob.Object):
         if len(self.shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
 
-        for i in range(self.shape[0]):
-            yield self[i]
+        for val in self.data:
+            yield val
 
     def __str__(self):
         return self.data.__str__()

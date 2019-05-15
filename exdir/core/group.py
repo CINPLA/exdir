@@ -323,11 +323,12 @@ class Group(Object):
 
 
         # TODO verify proper attributes
-        if not isinstance(data, type(current_object.data)):
-            raise IOError(
-                'Not allowed to change data instance with "require_dataset"'
-                '(existing {} vs new {}), set data if a change is desired.'
-                ''.format(type(current_object.data), type(data)))
+        if any(isinstance(a, pd.DataFrame) for a in [data, current_object.data]):
+            if not isinstance(data, type(current_object.data)):
+                raise IOError(
+                    'Not allowed to require different data instance with'
+                    '(existing {} vs new {}), set data if a change is desired.'
+                    ''.format(type(current_object.data), type(data)))
         if not isinstance(data, pd.DataFrame):
             _assert_data_shape_dtype_match(data, shape, dtype)
             shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
