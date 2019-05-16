@@ -41,7 +41,7 @@ def test_external_links(setup_teardown_file):
     assert '/grp/external/something' not in f
 
 
-def test_get_link(setup_teardown_file):
+def test_getlink(setup_teardown_file):
     """ Get link values """
     f = setup_teardown_file[3]
     g = File(setup_teardown_file[0] / 'somewhere.exdir')
@@ -53,8 +53,8 @@ def test_get_link(setup_teardown_file):
     f['soft'] = sl
     f['external'] = el
 
-    out_sl = f.get('soft', get_link=True)
-    out_el = f.get('external', get_link=True)
+    out_sl = f.get('soft', getlink=True)
+    out_el = f.get('external', getlink=True)
 
     assert isinstance(out_sl, SoftLink)
     assert out_sl == sl

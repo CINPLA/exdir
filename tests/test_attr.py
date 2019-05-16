@@ -20,6 +20,7 @@ except ImportError:
     import ruamel.yaml as yaml
 
 from exdir.core import Attribute, File
+from exdir.plugins import numpy_attributes
 import six
 
 def test_attr_init():
@@ -35,6 +36,16 @@ def test_create(setup_teardown_file):
     """Attribute creation by direct assignment."""
     f = setup_teardown_file[3]
     f.attrs["a"] = 4.0
+    assert list(f.attrs.keys()) == ["a"]
+    assert f.attrs["a"] == 4.0
+
+
+def test_numpy_int(setup_teardown_folder):
+    """Attribute creation by direct assignment."""
+    f = File(
+        setup_teardown_folder[1], 'w',
+        plugins=[numpy_attributes])
+    f.attrs["a"] = np.int64(4.0)
     assert list(f.attrs.keys()) == ["a"]
     assert f.attrs["a"] == 4.0
 

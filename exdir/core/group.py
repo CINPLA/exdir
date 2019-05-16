@@ -20,7 +20,7 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
-from .links import Link, SoftLink, ExternalLink, Reference
+from .links import Link, SoftLink, ExternalLink, Reference, HardLink
 from .mode import assert_file_open, OpenMode, assert_file_writable
 from . import exdir_object as exob
 from . import exdir_file as exfile
@@ -161,7 +161,6 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, meta)
 
         dataset = self._dataset(name)
-        print(dtype)
         if dtype in [exdir.ref_dtype, exdir.regionref_dtype]:
             prepared_data = pd.DataFrame(prepared_data)
             dataset.meta['has_ref'] = True
@@ -444,16 +443,20 @@ class Group(Object):
             )
             raise NotImplementedError(error_string)
 
-    def _link(self, name, get_link=False):
-        link_meta = self._group(name).meta[exob.EXDIR_METANAME][exob.LINK_METANAME]
-        print(link_meta)
+    def _link(self, name, getlink=False):
+        group = self._group(name)
+        link_meta = group.meta[exob.EXDIR_METANAME].get(exob.LINK_METANAME)
+        if link_meta is None:
+            if getlink:
+                return HardLink(name)
+            raise KeyError('Unable to retrieve link from {}'.format(group.name))
         if link_meta[exob.TYPE_METANAME] == exob.LINK_SOFTNAME:
-            if get_link:
+            if getlink:
                 result = SoftLink(link_meta[exob.LINK_TARGETNAME])
             else:
                 result = self[link_meta[exob.LINK_TARGETNAME]]
         elif link_meta[exob.TYPE_METANAME] == exob.LINK_EXTERNALNAME:
-            if get_link:
+            if getlink:
                 result = ExternalLink(
                     link_meta[exob.LINK_FILENAME],
                     link_meta[exob.LINK_TARGETNAME])
@@ -565,7 +568,16 @@ class Group(Object):
         assert_file_open(self.file)
         return len([a for a in self])
 
-    def get(self, name, get_link=False):
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir Group>"
+        return "<Exdir Group '{}'>".format(
+            self.directory)
+
+    def _ipython_key_completions_(self):
+        return self.keys()
+
+    def get(self, name, getlink=False):
         """
         Get an object in the group.
         Parameters
@@ -578,11 +590,8 @@ class Group(Object):
         """
         assert_file_open(self.file)
         if name in self:
-            if get_link:
-                return self._link(name, get_link)
+            if getlink:
+                return self._link(name, getlink)
             return self[name]
         else:
             return None
-
-    def _ipython_key_completions_(self):
-        return self.keys()

@@ -3,7 +3,8 @@ from . import plugin_interface
 from . import plugins
 from .core import (
     File, validation, Attribute, Dataset, Group, Raw, Object, SoftLink,
-    ExternalLink, ref_dtype, regionref_dtype, Reference, RegionReference
+    ExternalLink, ref_dtype, regionref_dtype, Reference, RegionReference,
+    special_dtype, check_dtype
 )
 
 # TODO remove versioneer

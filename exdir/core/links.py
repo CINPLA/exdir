@@ -37,6 +37,20 @@ class SoftLink(Link):
         return "Exdir SoftLink '{}' at {}".format(self.path, id(self))
 
 
+class HardLink(Link):
+    def __init__(self, path):
+        super(HardLink, self).__init__(
+            path=path
+        )
+
+    @property
+    def _link(self):
+        raise NotImplementedError('HardLink is not possible to use')
+
+    def __repr__(self):
+        return "Exdir HardLink '{}' at {}".format(self.path, id(self))
+
+
 class ExternalLink(Link):
     def __init__(self, filename, path):
         super(ExternalLink, self).__init__(

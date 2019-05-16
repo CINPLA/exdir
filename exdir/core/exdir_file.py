@@ -75,6 +75,7 @@ class File(Group):
         directory = pathlib.Path(directory).absolute() #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
+        self.filename = directory
         self.user_mode = mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:

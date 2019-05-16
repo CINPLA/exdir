@@ -296,10 +296,10 @@ class Object(object):
             return False
         if not isinstance(other, Object):
             return False
-        return (
-            self.relative_path == other.relative_path and
-            self.root_directory == other.root_directory
-        )
+        return self.__hash__() == other.__hash__()
+
+    def __hash__(self):
+        return hash(str(self.relative_path) + str(self.root_directory))
 
     def __bool__(self):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
@@ -310,9 +310,3 @@ class Object(object):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
             return None
         return exdir.utils.display.html_tree(self)
-
-    def __repr__(self):
-        if self.file.io_mode == OpenMode.FILE_CLOSED:
-            return "<Closed Exdir Group>"
-        return "<Exdir Group '{}' (mode {})>".format(
-            self.directory, self.file.user_mode)
