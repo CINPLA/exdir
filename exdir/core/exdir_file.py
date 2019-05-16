@@ -13,6 +13,7 @@ import warnings
 import exdir
 from . import exdir_object as exob
 from .group import Group
+from .links import Reference
 from .. import utils
 from .mode import OpenMode
 from . import validation
@@ -215,6 +216,8 @@ class File(Group):
         return super(File, self).require_group(path)
 
     def __getitem__(self, name):
+        if isinstance(name, Reference):
+            name = name.path
         path = utils.path.remove_root(name)
         if len(path.parts) < 1:
             return self

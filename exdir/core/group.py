@@ -20,7 +20,7 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
-from .links import Link, SoftLink, ExternalLink
+from .links import Link, SoftLink, ExternalLink, Reference
 from .mode import assert_file_open, OpenMode, assert_file_writable
 from . import exdir_object as exob
 from . import exdir_file as exfile
@@ -145,7 +145,6 @@ class Group(Object):
                 else:
                     fillvalue = fillvalue or 0.0
                     prepared_data = np.full(shape, fillvalue, dtype=dtype)
-
             if prepared_data is None:
                 raise TypeError("Could not create a meaningful dataset.")
         else:
@@ -162,6 +161,11 @@ class Group(Object):
         exob._create_object_directory(dataset_directory, meta)
 
         dataset = self._dataset(name)
+        print(dtype)
+        if dtype in [exdir.ref_dtype, exdir.regionref_dtype]:
+            prepared_data = pd.DataFrame(prepared_data)
+            dataset.meta['has_ref'] = True
+
         dataset._reset_data(prepared_data, attrs, None)  # meta already set above
         return dataset
 
@@ -390,6 +394,8 @@ class Group(Object):
             if the name does not correspond to an exdir object in the group
         """
         assert_file_open(self.file)
+        if isinstance(name, Reference):
+            name = name.path
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]

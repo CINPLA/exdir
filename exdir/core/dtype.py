@@ -1,8 +1,8 @@
 from numpy import dtype
 from .links import Reference, RegionReference
 
-ref_dtype = dtype('O', metadata={'ref': Reference})
-regionref_dtype = dtype('O', metadata={'ref': RegionReference})
+ref_dtype = dtype(str, metadata={'ref': Reference})
+regionref_dtype = dtype(str, metadata={'ref': RegionReference})
 
 
 def special_dtype(**kwds):

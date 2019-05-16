@@ -1,9 +1,7 @@
-from . import exdir_file
-from .exdir_object import Object, is_nonraw_object_directory
 from .constants import *
 
 
-class Link(Object):
+class Link(object):
     """
     Super class for link objects
     """
@@ -63,10 +61,23 @@ class ExternalLink(Link):
 
 
 class Reference(object):
+    base = '!exdir:ref'
     def __init__(self, path):
+        if self.base in path:
+            base, path = path.split(' ')
+            assert base == self.base
         self.path = path
+        self.ref = '{} {}'.format(self.base, path)
 
 
 class RegionReference(Reference):
-    def __init__(self, path).
+    base = '!exdir:regionref'
+    def __init__(self, path):
+        if self.base in path:
+            base, path, region = path.split(' ')
+            assert base == self.base
         self.path = path
+
+    def __getitem__(self, args):
+        self.ref = '{} {} {}'.format(self.base, self.path, args)
+        return self

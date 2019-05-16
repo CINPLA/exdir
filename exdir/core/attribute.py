@@ -203,6 +203,12 @@ class Attribute(object):
     def __len__(self):
         return len(self.keys())
 
+    def get(self, name):
+        if name in self:
+            return self[name]
+        else:
+            return None
+
     def update(self, value):
         """
         Update the Attribute with the key/value pairs from :code:`value`, overwriting existing keys.

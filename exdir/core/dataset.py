@@ -5,6 +5,7 @@ import pandas as pd
 import exdir
 
 from . import exdir_object as exob
+from .links import Reference, RegionReference
 from .mode import assert_file_open, OpenMode, assert_file_writable
 
 NUMPY_SUFFIX = '.npy'
@@ -62,10 +63,24 @@ class Dataset(exob.Object):
 
     def __getitem__(self, args):
         assert_file_open(self.file)
+
+        if self.meta.get('has_ref'):
+            refs = self._data.values[args]
+            Refs = []
+            for ref in refs:
+                if Reference.base in ref:
+                    Refs.append(Reference(ref))
+                elif RegionReference.base in ref:
+                    Refs.append(RegionReference(ref))
+            if len(Refs) == 1:
+                return Refs[0]
+            return Refs
+
         if len(self._data.shape) == 0:
             values = self._data
         else:
             values = self._data[args]
+
 
         enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
 
@@ -98,7 +113,13 @@ class Dataset(exob.Object):
 
     def __setitem__(self, args, value):
         assert_file_writable(self.file)
-        data_filename, is_numpy = _dataset_filename(self.directory)
+
+        if self.meta.get('has_ref'):
+            self._data.values[args] = value.ref
+            self.flush()
+            return
+
+        _, is_numpy = _dataset_filename(self.directory)
 
         value, attrs, meta = _prepare_write(
             data=value,
@@ -106,6 +127,7 @@ class Dataset(exob.Object):
             attrs=self.attrs.to_dict(),
             meta=self.meta.to_dict()
         )
+
         if is_numpy:
             self._data[args] = value
         else:

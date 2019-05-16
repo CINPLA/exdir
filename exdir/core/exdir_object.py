@@ -24,6 +24,8 @@ from .. import utils
 from .attribute import Attribute
 from .constants import *
 from .mode import assert_file_open, OpenMode
+from .links import Reference, RegionReference
+
 
 def _resolve_path(path):
     return pathlib.Path(path).resolve()
@@ -265,6 +267,14 @@ class Object(object):
             )
 
         return self.create_raw(name)
+
+    @property
+    def ref(self):
+        return Reference(self.name)
+
+    @property
+    def regionref(self):
+        return RegionReference(self.name)
 
     @property
     def parent(self):
