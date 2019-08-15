@@ -23,11 +23,10 @@ class Raw(exob.Object):
         >>> directory = raw.directory
 
     """
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None, plugin_manager=None):
+    def __init__(self, root_directory, parent_path, object_name, file):
         super(Raw, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
-            io_mode=io_mode,
-            plugin_manager=plugin_manager
+            file=file
         )

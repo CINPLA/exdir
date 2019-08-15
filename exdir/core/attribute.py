@@ -7,6 +7,8 @@ try:
 except ImportError:
     import ruamel.yaml as yaml
 
+from .mode import assert_file_open, OpenMode, assert_file_writable
+
 def _quote_strings(value):
     if isinstance(value, str):
         return yaml.scalarstring.DoubleQuotedScalarString(value)
@@ -65,19 +67,18 @@ class Attribute(object):
         ATTRIBUTES = 1
         METADATA = 2
 
-    def __init__(self, parent, mode, io_mode, path=None, plugin_manager=None):
+    def __init__(self, parent, mode, file, path=None):
         self.parent = parent
         self.mode = mode
-        self.io_mode = io_mode
+        self.file = file
         self.path = path or []
-        self.plugin_manager = plugin_manager
 
     def __getitem__(self, name=None):
         attrs = self._open_or_create()
 
         if self.mode == self._Mode.ATTRIBUTES:
             meta = self.parent.meta.to_dict()
-            for plugin in self.plugin_manager.attribute_plugins.read_order:
+            for plugin in self.file.plugin_manager.attribute_plugins.read_order:
                 attribute_data = exdir.plugin_interface.AttributeData(
                     attrs=attrs,
                     meta=meta
@@ -93,8 +94,7 @@ class Attribute(object):
             attrs = attrs[name]
         if isinstance(attrs, dict):
             return Attribute(
-                self.parent, self.mode, self.io_mode, self.path + [name],
-                plugin_manager=self.plugin_manager
+                self.parent, self.mode, self.file, self.path + [name]
             )
         else:
             return attrs
@@ -111,6 +111,8 @@ class Attribute(object):
         self._set_data(attrs)
 
     def __contains__(self, name):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return False
         attrs = self._open_or_create()
         for i in self.path:
             attrs = attrs[i]
@@ -141,7 +143,7 @@ class Attribute(object):
                 attrs=attrs,
                 meta=meta
             )
-            for plugin in self.plugin_manager.attribute_plugins.read_order:
+            for plugin in self.file.plugin_manager.attribute_plugins.read_order:
                 attribute_data = plugin.prepare_read(attribute_data)
 
                 attrs = attribute_data.attrs
@@ -171,14 +173,8 @@ class Attribute(object):
         return attrs.values()
 
     def _set_data(self, attrs):
-        # Importing here is a workaround for Python 2.7. It could be avoided if OpenMode was
-        # in a separate file
-        from exdir.core.exdir_object import Object
-
-        if self.io_mode == Object.OpenMode.READ_ONLY:
-            raise IOError("Cannot write in read only ("r") mode")
-
-        plugins = self.plugin_manager.attribute_plugins.write_order
+        assert_file_writable(self.file)
+        plugins = self.file.plugin_manager.attribute_plugins.write_order
 
         if self.mode == self._Mode.ATTRIBUTES and len(plugins) > 0:
             meta = self.parent.meta.to_dict()
@@ -208,6 +204,7 @@ class Attribute(object):
 
     # TODO only needs filename, make into free function
     def _open_or_create(self):
+        assert_file_open(self.file)
         attrs = {}
         if self.filename.exists():  # NOTE str for Python 3.5 support
             with self.filename.open("r", encoding="utf-8") as meta_file:
@@ -225,6 +222,7 @@ class Attribute(object):
         -------
         The filename of the :code:`attributes.yaml` file.
         """
+        assert_file_open(self.file)
         if self.mode == self._Mode.METADATA:
             return self.parent.meta_filename
         else:
@@ -243,10 +241,20 @@ class Attribute(object):
             self[key] = value[key]
 
     def __str__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Attributes of closed Exdir object>"
         string = ""
         for key in self:
             string += "{}: {},".format(key, self[key])
         return "Attribute({}, {{{}}})".format(self.parent.name, string)
 
     def _repr_html_(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return False
         return exdir.utils.display.html_attrs(self)
+
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Attributes of closed Exdir object>"
+        return "Attributes of Exdir object '{}' at '{}'".format(
+            self.parent.name, id(self))

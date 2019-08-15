@@ -1,5 +1,6 @@
 import os
 import shutil
+import weakref
 try:
     import pathlib
 except ImportError as e:
@@ -13,6 +14,8 @@ import exdir
 from . import exdir_object as exob
 from .group import Group
 from .. import utils
+from .mode import OpenMode
+from . import validation
 
 
 class File(Group):
@@ -74,15 +77,12 @@ class File(Group):
     """
 
     def __init__(self, directory, mode=None, allow_remove=False,
-                 name_validation=None, plugins=None, validate_name=None):
-        if validate_name is not None:
-            warnings.warn("validate_name is deprecated. Use name_validation instead.")
-            name_validation = name_validation or validate_name
-
+                 name_validation=None, plugins=None):
+        self._open_datasets = weakref.WeakValueDictionary({})
         directory = pathlib.Path(directory) #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
-        mode = mode or 'a'
+        self.user_mode = mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
             raise ValueError(
@@ -90,20 +90,44 @@ class File(Group):
                 "mode must be one of {}".format(mode, recognized_modes)
             )
 
-        plugin_manager = exdir.plugin_interface.plugin_interface.Manager(plugins)
+        self.plugin_manager = exdir.plugin_interface.plugin_interface.Manager(plugins)
+
+        name_validation = name_validation or validation.thorough
+
+        if isinstance(name_validation, str):
+            if name_validation == 'simple':
+                name_validation = validation.thorough
+            elif name_validation == 'thorough':
+                name_validation = validation.thorough
+            elif name_validation == 'strict':
+                name_validation = validation.strict
+            elif name_validation == 'none':
+                name_validation = validation.none
+            else:
+                raise ValueError(
+                    'IO name rule "{}" not recognized, '
+                    'name rule must be one of "strict", "simple", '
+                    '"thorough", "none"'.format(name_validation)
+                )
+
+            warnings.warn(
+                "WARNING: name_validation should be set to one of the functions in "
+                "the exdir.validation module. "
+                "Defining naming rule by string is no longer supported."
+            )
+
+        self.name_validation = name_validation
 
         if mode == "r":
-            self.io_mode = self.OpenMode.READ_ONLY
+            self.io_mode = OpenMode.READ_ONLY
         else:
-            self.io_mode = self.OpenMode.READ_WRITE
+            self.io_mode = OpenMode.READ_WRITE
 
         super(File, self).__init__(
             root_directory=directory,
             parent_path=pathlib.PurePosixPath(""),
             object_name="",
-            io_mode=self.io_mode,
-            name_validation=name_validation,
-            plugin_manager=plugin_manager
+            file=self
         )
 
         already_exists = directory.exists()
@@ -146,10 +170,27 @@ class File(Group):
     def close(self):
         """
         Closes the File object.
-        Currently, this has no effect because all data is immediately written to disk.
+        Sets the OpenMode to FILE_CLOSED which denies access to any attribute or
+        child
         """
-        # yeah right, as if we would create a real file format
-        pass
+        import gc
+        for name, data_set in self._open_datasets.items():
+            # there are no way to close the memmap other than deleting all
+            # references to it, thus
+            try:
+                data_set._data_memmap.flush()
+                data_set._data_memmap.setflags(write=False) # TODO does not work
+            except AttributeError:
+                pass
+        # force garbage collection to clean weakrefs
+        gc.collect()
+        self.io_mode = OpenMode.FILE_CLOSED
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def create_group(self, name):
         """
@@ -190,3 +231,9 @@ class File(Group):
     def __contains__(self, name):
         path = utils.path.remove_root(name)
         return super(File, self).__contains__(path)
+
+    def __repr__(self):
+        if self.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir File>"
+        return "<Exdir File '{}' (mode {})>".format(
+            self.directory, self.user_mode)

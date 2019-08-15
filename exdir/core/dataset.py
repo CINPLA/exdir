@@ -3,7 +3,7 @@ import numpy as np
 import exdir
 
 from . import exdir_object as exob
-
+from .mode import assert_file_open, OpenMode, assert_file_writable
 
 def _prepare_write(data, plugins, attrs, meta):
     for plugin in plugins:
@@ -65,21 +65,19 @@ class Dataset(exob.Object):
         This class modifies the view and it is possible to overwrite
         an existing dataset, which is different from the behavior in h5py.
     """
-    def __init__(self, root_directory, parent_path, object_name, io_mode=None,
-                 name_validation=None, plugin_manager=None):
+    def __init__(self, root_directory, parent_path, object_name, file):
         super(Dataset, self).__init__(
             root_directory=root_directory,
             parent_path=parent_path,
             object_name=object_name,
-            io_mode=io_mode,
-            name_validation=name_validation,
-            plugin_manager=plugin_manager
+            file=file
         )
         self._data_memmap = None
-
+        self.plugin_manager = file.plugin_manager
         self.data_filename = str(_dataset_filename(self.directory))
 
     def __getitem__(self, args):
+        assert_file_open(self.file)
         if len(self._data.shape) == 0:
             values = self._data
         else:
@@ -115,10 +113,8 @@ class Dataset(exob.Object):
 
         return data
 
-
     def __setitem__(self, args, value):
-        if self.io_mode == self.OpenMode.READ_ONLY:
-            raise IOError('Cannot write data to file in read only ("r") mode')
+        assert_file_writable(self.file)
 
         value, attrs, meta = _prepare_write(
             data=value,
@@ -131,16 +127,18 @@ class Dataset(exob.Object):
         self.meta._set_data(meta)
 
     def _reload_data(self):
+        assert_file_open(self.file)
         for plugin in self.plugin_manager.dataset_plugins.write_order:
             plugin.before_load(self.data_filename)
 
-        if self.io_mode == self.OpenMode.READ_ONLY:
+        if self.file.io_mode == OpenMode.READ_ONLY:
             mmap_mode = "r"
         else:
             mmap_mode = "r+"
 
         try:
             self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode, allow_pickle=False)
+            self.file._open_datasets[self.name] = self
         except ValueError as e:
             # Could be that it is a Git LFS file. Let's see if that is the case and warn if so.
             with open(self.data_filename, "r") as f:
@@ -154,6 +152,7 @@ class Dataset(exob.Object):
                     raise e
 
     def _reset_data(self, value, attrs, meta):
+        assert_file_open(self.file)
         self._data_memmap = np.lib.format.open_memmap(
             self.data_filename,
             mode="w+",
@@ -200,11 +199,23 @@ class Dataset(exob.Object):
         numpy.memmap
             The entire dataset.
         """
+        assert_file_open(self.file)
         return self[:]
 
     @data.setter
     def data(self, value):
-        self.value = value
+        assert_file_open(self.file)
+        if self._data.shape != value.shape or self._data.dtype != value.dtype:
+            value, attrs, meta = _prepare_write(
+                data=value,
+                plugins=self.plugin_manager.dataset_plugins.write_order,
+                attrs=self.attrs.to_dict(),
+                meta=self.meta.to_dict()
+            )
+            self._reset_data(value, attrs, meta)
+            return
+
+        self[:] = value
 
     @property
     def shape(self):
@@ -256,25 +267,15 @@ class Dataset(exob.Object):
         interoperable with h5py.
         We recommend to use :code:`data` instead of :code:`value`.
         """
-        return self[:]
+        return self.data
 
     @value.setter
     def value(self, value):
-        # TODO this should be in data, since value is deprecated
-        if self._data.shape != value.shape or self._data.dtype != value.dtype:
-            value, attrs, meta = _prepare_write(
-                data=value,
-                plugins=self.plugin_manager.dataset_plugins.write_order,
-                attrs=self.attrs.to_dict(),
-                meta=self.meta.to_dict()
-            )
-            self._reset_data(value, attrs, meta)
-            return
-
-        self[:] = value
+        self.data = value
 
     def __len__(self):
         """ The size of the first axis.  TypeError if scalar."""
+        assert_file_open(self.file)
         if len(self.shape) == 0:
             raise TypeError("Attempt to take len() of scalar dataset")
         return self.shape[0]
@@ -283,6 +284,7 @@ class Dataset(exob.Object):
         """Iterate over the first axis.  TypeError if scalar.
         WARNING: Modifications to the yielded data are *NOT* written to file.
         """
+        assert_file_open(self.file)
 
         if len(self.shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
@@ -290,11 +292,18 @@ class Dataset(exob.Object):
         for i in range(self.shape[0]):
             yield self[i]
 
+    def __str__(self):
+        return self.data.__str__()
+
     def __repr__(self):
-        return self.data.__repr__()
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir Dataset>"
+        return "<Exdir Dataset {} shape {} dtype {}>".format(
+            self.name, self.shape, self.dtype)
 
     @property
     def _data(self):
+        assert_file_open(self.file)
         if self._data_memmap is None:
             self._reload_data()
         return self._data_memmap

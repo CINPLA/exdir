@@ -138,8 +138,7 @@ def test_readonly(setup_teardown_folder):
 
     f = File(setup_teardown_folder[1], 'w')
     f.close()
-    # TODO comment in when close is implemented
-    # assert not f
+    assert not f
     f = File(setup_teardown_folder[1], 'r')
     assert isinstance(f, File)
     with pytest.raises(IOError):
@@ -268,7 +267,6 @@ def test_open(setup_teardown_file):
     assert f == f
 
 
-
 def test_open_mode(setup_teardown_folder):
     # must exist
     for mode in ["r+", "r"]:
@@ -308,15 +306,133 @@ def test_open_two_attrs(setup_teardown_file):
     f.attrs['another_atribute'] = 14
 
 
+def test_exc(setup_teardown_file):
+    """'in' on closed group returns False."""
+    f = setup_teardown_file[3]
 
-# TODO uncomment when enter and exit has been implemented
-# # Feature: File objects can be used as context managers
-# def test_context_manager(setup_teardown_folder):
-#     """File objects can be used in with statements."""
+    f.create_group("a")
+    f.close()
 
-#     no_exdir = pytest.TESTPATH / "no_exdir"
+    assert not f
+    assert "a" not in f
 
-#     with File(no_exdir, mode="w") as f:
-#         assert isinstance(f, File)
 
-#     assert not f
+def test_close_group(setup_teardown_file):
+    """'closed file is unable to handle."""
+    f = setup_teardown_file[3]
+
+    grp = f.create_group("group")
+
+    f.close()
+    assert not f
+    assert "group" not in f
+    assert 'dataset' not in f
+
+    # unable to create new stuff
+    match = "Unable to operate on closed File instance."
+    with pytest.raises(IOError, match=match):
+        f.create_group("group")
+    with pytest.raises(IOError, match=match):
+        grp.create_group("group")
+    with pytest.raises(IOError, match=match):
+        grp.attrs = {'group': 'attrs'}
+
+
+def test_close_attrs(setup_teardown_file):
+    """'closed file is unable to handle."""
+    f = setup_teardown_file[3]
+
+    grp = f.create_group("group")
+    dset = f.create_dataset('dataset', data=np.array([1,2,3]))
+    raw = f.create_raw('raw')
+    f.attrs = {'file': 'attrs'}
+    file_attrs = f.attrs
+    f.close()
+
+    match = "Unable to operate on closed File instance."
+    with pytest.raises(IOError, match=match):
+        f.attrs = {'file': 'attrs'}
+    with pytest.raises(IOError, match=match):
+        file_attrs['new'] = 'yo'
+
+    # unable to retrieve stuff
+    with pytest.raises(IOError, match=match):
+        file_attrs['file']
+    with pytest.raises(IOError, match=match):
+        f.attrs
+    assert 'file' not in file_attrs
+
+
+def test_close_raw(setup_teardown_file):
+    """'closed file is unable to handle."""
+    f = setup_teardown_file[3]
+
+    raw = f.create_raw('raw')
+    f.close()
+
+    assert "raw" not in f
+
+    # unable to create new stuff
+    match = "Unable to operate on closed File instance."
+    with pytest.raises(IOError, match=match):
+        f.create_raw('raw')
+
+    # unable to retrieve
+    with pytest.raises(IOError, match=match):
+        f['raw']
+
+
+def test_close_dataset(setup_teardown_file):
+    """'closed file is unable to handle."""
+    f = setup_teardown_file[3]
+
+    grp = f.create_group("group")
+    dset = f.create_dataset('dataset', data=np.array([1,2,3]))
+    dset.attrs = {'dataset': 'attrs'}
+    dset_attrs = dset.attrs
+    data = dset.data
+    f.close()
+
+    assert 'dataset' not in f
+
+    # unable to create new stuff
+    match = "Unable to operate on closed File instance."
+
+    with pytest.raises(IOError, match=match):
+        f.create_dataset('dataset', data=np.array([1,2,3]))
+    with pytest.raises(IOError, match=match):
+        grp.create_dataset('dataset', data=np.array([1,2,3]))
+    with pytest.raises(IOError, match=match):
+        dset.attrs = {'dataset': 'attrs'}
+    with pytest.raises(IOError, match=match):
+        dset_attrs['new'] = 'yo'
+
+    # unable to retrieve stuff
+    with pytest.raises(IOError, match=match):
+        dset.data
+    with pytest.raises(IOError, match=match):
+        dset.shape
+    with pytest.raises(IOError, match=match):
+        dset.dtype
+    with pytest.raises(IOError, match=match):
+        dset.attrs
+
+    assert 'dataset' not in dset_attrs
+
+    # TODO unable to close datasets: uncomment when done
+    # assert 1 not in data
+    # data[:] = np.array([3,2,1]) # TODO should give error
+    # f.io_mode = 1
+    # assert np.array_equal(dset.data, np.array([1,2,3]))
+
+
+# Feature: File objects can be used as context managers
+def test_context_manager(setup_teardown_folder):
+    """File objects can be used in with statements."""
+
+    no_exdir = setup_teardown_folder[2]
+
+    with File(no_exdir, mode="w") as f:
+        assert isinstance(f, File)
+
+    assert not f

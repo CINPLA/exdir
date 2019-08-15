@@ -27,18 +27,18 @@ try:
 except:
     from collections import KeysView, ValuesView, ItemsView
 
-from exdir.core import Group, File
+from exdir.core import Group, File, Dataset
 from exdir import validation as fv
 from conftest import remove
 
 # tests for Group class
 def test_group_init(setup_teardown_folder):
-    group = Group(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", io_mode=None)
+    group = Group(setup_teardown_folder[2], pathlib.PurePosixPath(""), "test_object", file=None)
 
     assert group.root_directory == setup_teardown_folder[2]
     assert group.object_name == "test_object"
     assert group.parent_path == pathlib.PurePosixPath("")
-    assert group.io_mode is None
+    assert group.file is None
     assert group.relative_path == pathlib.PurePosixPath("test_object")
     assert group.name == "/test_object"
 
@@ -176,37 +176,87 @@ def test_set_item_intermediate(exdir_tmpfile):
     assert np.array_equal(exdir_tmpfile["group1/group2/group3/dataset"].data, np.array([1, 2, 3]))
 
 
-# TODO uncomment when deletion is implemented
 # Feature: Objects can be unlinked via "del" operator
-# def test_delete(setup_teardown_file):
-#     """Object deletion via "del"."""
-#
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#     grp.create_group("foo")
-#
-#     assert "foo" in grp
-#     del grp["foo"]
-#     assert "foo" not in grp
-#
-# def test_nonexisting(setup_teardown_file):
-#     """Deleting non-existent object raises KeyError."""
-#     f = setup_teardown_file[3]
-#     grp = f.create_group("test")
-#
-#     with pytest.raises(KeyError):
-#         del grp["foo"]
-#
-# def test_readonly_delete_exception(setup_teardown_file):
-#     """Deleting object in readonly file raises KeyError."""
-#     f = setup_teardown_file[3]
-#     f.close()
-#
-#     f = File(setup_teardown_folder[1], "r")
-#
-#     with pytest.raises(KeyError):
-#         del f["foo"]
+def test_delete_group(setup_teardown_file):
+    """Object deletion via "del"."""
 
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    grp.create_group("foo")
+
+    assert "foo" in grp
+    del grp["foo"]
+    assert "foo" not in grp
+
+
+def test_delete_group_from_file(setup_teardown_file):
+    """Object deletion via "del"."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    assert "test" in f
+    del f["test"]
+    assert "test" not in f
+
+
+def test_delete_raw(setup_teardown_file):
+    """Object deletion via "del"."""
+
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    grp.create_raw("foo")
+
+    assert "foo" in grp
+    del grp["foo"]
+    assert "foo" not in grp
+
+
+def test_nonexisting(setup_teardown_file):
+    """Deleting non-existent object raises KeyError."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    match = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=match):
+        del grp["foo"]
+
+
+def test_readonly_delete_exception(setup_teardown_file):
+    """Deleting object in readonly file raises KeyError."""
+    f = setup_teardown_file[3]
+    f.close()
+
+    f = File(setup_teardown_file[1], "r")
+    match = "Cannot change data on file in read only 'r' mode"
+    with pytest.raises(IOError, match=match):
+        del f["foo"]
+
+
+def test_delete_dataset(setup_teardown_file):
+    """Create new dataset with no conflicts."""
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+
+    foo = grp.create_dataset('foo', (10, 3), 'f')
+    assert isinstance(grp['foo'], Dataset)
+    assert foo.shape == (10, 3)
+    bar = grp.require_dataset('bar', data=(3, 10))
+    del foo
+    assert 'foo' in grp
+    del grp['foo']
+    match = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=match):
+        grp['foo']
+    # the "bar" dataset is intact
+    assert isinstance(grp['bar'], Dataset)
+    assert np.all(bar[:] == (3, 10))
+    # even though the dataset is deleted on file, the memmap stays open until
+    # garbage collected
+    del grp['bar']
+    assert bar.shape == (2,)
+    assert np.all(bar[:] == (3, 10))
+    with pytest.raises(KeyError):
+        grp['bar']
 
 # Feature: Objects can be opened via indexing syntax obj[name]
 
@@ -226,6 +276,7 @@ def test_open(setup_teardown_file):
     with pytest.raises(NotImplementedError):
         grp["/test"]
 
+
 def test_open_deep(setup_teardown_file):
     """Simple obj[name] opening."""
     f = setup_teardown_file[3]
@@ -238,12 +289,11 @@ def test_open_deep(setup_teardown_file):
     assert grp3 == grp4
 
 
-
 def test_nonexistent(setup_teardown_file):
     """Opening missing objects raises KeyError."""
     f = setup_teardown_file[3]
-
-    with pytest.raises(KeyError):
+    match = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=match):
         f["foo"]
 
 
@@ -272,16 +322,6 @@ def test_contains_deep(setup_teardown_file):
 
     assert "a/b" in grp
 
-
-# TODO uncomment this when close is implemented
-# def test_exc(setup_teardown_file):
-#     """'in' on closed group returns False."""
-#     f = setup_teardown_file[3]
-
-#     f.create_group("a")
-#     f.close()
-
-#     assert not "a" in f
 
 def test_empty(setup_teardown_file):
     """Empty strings work properly and aren"t contained."""
@@ -313,9 +353,6 @@ def test_trailing_slash(setup_teardown_file):
     assert "a/" in grp
     assert "a//" in grp
     assert "a////" in grp
-
-
-
 
 # Feature: Standard Python 3 .keys, .values, etc. methods are available
 def test_keys(setup_teardown_file):
