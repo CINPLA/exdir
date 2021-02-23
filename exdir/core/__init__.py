@@ -11,3 +11,5 @@ from .attribute import Attribute
 from .dataset import Dataset
 from .group import Group
 from .raw import Raw
+from .links import SoftLink, ExternalLink, Reference, RegionReference
+from .dtype import ref_dtype, regionref_dtype, special_dtype, check_dtype

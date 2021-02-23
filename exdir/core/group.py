@@ -9,6 +9,7 @@ except ImportError as e:
         raise e
 import numpy as np
 import exdir
+import pandas as pd
 try:
     import ruamel_yaml as yaml
 except ImportError:
@@ -19,11 +20,14 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
+from .links import Link, SoftLink, ExternalLink, Reference, HardLink
 from .mode import assert_file_open, OpenMode, assert_file_writable
 from . import exdir_object as exob
+from . import exdir_file as exfile
 from . import dataset as ds
 from . import raw
 from .. import utils
+
 
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
@@ -35,6 +39,7 @@ def _data_to_shape_and_dtype(data, shape, dtype):
     if dtype is None:
         dtype = np.float32
     return shape, dtype
+
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
@@ -52,6 +57,7 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
                 )
             )
         return
+
 
 class Group(Object):
     """
@@ -124,27 +130,41 @@ class Group(Object):
             meta=exob._default_metadata(exob.DATASET_TYPENAME)
         )
 
-        _assert_data_shape_dtype_match(prepared_data, shape, dtype)
+        if not isinstance(data, pd.DataFrame):
 
-        shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
+            _assert_data_shape_dtype_match(prepared_data, shape, dtype)
 
-        if prepared_data is not None:
-            if shape is not None and prepared_data.shape != shape:
-                prepared_data = np.reshape(prepared_data, shape)
-        else:
-            if shape is None:
-                prepared_data = None
+            shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
+
+            if prepared_data is not None:
+                if shape is not None and prepared_data.shape != shape:
+                    prepared_data = np.reshape(prepared_data, shape)
             else:
-                fillvalue = fillvalue or 0.0
-                prepared_data = np.full(shape, fillvalue, dtype=dtype)
-
-        if prepared_data is None:
-            raise TypeError("Could not create a meaningful dataset.")
+                if shape is None:
+                    prepared_data = None
+                else:
+                    fillvalue = fillvalue or 0.0
+                    prepared_data = np.full(shape, fillvalue, dtype=dtype)
+            if prepared_data is None:
+                raise TypeError("Could not create a meaningful dataset.")
+        else:
+            if dtype is not None:
+                raise NotImplementedError(
+                    'We currently do not support forcing dtype on creating with'
+                    ' DataFrames.')
+            if shape is not None:
+                raise NotImplementedError(
+                    'We currently do not support reshape on creating with '
+                    'DataFrames.')
 
         dataset_directory = self.directory / name
         exob._create_object_directory(dataset_directory, meta)
 
         dataset = self._dataset(name)
+        if dtype in [exdir.ref_dtype, exdir.regionref_dtype]:
+            prepared_data = pd.DataFrame(prepared_data)
+            dataset.meta['has_ref'] = True
+
         dataset._reset_data(prepared_data, attrs, None)  # meta already set above
         return dataset
 
@@ -306,30 +326,36 @@ class Group(Object):
 
 
         # TODO verify proper attributes
+        if any(isinstance(a, pd.DataFrame) for a in [data, current_object.data]):
+            if not isinstance(data, type(current_object.data)):
+                raise IOError(
+                    'Not allowed to require different data instance with'
+                    '(existing {} vs new {}), set data if a change is desired.'
+                    ''.format(type(current_object.data), type(data)))
+        if not isinstance(data, pd.DataFrame):
+            _assert_data_shape_dtype_match(data, shape, dtype)
+            shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
 
-        _assert_data_shape_dtype_match(data, shape, dtype)
-        shape, dtype = _data_to_shape_and_dtype(data, shape, dtype)
-
-        if not np.array_equal(shape, current_object.shape):
-            raise TypeError(
-                "Shapes do not match (existing {} vs "
-                "new {})".format(current_object.shape, shape)
-            )
-
-        if dtype != current_object.dtype:
-            if exact:
+            if not np.array_equal(shape, current_object.shape):
                 raise TypeError(
-                    "Datatypes do not exactly match "
-                    "existing {} vs new {})".format(current_object.dtype, dtype)
+                    "Shapes do not match (existing {} vs "
+                    "new {})".format(current_object.shape, shape)
                 )
 
-            if not np.can_cast(dtype, current_object.dtype):
-                raise TypeError(
-                    "Cannot safely cast from {} to {}".format(
-                        dtype,
-                        current_object.dtype
+            if dtype != current_object.dtype:
+                if exact:
+                    raise TypeError(
+                        "Datatypes do not exactly match "
+                        "existing {} vs new {})".format(current_object.dtype, dtype)
                     )
-                )
+
+                if not np.can_cast(dtype, current_object.dtype):
+                    raise TypeError(
+                        "Cannot safely cast from {} to {}".format(
+                            dtype,
+                            current_object.dtype
+                        )
+                    )
 
         return current_object
 
@@ -367,6 +393,8 @@ class Group(Object):
             if the name does not correspond to an exdir object in the group
         """
         assert_file_open(self.file)
+        if isinstance(name, Reference):
+            name = name.path
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             top_directory = path.parts[0]
@@ -403,6 +431,8 @@ class Group(Object):
             return self._dataset(name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return self._group(name)
+        elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.LINK_TYPENAME:
+            return self._link(name)
         else:
             error_string = (
                 "Object {name} has data type {type}.\n"
@@ -412,6 +442,29 @@ class Group(Object):
                 type=meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
             )
             raise NotImplementedError(error_string)
+
+    def _link(self, name, getlink=False):
+        group = self._group(name)
+        link_meta = group.meta[exob.EXDIR_METANAME].get(exob.LINK_METANAME)
+        if link_meta is None:
+            if getlink:
+                return HardLink(name)
+            raise KeyError('Unable to retrieve link from {}'.format(group.name))
+        if link_meta[exob.TYPE_METANAME] == exob.LINK_SOFTNAME:
+            if getlink:
+                result = SoftLink(link_meta[exob.LINK_TARGETNAME])
+            else:
+                result = self[link_meta[exob.LINK_TARGETNAME]]
+        elif link_meta[exob.TYPE_METANAME] == exob.LINK_EXTERNALNAME:
+            if getlink:
+                result = ExternalLink(
+                    link_meta[exob.LINK_FILENAME],
+                    link_meta[exob.LINK_TARGETNAME])
+            else:
+                external_file = exfile.File(
+                    link_meta[exob.LINK_FILENAME], 'r')
+                result = external_file[link_meta[exob.LINK_TARGETNAME]]
+        return result
 
     def _dataset(self, name):
         return ds.Dataset(
@@ -439,6 +492,13 @@ class Group(Object):
             self[path.parent][path.name] = value
             return
 
+        if isinstance(value, Link):
+            link_group = self.create_group(name)
+            # if value.path not in self.file:
+            #     return # TODO works when merging with lepmik/close
+            link_group.meta[exob.EXDIR_METANAME].update(value._link)
+            return
+
         if name not in self:
             self.create_dataset(name, data=value)
             return
@@ -447,8 +507,7 @@ class Group(Object):
             raise RuntimeError(
                 "Unable to assign value, {} already exists".format(name)
             )
-
-        self[name].value = value
+        self[name].data = value
 
     def __delitem__(self, name):
         """
@@ -509,22 +568,30 @@ class Group(Object):
         assert_file_open(self.file)
         return len([a for a in self])
 
-    def get(self, key):
+    def __repr__(self):
+        if self.file.io_mode == OpenMode.FILE_CLOSED:
+            return "<Closed Exdir Group>"
+        return "<Exdir Group '{}'>".format(
+            self.directory)
+
+    def _ipython_key_completions_(self):
+        return self.keys()
+
+    def get(self, name, getlink=False):
         """
         Get an object in the group.
         Parameters
         ----------
-        key : str
-            The key of the desired object
+        name : str
+            The name of the desired object
         Returns
         -------
         Value or None if object does not exist.
         """
         assert_file_open(self.file)
-        if key in self:
-            return self[key]
+        if name in self:
+            if getlink:
+                return self._link(name, getlink)
+            return self[name]
         else:
             return None
-
-    def _ipython_key_completions_(self):
-        return self.keys()

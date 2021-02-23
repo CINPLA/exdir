@@ -24,6 +24,8 @@ from .. import utils
 from .attribute import Attribute
 from .constants import *
 from .mode import assert_file_open, OpenMode
+from .links import Reference, RegionReference
+
 
 def _resolve_path(path):
     return pathlib.Path(path).resolve()
@@ -112,7 +114,8 @@ def is_nonraw_object_directory(directory):
             return False
         if TYPE_METANAME not in meta_data[EXDIR_METANAME]:
             return False
-        valid_types = [DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME]
+        valid_types = [
+            DATASET_TYPENAME, FILE_TYPENAME, GROUP_TYPENAME, LINK_METANAME]
         if meta_data[EXDIR_METANAME][TYPE_METANAME] not in valid_types:
             return False
     return True
@@ -266,6 +269,14 @@ class Object(object):
         return self.create_raw(name)
 
     @property
+    def ref(self):
+        return Reference(self.name)
+
+    @property
+    def regionref(self):
+        return RegionReference(self.name)
+
+    @property
     def parent(self):
         from .group import Group
         assert_file_open(self.file)
@@ -285,10 +296,10 @@ class Object(object):
             return False
         if not isinstance(other, Object):
             return False
-        return (
-            self.relative_path == other.relative_path and
-            self.root_directory == other.root_directory
-        )
+        return self.__hash__() == other.__hash__()
+
+    def __hash__(self):
+        return hash(str(self.relative_path) + str(self.root_directory))
 
     def __bool__(self):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
@@ -299,9 +310,3 @@ class Object(object):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
             return None
         return exdir.utils.display.html_tree(self)
-
-    def __repr__(self):
-        if self.file.io_mode == OpenMode.FILE_CLOSED:
-            return "<Closed Exdir Group>"
-        return "<Exdir Group '{}' (mode {})>".format(
-            self.directory, self.file.user_mode)

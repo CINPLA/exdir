@@ -171,6 +171,17 @@ def test_shape_conflict(setup_teardown_file):
         grp.require_dataset('foo', (10, 4), 'f')
 
 
+def test_create_dtype_object(setup_teardown_file):
+    """Assignement of variable-length byte string produces a fixed-length
+    ascii dataset """
+    f = setup_teardown_file[3]
+    grp = f.create_group("test")
+    # one needs object dtype in order to be able to change length of string with setitem
+    data = np.array(['aaaa', 'aaaaa'], dtype=object)
+    with pytest.raises(ValueError):
+        grp.create_dataset('foo', data=data)
+
+
 def test_type_confict(setup_teardown_file):
     """require_dataset with object type conflict yields TypeError."""
     f = setup_teardown_file[3]

@@ -1,9 +1,16 @@
 import numbers
 import numpy as np
+import pyarrow.feather as feather
+import pandas as pd
 import exdir
 
 from . import exdir_object as exob
+from .links import Reference, RegionReference
 from .mode import assert_file_open, OpenMode, assert_file_writable
+
+NUMPY_SUFFIX = '.npy'
+FEATHER_SUFFIX = '.feather'
+
 
 def _prepare_write(data, plugins, attrs, meta):
     for plugin in plugins:
@@ -25,7 +32,14 @@ def _prepare_write(data, plugins, attrs, meta):
 
 
 def _dataset_filename(dataset_directory):
-    return dataset_directory / "data.npy"
+    base = dataset_directory / "data"
+    if base.with_suffix(FEATHER_SUFFIX).exists():
+        filename = base.with_suffix(FEATHER_SUFFIX)
+        is_numpy = False
+    else:
+        filename = base.with_suffix(NUMPY_SUFFIX)
+        is_numpy = True
+    return filename, is_numpy
 
 
 class Dataset(exob.Object):
@@ -44,16 +58,29 @@ class Dataset(exob.Object):
             object_name=object_name,
             file=file
         )
-        self._data_memmap = None
+        self._data_loaded = None
         self.plugin_manager = file.plugin_manager
-        self.data_filename = str(_dataset_filename(self.directory))
 
     def __getitem__(self, args):
         assert_file_open(self.file)
+
+        if self.meta.get('has_ref'):
+            refs = self._data.values[args]
+            Refs = []
+            for ref in refs:
+                if Reference.base in ref:
+                    Refs.append(Reference(ref))
+                elif RegionReference.base in ref:
+                    Refs.append(RegionReference(ref))
+            if len(Refs) == 1:
+                return Refs[0]
+            return Refs
+
         if len(self._data.shape) == 0:
             values = self._data
         else:
             values = self._data[args]
+
 
         enabled_plugins = [plugin_module.name for plugin_module in self.plugin_manager.plugins]
 
@@ -75,9 +102,8 @@ class Dataset(exob.Object):
             meta = self.meta.to_dict()
             atts = self.attrs.to_dict()
 
-            dataset_data = exdir.plugin_interface.DatasetData(data=values,
-                                                              attrs=self.attrs.to_dict(),
-                                                              meta=meta)
+            dataset_data = exdir.plugin_interface.DatasetData(
+                data=values, attrs=self.attrs.to_dict(), meta=meta)
             for plugin in plugins:
                 dataset_data = plugin.prepare_read(dataset_data)
 
@@ -88,20 +114,37 @@ class Dataset(exob.Object):
     def __setitem__(self, args, value):
         assert_file_writable(self.file)
 
+        if self.meta.get('has_ref'):
+            self._data.values[args] = value.ref
+            self.flush()
+            return
+
+        _, is_numpy = _dataset_filename(self.directory)
+
         value, attrs, meta = _prepare_write(
             data=value,
             plugins=self.plugin_manager.dataset_plugins.write_order,
             attrs=self.attrs.to_dict(),
             meta=self.meta.to_dict()
         )
-        self._data[args] = value
+
+        if is_numpy:
+            self._data[args] = value
+        else:
+            self._data[args] = value
+            self.flush()
         self.attrs = attrs
         self.meta._set_data(meta)
 
+    def flush(self):
+        self.data = self._data
+
     def _reload_data(self):
         assert_file_open(self.file)
+        data_filename, is_numpy = _dataset_filename(self.directory)
         for plugin in self.plugin_manager.dataset_plugins.write_order:
-            plugin.before_load(self.data_filename)
+            plugin.before_load(str(data_filename))
+
 
         if self.file.io_mode == OpenMode.READ_ONLY:
             mmap_mode = "r"
@@ -109,35 +152,54 @@ class Dataset(exob.Object):
             mmap_mode = "r+"
 
         try:
-            self._data_memmap = np.load(self.data_filename, mmap_mode=mmap_mode, allow_pickle=False)
+            if is_numpy:
+                self._data_loaded = np.load(
+                    str(data_filename),
+                    mmap_mode=mmap_mode, allow_pickle=False)
+            else:
+                self._data_loaded = feather.read_feather(str(data_filename))
             self.file._open_datasets[self.name] = self
         except ValueError as e:
-            # Could be that it is a Git LFS file. Let's see if that is the case and warn if so.
-            with open(self.data_filename, "r") as f:
+            # Could be that numpy needs to pickle, suggest the user to use
+            # dataframe
+
+            # Could be that it is a Git LFS file.
+            # Let's see if that is the case and warn if so.
+            with open(str(data_filename), "r") as f:
                 test_string = "version https://git-lfs.github.com/spec/v1"
                 contents = f.read(len(test_string))
                 if contents == test_string:
                     raise IOError("The file '{}' is a Git LFS placeholder. "
-                        "Open the the Exdir File with the Git LFS plugin or run "
-                        "`git lfs fetch` first. ".format(self.data_filename))
+                        "Open the the Exdir File with the Git LFS plugin or run"
+                        " `git lfs fetch` first. ".format(str(data_filename)))
                 else:
                     raise e
 
     def _reset_data(self, value, attrs, meta):
         assert_file_open(self.file)
-        self._data_memmap = np.lib.format.open_memmap(
-            self.data_filename,
-            mode="w+",
-            dtype=value.dtype,
-            shape=value.shape
-        )
-
-        if len(value.shape) == 0:
-            # scalars need to be set with itemset
-            self._data_memmap.itemset(value)
+        data_filename, _ = _dataset_filename(self.directory)
+        if isinstance(value, pd.DataFrame):
+            feather.write_feather(
+                value, str(data_filename.with_suffix(FEATHER_SUFFIX)))
+            if data_filename.with_suffix(NUMPY_SUFFIX).exists():
+                data_filename.with_suffix(NUMPY_SUFFIX).unlink()
         else:
-            # replace the contents with the value
-            self._data_memmap[:] = value
+            self._data_loaded = np.lib.format.open_memmap(
+                str(data_filename.with_suffix(NUMPY_SUFFIX)),
+                mode="w+",
+                dtype=value.dtype,
+                shape=value.shape
+            )
+
+            if len(value.shape) == 0:
+                # scalars need to be set with itemset
+                self._data_loaded.itemset(value)
+            else:
+                # replace the contents with the value
+                self._data_loaded[:] = value
+
+            if data_filename.with_suffix(FEATHER_SUFFIX).exists():
+                data_filename.with_suffix(FEATHER_SUFFIX).unlink()
 
         # update attributes and plugin metadata
         if attrs:
@@ -177,7 +239,7 @@ class Dataset(exob.Object):
     @data.setter
     def data(self, value):
         assert_file_open(self.file)
-        if self._data.shape != value.shape or self._data.dtype != value.dtype:
+        if isinstance(value, pd.DataFrame):
             value, attrs, meta = _prepare_write(
                 data=value,
                 plugins=self.plugin_manager.dataset_plugins.write_order,
@@ -185,9 +247,22 @@ class Dataset(exob.Object):
                 meta=self.meta.to_dict()
             )
             self._reset_data(value, attrs, meta)
-            return
+        else:
+            if hasattr(self._data, 'dtype'):
+                new_dtype = self._data.dtype != value.dtype
+            else:
+                new_dtype = True # changing from feather to numpy
+            if self._data.shape != value.shape or new_dtype:
+                value, attrs, meta = _prepare_write(
+                    data=value,
+                    plugins=self.plugin_manager.dataset_plugins.write_order,
+                    attrs=self.attrs.to_dict(),
+                    meta=self.meta.to_dict()
+                )
+                self._reset_data(value, attrs, meta)
+                return
 
-        self[:] = value
+            self[:] = value
 
     @property
     def shape(self):
@@ -261,8 +336,8 @@ class Dataset(exob.Object):
         if len(self.shape) == 0:
             raise TypeError("Can't iterate over a scalar dataset")
 
-        for i in range(self.shape[0]):
-            yield self[i]
+        for val in self.data:
+            yield val
 
     def __str__(self):
         return self.data.__str__()
@@ -270,12 +345,12 @@ class Dataset(exob.Object):
     def __repr__(self):
         if self.file.io_mode == OpenMode.FILE_CLOSED:
             return "<Closed Exdir Dataset>"
-        return "<Exdir Dataset {} shape {} dtype {}>".format(
-            self.name, self.shape, self.dtype)
+        return "<Exdir Dataset {} shape {}>".format(
+            self.name, self.shape)
 
     @property
     def _data(self):
         assert_file_open(self.file)
-        if self._data_memmap is None:
+        if self._data_loaded is None:
             self._reload_data()
-        return self._data_memmap
+        return self._data_loaded

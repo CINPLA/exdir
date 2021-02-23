@@ -13,6 +13,7 @@ import warnings
 import exdir
 from . import exdir_object as exob
 from .group import Group
+from .links import Reference
 from .. import utils
 from .mode import OpenMode
 from . import validation
@@ -71,9 +72,10 @@ class File(Group):
     def __init__(self, directory, mode=None, allow_remove=False,
                  name_validation=None, plugins=None):
         self._open_datasets = weakref.WeakValueDictionary({})
-        directory = pathlib.Path(directory) #.resolve()
+        directory = pathlib.Path(directory).absolute() #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
+        self.filename = directory
         self.user_mode = mode = mode or 'a'
         recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
         if mode not in recognized_modes:
@@ -170,8 +172,8 @@ class File(Group):
             # there are no way to close the memmap other than deleting all
             # references to it, thus
             try:
-                data_set._data_memmap.flush()
-                data_set._data_memmap.setflags(write=False) # TODO does not work
+                data_set._data_loaded.flush()
+                data_set._data_loaded.setflags(write=False) # TODO does not work
             except AttributeError:
                 pass
         # force garbage collection to clean weakrefs
@@ -215,10 +217,18 @@ class File(Group):
         return super(File, self).require_group(path)
 
     def __getitem__(self, name):
+        if isinstance(name, Reference):
+            name = name.path
         path = utils.path.remove_root(name)
         if len(path.parts) < 1:
             return self
         return super(File, self).__getitem__(path)
+
+    def __setitem__(self, name, value):
+        path = utils.path.remove_root(name)
+        if len(path.parts) < 1:
+            return self
+        return super(File, self).__setitem__(path, value)
 
     def __contains__(self, name):
         path = utils.path.remove_root(name)
