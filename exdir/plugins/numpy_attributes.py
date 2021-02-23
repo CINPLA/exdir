@@ -20,7 +20,7 @@ def convert_to_list(data):
         return data.tolist()
     elif isinstance(data, np.integer):
         return int(data)
-    elif isinstance(data, np.float):
+    elif isinstance(data, np.float64):
         return float(data)
     else:
         try:
