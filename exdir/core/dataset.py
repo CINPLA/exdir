@@ -113,7 +113,7 @@ class Dataset(exob.Object):
             self.file._open_datasets[self.name] = self
         except ValueError as e:
             # Could be that it is a Git LFS file. Let's see if that is the case and warn if so.
-            with open(self.data_filename, "r") as f:
+            with open(self.data_filename, "r", encoding="utf-8") as f:
                 test_string = "version https://git-lfs.github.com/spec/v1"
                 contents = f.read(len(test_string))
                 if contents == test_string:

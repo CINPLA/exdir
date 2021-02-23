@@ -16,7 +16,7 @@ class DatasetPlugin(exdir.plugin_interface.Dataset):
     def before_load(self, dataset_path):
         path = pathlib.Path(dataset_path)
         parent_path = path.parent
-        with open(dataset_path, "rb") as f:
+        with open(dataset_path, "rb", encoding="utf-8") as f:
             test_string = b"version https://git-lfs.github.com/spec/v1"
             contents = f.read(len(test_string))
         if contents == test_string:

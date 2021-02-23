@@ -12,7 +12,7 @@ def test_simple(setup_teardown_folder):
     f.attrs["array"] = np.array([1, 2, 3])
     f.close()
 
-    with open(str(setup_teardown_folder[1] / "attributes.yaml"), "r") as f:
+    with open(str(setup_teardown_folder[1] / "attributes.yaml"), "r", encoding="utf-8") as f:
         content = "array:\n- 1\n- 2\n- 3\n"
         assert content == f.read()
 
@@ -23,7 +23,7 @@ def test_with_quantities(setup_teardown_folder):
     f.attrs["array"] = np.array([1, 2, 3]) * pq.m
     f.close()
 
-    with open(str(setup_teardown_folder[1] / "attributes.yaml"), "r")  as f:
+    with open(str(setup_teardown_folder[1] / "attributes.yaml"), "r", encoding="utf-8")  as f:
         content = 'array:\n  value:\n  - 1.0\n  - 2.0\n  - 3.0\n  unit: "m"\n'
 
         # NOTE split and conversion to set is just because the order of the items is not important
