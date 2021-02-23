@@ -1,0 +1,5 @@
+# These are developer requirements needed for testing and CI
+h5py
+numpy
+pytest
+quantities
