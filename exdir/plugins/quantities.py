@@ -50,7 +50,7 @@ def convert_quantities(value):
         result = value.tolist()
     elif isinstance(value, np.integer):
         result = int(value)
-    elif isinstance(value, np.float):
+    elif isinstance(value, np.float64):
         result = float(value)
     else:
         # try if dictionary like objects can be converted if not return the
