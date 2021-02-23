@@ -18,17 +18,27 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     data_files=[
         # like `jupyter nbextension install --sys-prefix`
-        ("share/jupyter/nbextensions/exdir", [
-            "exdir/static/index.js",
-        ]),
+        (
+            "share/jupyter/nbextensions/exdir",
+            [
+                "exdir/static/index.js",
+            ],
+        ),
         # like `jupyter nbextension enable --sys-prefix`
-        ("etc/jupyter/nbconfig/notebook.d", [
-            "jupyter-config/nbconfig/notebook.d/exdir.json"
-        ]),
+        (
+            "etc/jupyter/nbconfig/notebook.d",
+            ["jupyter-config/nbconfig/notebook.d/exdir.json"],
+        ),
         # like `jupyter serverextension enable --sys-prefix`
-        ("etc/jupyter/jupyter_notebook_config.d", [
-            "jupyter-config/jupyter_notebook_config.d/exdir.json"
-        ])
+        (
+            "etc/jupyter/jupyter_notebook_config.d",
+            ["jupyter-config/jupyter_notebook_config.d/exdir.json"],
+        ),
     ],
-    zip_safe=False
+    install_requires=[
+        "numpy>=1.20",
+        "ruamel.yaml>=0.16",
+        "six>=1.15",
+    ],
+    zip_safe=False,
 )
