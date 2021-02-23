@@ -340,7 +340,7 @@ def get_config_from_root(root):
     # the top of versioneer.py for instructions on writing your setup.cfg .
     setup_cfg = os.path.join(root, "setup.cfg")
     parser = configparser.SafeConfigParser()
-    with open(setup_cfg, "r") as f:
+    with open(setup_cfg, "r", encoding="utf-8") as f:
         parser.readfp(f)
     VCS = parser.get("versioneer", "VCS")  # mandatory
 
@@ -1197,7 +1197,7 @@ def get_versions():
 def versions_from_file(filename):
     """Try to determine the version from _version.py if present."""
     try:
-        with open(filename) as f:
+        with open(filename, encoding="utf-8") as f:
             contents = f.read()
     except EnvironmentError:
         raise NotThisMethod("unable to read _version.py")
@@ -1216,7 +1216,7 @@ def write_to_version_file(filename, versions):
     os.unlink(filename)
     contents = json.dumps(versions, sort_keys=True,
                           indent=1, separators=(",", ": "))
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(SHORT_VERSION_PY % contents)
 
     print("set %s to '%s'" % (filename, versions["version"]))
@@ -1575,7 +1575,7 @@ def get_cmdclass():
 
                 _build_exe.run(self)
                 os.unlink(target_versionfile)
-                with open(cfg.versionfile_source, "w") as f:
+                with open(cfg.versionfile_source, "w", encoding="utf-8") as f:
                     LONG = LONG_VERSION_PY[cfg.VCS]
                     f.write(LONG %
                             {"DOLLAR": "$",
@@ -1604,7 +1604,7 @@ def get_cmdclass():
 
                 _py2exe.run(self)
                 os.unlink(target_versionfile)
-                with open(cfg.versionfile_source, "w") as f:
+                with open(cfg.versionfile_source, "w", encoding="utf-8") as f:
                     LONG = LONG_VERSION_PY[cfg.VCS]
                     f.write(LONG %
                             {"DOLLAR": "$",
@@ -1700,13 +1700,13 @@ def do_setup():
         if isinstance(e, (EnvironmentError, configparser.NoSectionError)):
             print("Adding sample versioneer config to setup.cfg",
                   file=sys.stderr)
-            with open(os.path.join(root, "setup.cfg"), "a") as f:
+            with open(os.path.join(root, "setup.cfg"), "a", encoding="utf-8") as f:
                 f.write(SAMPLE_CONFIG)
         print(CONFIG_ERROR, file=sys.stderr)
         return 1
 
     print(" creating %s" % cfg.versionfile_source)
-    with open(cfg.versionfile_source, "w") as f:
+    with open(cfg.versionfile_source, "w", encoding="utf-8") as f:
         LONG = LONG_VERSION_PY[cfg.VCS]
         f.write(LONG % {"DOLLAR": "$",
                         "STYLE": cfg.style,
@@ -1719,13 +1719,13 @@ def do_setup():
                        "__init__.py")
     if os.path.exists(ipy):
         try:
-            with open(ipy, "r") as f:
+            with open(ipy, "r", encoding="utf-8") as f:
                 old = f.read()
         except EnvironmentError:
             old = ""
         if INIT_PY_SNIPPET not in old:
             print(" appending to %s" % ipy)
-            with open(ipy, "a") as f:
+            with open(ipy, "a", encoding="utf-8") as f:
                 f.write(INIT_PY_SNIPPET)
         else:
             print(" %s unmodified" % ipy)
@@ -1740,7 +1740,7 @@ def do_setup():
     manifest_in = os.path.join(root, "MANIFEST.in")
     simple_includes = set()
     try:
-        with open(manifest_in, "r") as f:
+        with open(manifest_in, "r", encoding="utf-8") as f:
             for line in f:
                 if line.startswith("include "):
                     for include in line.split()[1:]:
@@ -1753,14 +1753,14 @@ def do_setup():
     # lines is safe, though.
     if "versioneer.py" not in simple_includes:
         print(" appending 'versioneer.py' to MANIFEST.in")
-        with open(manifest_in, "a") as f:
+        with open(manifest_in, "a", encoding="utf-8") as f:
             f.write("include versioneer.py\n")
     else:
         print(" 'versioneer.py' already in MANIFEST.in")
     if cfg.versionfile_source not in simple_includes:
         print(" appending versionfile_source ('%s') to MANIFEST.in" %
               cfg.versionfile_source)
-        with open(manifest_in, "a") as f:
+        with open(manifest_in, "a", encoding="utf-8") as f:
             f.write("include %s\n" % cfg.versionfile_source)
     else:
         print(" versionfile_source already in MANIFEST.in")
@@ -1777,7 +1777,7 @@ def scan_setup_py():
     found = set()
     setters = False
     errors = 0
-    with open("setup.py", "r") as f:
+    with open("setup.py", "r", encoding="utf-8") as f:
         for line in f.readlines():
             if "import versioneer" in line:
                 found.add("import")

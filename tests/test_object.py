@@ -59,7 +59,7 @@ def test_object_attrs(setup_teardown_file):
     assert obj.attrs.mode.value == 1
     obj.attrs = "test value"
 
-    with (setup_teardown_file[1] / "test_object" / ATTRIBUTES_FILENAME).open("r") as meta_file:
+    with (setup_teardown_file[1] / "test_object" / ATTRIBUTES_FILENAME).open("r", encoding="utf-8") as meta_file:
         meta_data = yaml.safe_load(meta_file)
         assert meta_data == "test value"
 

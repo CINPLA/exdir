@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 import versioneer
 
 
-long_description = open("README.md").read()
+long_description = open("README.md", encoding="utf-8").read()
 
 install_requires = []
 
