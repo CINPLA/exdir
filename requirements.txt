@@ -22,7 +22,7 @@ py==1.10.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest==6.2.2
+pytest==6.2.3
     # via -r requirements.in
 quantities==0.12.4
     # via -r requirements.in
