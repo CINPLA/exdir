@@ -6,7 +6,7 @@
 #
 attrs==20.3.0
     # via pytest
-h5py==3.2.1
+h5py==3.3.0
     # via -r requirements.in
 iniconfig==1.1.1
     # via pytest
