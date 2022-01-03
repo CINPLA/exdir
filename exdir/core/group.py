@@ -176,8 +176,7 @@ class Group(Object):
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             subgroup = self.require_group(path.parent)
-            subgroup.create_group(path.name)
-            return
+            return subgroup.create_group(path.name)
 
         exob._assert_valid_name(path, self)
 

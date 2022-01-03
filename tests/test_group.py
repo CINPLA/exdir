@@ -112,9 +112,10 @@ def test_create_intermediate(setup_teardown_file):
     f = setup_teardown_file[3]
     grp = f.create_group("test")
 
-    grp.create_group("foo/bar/baz")
+    grp2 = grp.create_group("foo/bar/baz")
 
     assert isinstance(grp["foo/bar/baz"], Group)
+    assert isinstance(grp2, Group)
 
     # assert grp.name == "/foo/bar/baz"
 
