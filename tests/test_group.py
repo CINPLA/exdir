@@ -117,6 +117,10 @@ def test_create_intermediate(setup_teardown_file):
     assert isinstance(grp2, Group)
 
     assert grp2.name == "/test/foo/bar/baz"
+    assert "foo" in grp
+    assert "bar" in grp.require_group("foo")
+    assert "baz" in grp.require_group("foo").require_group("bar")
+    assert grp.require_group("foo").require_group("bar").require_group("baz") == grp2
 
 
 def test_create_exception(setup_teardown_file):
