@@ -106,17 +106,21 @@ def test_create_existing_twice(exdir_tmpfile):
         exdir_tmpfile.create_group("test")
 
 
-# TODO update this test when it is implemented
 def test_create_intermediate(setup_teardown_file):
     """intermediate groups can be created automatically."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")
 
-    grp.create_group("foo/bar/baz")
+    grp2 = grp.create_group("foo/bar/baz")
 
     assert isinstance(grp["foo/bar/baz"], Group)
+    assert isinstance(grp2, Group)
 
-    # assert grp.name == "/foo/bar/baz"
+    assert grp2.name == "/test/foo/bar/baz"
+    assert "foo" in grp
+    assert "bar" in grp.require_group("foo")
+    assert "baz" in grp.require_group("foo").require_group("bar")
+    assert grp.require_group("foo").require_group("bar").require_group("baz") == grp2
 
 
 def test_create_exception(setup_teardown_file):
