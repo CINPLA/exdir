@@ -103,7 +103,7 @@ def is_nonraw_object_directory(directory):
     if not meta_filename.exists():
         return False
     with meta_filename.open("r", encoding="utf-8") as meta_file:
-        meta_data = yaml.safe_load(meta_file)
+        meta_data = yaml.YAML(typ="safe", pure=True).load(meta_file)
 
         if not isinstance(meta_data, dict):
             return False
@@ -140,7 +140,7 @@ def root_directory(path):
 
         meta_filename = path / META_FILENAME
         with meta_filename.open("r", encoding="utf-8") as meta_file:
-            meta_data = yaml.safe_load(meta_file)
+            meta_data = yaml.YAML(typ="safe", pure=True).load(meta_file)
         if EXDIR_METANAME not in meta_data:
             path = path.parent
             continue

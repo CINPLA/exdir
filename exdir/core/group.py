@@ -402,7 +402,7 @@ class Group(Object):
 
         meta_filename = directory / exob.META_FILENAME
         with meta_filename.open("r", encoding="utf-8") as meta_file:
-            meta_data = yaml.safe_load(meta_file)
+            meta_data = yaml.YAML(typ="safe", pure=True).load(meta_file)
         if meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.DATASET_TYPENAME:
             return self._dataset(name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:

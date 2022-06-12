@@ -114,7 +114,7 @@ def test_create_object_directory(setup_teardown_folder):
     }
 
     with file_path.open("r", encoding="utf-8") as meta_file:
-        metadata = yaml.safe_load(meta_file)
+        metadata = yaml.YAML(typ="safe", pure=True).load(meta_file)
 
         assert metadata == compare_metadata
 

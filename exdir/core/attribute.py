@@ -180,7 +180,7 @@ class Attribute(object):
         attrs = {}
         if self.filename.exists():  # NOTE str for Python 3.5 support
             with self.filename.open("r", encoding="utf-8") as meta_file:
-                attrs = yaml.safe_load(meta_file)
+                attrs = yaml.YAML(typ="safe", pure=True).load(meta_file)
         return attrs
 
     def __iter__(self):
