@@ -6,9 +6,7 @@
 #
 attrs==20.3.0
     # via pytest
-exceptiongroup==1.0.0rc9
-    # via pytest
-h5py==3.7.0
+h5py==3.8.0
     # via -r requirements.in
 iniconfig==1.1.1
     # via pytest
@@ -26,5 +24,3 @@ pytest==7.2.0
     # via -r requirements.in
 quantities==0.13.0
     # via -r requirements.in
-tomli==2.0.1
-    # via pytest
