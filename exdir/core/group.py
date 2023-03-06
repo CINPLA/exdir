@@ -110,6 +110,11 @@ class Group(Object):
         require_dataset
         """
         assert_file_writable(self.file)
+        path = utils.path.name_to_asserted_group_path(name)
+        if len(path.parts) > 1:
+            subgroup = self.require_group(path.parent)
+            return subgroup.create_dataset(path.name, shape, dtype, data, fillvalue)
+
         exob._assert_valid_name(name, self)
 
         if data is None and shape is None:
