@@ -62,7 +62,10 @@ def _create_object_directory(directory, metadata):
                 version=1
             )
         else:
-            metadata_string = yaml.dump(metadata)
+            from io import StringIO
+            with StringIO() as buf:
+                yaml.YAML(typ="safe", pure=True).dump(metadata, buf)
+                metadata_string = buf.getvalue()
 
         try:
             meta_file.write(metadata_string)

@@ -166,12 +166,9 @@ class Attribute(object):
             attribute_data_quoted = attrs
 
         with self.filename.open("w", encoding="utf-8") as attribute_file:
-            yaml.dump(
+            yaml.YAML(typ="rt", pure=True).dump(
                 attribute_data_quoted,
                 attribute_file,
-                default_flow_style=False,
-                allow_unicode=True,
-                Dumper=yaml.RoundTripDumper
             )
 
     # TODO only needs filename, make into free function

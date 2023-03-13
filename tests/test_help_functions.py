@@ -141,10 +141,9 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
             exob.EXDIR_METANAME: {
                 exob.VERSION_METANAME: 1}
         }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
+        yaml.YAML(typ="safe", pure=True).dump(
+            metadata,
+            meta_file)
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is False
@@ -156,10 +155,9 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
                 exob.TYPE_METANAME: "wrong_typename",
                 exob.VERSION_METANAME: 1}
         }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
+        yaml.YAML(typ="safe", pure=True).dump(
+            metadata,
+            meta_file)
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is False
@@ -171,10 +169,9 @@ def test_is_nonraw_object_directory(setup_teardown_folder):
                 exob.TYPE_METANAME: exob.DATASET_TYPENAME,
                 exob.VERSION_METANAME: 1}
         }
-        yaml.safe_dump(metadata,
-                       meta_file,
-                       default_flow_style=False,
-                       allow_unicode=True)
+        yaml.YAML(typ="safe", pure=True).dump(
+            metadata,
+            meta_file)
 
     result = exob.is_nonraw_object_directory(setup_teardown_folder[2])
     assert result is True
