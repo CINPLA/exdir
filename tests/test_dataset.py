@@ -113,14 +113,18 @@ def test_create_extended_data(setup_teardown_file):
     dset = grp.create_dataset('foo', data=data)
     assert dset.shape == data.shape
 
-# TODO uncomment once intermidiate creation is supported
-# def test_dataset_intermediate_group(setup_teardown_file):
-#     """Create dataset with missing intermediate groups."""
-#     f = setup_teardown_file[3]
+def test_dataset_intermediate_group(setup_teardown_file):
+    """Create dataset with missing intermediate groups."""
+    f = setup_teardown_file[3]
 
-#     ds = f.create_dataset("/foo/bar/baz", shape=(10, 10), dtype='<i4')
-#     assert isinstance(ds, Dataset)
-#     assert "/foo/bar/baz" in f
+    # Trying to create intermediate groups that are absolute should fail just
+    # like when creating them on groups.
+    with pytest.raises(NotImplementedError):
+        f.create_dataset("/foo/bar/baz", shape=(10, 10), dtype='<i4')
+
+    ds = f.create_dataset("foo/bar/baz", shape=(10, 10), dtype='<i4')
+    assert isinstance(ds, Dataset)
+    assert "/foo/bar/baz" in f
 
 def test_reshape(setup_teardown_file):
     """Create from existing data, and make it fit a new shape."""
