@@ -28,7 +28,7 @@ from .. import utils
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
         if shape is None:
-            shape = data.shape
+            shape = np.shape(data)
         if dtype is None:
             dtype = data.dtype
         return shape, dtype
@@ -38,10 +38,10 @@ def _data_to_shape_and_dtype(data, shape, dtype):
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
-        if shape is not None and np.product(shape) != np.product(data.shape):
+        if shape is not None and np.product(shape) != np.product(np.shape(data)):
             raise ValueError(
                 "Provided shape and data.shape do not match: {} vs {}".format(
-                    shape, data.shape
+                    shape, np.shape(shape)
                 )
             )
 
@@ -129,12 +129,15 @@ class Group(Object):
             meta=exob._default_metadata(exob.DATASET_TYPENAME)
         )
 
+        if not isinstance(prepared_data, np.ndarray) and prepared_data is not None:
+            prepared_data = np.array(prepared_data)
+
         _assert_data_shape_dtype_match(prepared_data, shape, dtype)
 
         shape, dtype = _data_to_shape_and_dtype(prepared_data, shape, dtype)
 
         if prepared_data is not None:
-            if shape is not None and prepared_data.shape != shape:
+            if shape is not None and np.shape(prepared_data) != shape:
                 prepared_data = np.reshape(prepared_data, shape)
         else:
             if shape is None:
