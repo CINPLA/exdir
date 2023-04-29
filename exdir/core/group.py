@@ -19,11 +19,14 @@ except ImportError:
     import collections as abc
 
 from .exdir_object import Object
+from .links import Link, SoftLink, ExternalLink
 from .mode import assert_file_open, OpenMode, assert_file_writable
 from . import exdir_object as exob
+from . import exdir_file as exfile
 from . import dataset as ds
 from . import raw
 from .. import utils
+
 
 def _data_to_shape_and_dtype(data, shape, dtype):
     if data is not None:
@@ -35,6 +38,7 @@ def _data_to_shape_and_dtype(data, shape, dtype):
     if dtype is None:
         dtype = np.float32
     return shape, dtype
+
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
@@ -52,6 +56,7 @@ def _assert_data_shape_dtype_match(data, shape, dtype):
                 )
             )
         return
+
 
 class Group(Object):
     """
@@ -407,6 +412,8 @@ class Group(Object):
             return self._dataset(name)
         elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.GROUP_TYPENAME:
             return self._group(name)
+        elif meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME] == exob.LINK_TYPENAME:
+            return self._link(name)
         else:
             error_string = (
                 "Object {name} has data type {type}.\n"
@@ -416,6 +423,25 @@ class Group(Object):
                 type=meta_data[exob.EXDIR_METANAME][exob.TYPE_METANAME]
             )
             raise NotImplementedError(error_string)
+
+    def _link(self, name, get_link=False):
+        link_meta = self._group(name).meta[exob.EXDIR_METANAME][exob.LINK_METANAME]
+        print(link_meta)
+        if link_meta[exob.TYPE_METANAME] == exob.LINK_SOFTNAME:
+            if get_link:
+                result = SoftLink(link_meta[exob.LINK_TARGETNAME])
+            else:
+                result = self[link_meta[exob.LINK_TARGETNAME]]
+        elif link_meta[exob.TYPE_METANAME] == exob.LINK_EXTERNALNAME:
+            if get_link:
+                result = ExternalLink(
+                    link_meta[exob.LINK_FILENAME],
+                    link_meta[exob.LINK_TARGETNAME])
+            else:
+                external_file = exfile.File(
+                    link_meta[exob.LINK_FILENAME], 'r')
+                result = external_file[link_meta[exob.LINK_TARGETNAME]]
+        return result
 
     def _dataset(self, name):
         return ds.Dataset(
@@ -441,6 +467,13 @@ class Group(Object):
         path = utils.path.name_to_asserted_group_path(name)
         if len(path.parts) > 1:
             self[path.parent][path.name] = value
+            return
+
+        if isinstance(value, Link):
+            link_group = self.create_group(name)
+            # if value.path not in self.file:
+            #     return # TODO works when merging with lepmik/close
+            link_group.meta[exob.EXDIR_METANAME].update(value._link)
             return
 
         if name not in self:
@@ -513,20 +546,22 @@ class Group(Object):
         assert_file_open(self.file)
         return len([a for a in self])
 
-    def get(self, key):
+    def get(self, name, get_link=False):
         """
         Get an object in the group.
         Parameters
         ----------
-        key : str
-            The key of the desired object
+        name : str
+            The name of the desired object
         Returns
         -------
         Value or None if object does not exist.
         """
         assert_file_open(self.file)
-        if key in self:
-            return self[key]
+        if name in self:
+            if get_link:
+                return self._link(name, get_link)
+            return self[name]
         else:
             return None
 
