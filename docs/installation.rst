@@ -7,9 +7,21 @@ Installation
 
 Pre-configured installation (recommended)
 -----------------------------------------
-It’s strongly recommended that you use Anaconda to install exdir along with its compiled dependencies. 
+With `PyPi <https://pypi.org/>`_::
 
-With `Anaconda <http://continuum.io/downloads>`_ or 
+    pip install exdir
+
+With `Anaconda <http://continuum.io/downloads>`_ or
 `Miniconda <http://conda.pydata.org/miniconda.html>`_::
 
     conda install -c cinpla exdir
+
+Installing from source
+----------------------
+
+It is also possible to install exdir from the source code found on
+`GitHub <https://github.com/CINPLA/exdir>`_::
+
+    git clone https://github.com/CINPLA/exdir.git
+    cd exdir
+    python setup.py install

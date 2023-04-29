@@ -29,6 +29,34 @@ class Attribute(object):
     the attributes stored in the :code:`attributes.yaml` file for a given
     Exdir Object.
 
+    With exdir you can store metadata right next to the data it describes.
+    All groups and datasets can have attributes which are descibed by :py:meth:`exdir.core.attributes`.
+
+    Attributes are accessed through the ``attrs`` proxy object, which again
+    implements the dictionary interface:
+
+        >>> import exdir
+        >>> import numpy as np
+        >>> f = exdir.File("mytestfile.exdir")
+        >>> grp = f.require_group('my_group')
+        >>> dset = f.require_dataset("my_dataset", data=np.arange(100))
+        >>> dset.attrs['temperature'] = 99.5
+        >>> dset.attrs['temperature']
+        99.5
+        >>> 'temperature' in dset.attrs
+        True
+
+    Groups and Files may also have attributes::
+
+        >>> group.attr = {'description': 'this is a group'}
+        >>> group.attr['number'] = 1
+        >>> print(group.attr)
+        {'description': 'this is a group', 'number': 1}
+        >>> f.attr = {'description': 'this is a file'}
+        >>> f.attr['number'] = 2
+        >>> print(f.attr)
+        {'description': 'this is a file', 'number': 2}
+
     The Attribute object should not be created, but retrieved by accessing
     the :code:`.attrs` property of any Exdir Object, such as a Dataset,
     Group or File.
