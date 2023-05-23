@@ -4,9 +4,8 @@ from . import plugins
 from .core import File, validation, Attribute, Dataset, Group, Raw, Object
 
 # TODO remove versioneer
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+from . import _version
+__version__ = _version.get_versions()['version']
 
 # Jupyter extensions
 def _jupyter_server_extension_paths():
