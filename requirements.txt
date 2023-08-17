@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements.in
 #
-h5py==3.8.0
+h5py==3.9.0
     # via -r requirements.in
 iniconfig==1.1.1
     # via pytest
