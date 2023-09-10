@@ -303,7 +303,7 @@ def test_open_two_attrs(setup_teardown_file):
     f = setup_teardown_file[3]
 
     f.attrs['can_overwrite'] = 42
-    f.attrs['another_atribute'] = 14
+    f.attrs['another_attribute'] = 14
 
 
 def test_exc(setup_teardown_file):
