@@ -445,7 +445,7 @@ def test_eq(setup_teardown_file):
 
 
 # Feature: Parent
-def test_eq(setup_teardown_file):
+def test_eq_parent(setup_teardown_file):
     """Test equal."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")
