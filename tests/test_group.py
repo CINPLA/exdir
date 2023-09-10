@@ -313,7 +313,7 @@ def test_contains(setup_teardown_file):
     assert not "c" in grp
 
     with pytest.raises(NotImplementedError):
-        assert "/b" in  grp
+        assert "/b" in grp
 
 
 def test_contains_deep(setup_teardown_file):

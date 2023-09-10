@@ -12,6 +12,7 @@ from .attribute import Attribute
 from .constants import *
 from .mode import assert_file_open, OpenMode
 
+
 def _resolve_path(path):
     return Path(path).resolve()
 
