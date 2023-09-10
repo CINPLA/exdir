@@ -1,18 +1,6 @@
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-from six import with_metaclass
-
-from enum import Enum
-import os
-import warnings
+from pathlib import Path
 import shutil
-try:
-    import pathlib
-except ImportError as e:
-    try:
-        import pathlib2 as pathlib
-    except ImportError:
-        raise e
+
 try:
     import ruamel_yaml as yaml
 except ImportError:
@@ -20,13 +8,12 @@ except ImportError:
 
 import exdir
 
-from .. import utils
 from .attribute import Attribute
 from .constants import *
 from .mode import assert_file_open, OpenMode
 
 def _resolve_path(path):
-    return pathlib.Path(path).resolve()
+    return Path(path).resolve()
 
 
 def _assert_valid_name(name, container):
@@ -185,7 +172,7 @@ def open_object(path):
 # NOTE This is in a separate file only because of circular imports between Object and Raw otherwise
 # TODO move this back to Object once circular imports are figured out
 
-class Object(object):
+class Object:
     """
     Parent class for exdir Group and exdir dataset objects
     """

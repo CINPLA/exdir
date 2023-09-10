@@ -115,7 +115,7 @@ class File(Group):
         else:
             self.io_mode = OpenMode.READ_WRITE
 
-        super(File, self).__init__(
+        super().__init__(
             root_directory=directory,
             parent_path=pathlib.PurePosixPath(""),
             object_name="",
@@ -197,7 +197,7 @@ class File(Group):
         """
         path = utils.path.remove_root(name)
 
-        return super(File, self).create_group(path)
+        return super().create_group(path)
 
     def require_group(self, name):
         """
@@ -212,17 +212,17 @@ class File(Group):
         """
         path = utils.path.remove_root(name)
 
-        return super(File, self).require_group(path)
+        return super().require_group(path)
 
     def __getitem__(self, name):
         path = utils.path.remove_root(name)
         if len(path.parts) < 1:
             return self
-        return super(File, self).__getitem__(path)
+        return super().__getitem__(path)
 
     def __contains__(self, name):
         path = utils.path.remove_root(name)
-        return super(File, self).__contains__(path)
+        return super().__contains__(path)
 
     def __repr__(self):
         if self.io_mode == OpenMode.FILE_CLOSED:

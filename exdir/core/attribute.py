@@ -1,6 +1,4 @@
 from enum import Enum
-import os
-import numpy as np
 import exdir
 try:
     import ruamel_yaml as yaml
@@ -23,7 +21,7 @@ def _quote_strings(value):
     return value
 
 
-class Attribute(object):
+class Attribute:
     """
     The attribute object is a dictionary-like object that is used to access
     the attributes stored in the :code:`attributes.yaml` file for a given
