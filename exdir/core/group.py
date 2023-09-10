@@ -38,7 +38,7 @@ def _data_to_shape_and_dtype(data, shape, dtype):
 
 def _assert_data_shape_dtype_match(data, shape, dtype):
     if data is not None:
-        if shape is not None and np.product(shape) != np.product(data.shape):
+        if shape is not None and np.prod(shape) != np.prod(data.shape):
             raise ValueError(
                 "Provided shape and data.shape do not match: {} vs {}".format(
                     shape, data.shape
