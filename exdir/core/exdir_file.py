@@ -75,7 +75,7 @@ class File(Group):
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
         self.user_mode = mode = mode or 'a'
-        recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x', 'a']
+        recognized_modes = ['a', 'r', 'r+', 'w', 'w-', 'x']
         if mode not in recognized_modes:
             raise ValueError(
                 "IO mode {} not recognized, "
