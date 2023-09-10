@@ -80,6 +80,7 @@ def test_object_directory(setup_teardown_file):
     assert obj.attributes_filename == setup_teardown_file[1] / "test_object" / ATTRIBUTES_FILENAME
     assert obj.meta_filename == setup_teardown_file[1] / "test_object" / META_FILENAME
 
+
 def test_object_create_raw(setup_teardown_file):
     obj = setup_teardown_file[3].create_dataset("test_object", shape=(1,), dtype=float)
     obj.create_raw("test_raw")
