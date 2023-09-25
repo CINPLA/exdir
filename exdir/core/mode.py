@@ -1,10 +1,10 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class OpenMode(Enum):
-    READ_WRITE = 1
-    READ_ONLY = 2
-    FILE_CLOSED = 3
+    READ_WRITE = auto()
+    READ_ONLY = auto()
+    FILE_CLOSED = auto()
 
 
 def assert_file_open(file_object):

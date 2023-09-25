@@ -220,8 +220,8 @@ def test_nonexisting(setup_teardown_file):
     """Deleting non-existent object raises KeyError."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")
-    match = "No such object: 'foo' in path *"
-    with pytest.raises(KeyError, match=match):
+    mtch = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=mtch):
         del grp["foo"]
 
 
@@ -231,8 +231,8 @@ def test_readonly_delete_exception(setup_teardown_file):
     f.close()
 
     f = File(setup_teardown_file[1], "r")
-    match = "Cannot change data on file in read only 'r' mode"
-    with pytest.raises(IOError, match=match):
+    mtch = "Cannot change data on file in read only 'r' mode"
+    with pytest.raises(IOError, match=mtch):
         del f["foo"]
 
 
@@ -248,8 +248,8 @@ def test_delete_dataset(setup_teardown_file):
     del foo
     assert 'foo' in grp
     del grp['foo']
-    match = "No such object: 'foo' in path *"
-    with pytest.raises(KeyError, match=match):
+    mtch = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=mtch):
         grp['foo']
     # the "bar" dataset is intact
     assert isinstance(grp['bar'], Dataset)
@@ -296,8 +296,8 @@ def test_open_deep(setup_teardown_file):
 def test_nonexistent(setup_teardown_file):
     """Opening missing objects raises KeyError."""
     f = setup_teardown_file[3]
-    match = "No such object: 'foo' in path *"
-    with pytest.raises(KeyError, match=match):
+    mtch = "No such object: 'foo' in path *"
+    with pytest.raises(KeyError, match=mtch):
         f["foo"]
 
 
@@ -313,7 +313,7 @@ def test_contains(setup_teardown_file):
     assert not "c" in grp
 
     with pytest.raises(NotImplementedError):
-        assert "/b" in  grp
+        assert "/b" in grp
 
 
 def test_contains_deep(setup_teardown_file):
@@ -445,7 +445,7 @@ def test_eq(setup_teardown_file):
 
 
 # Feature: Parent
-def test_eq(setup_teardown_file):
+def test_eq_parent(setup_teardown_file):
     """Test equal."""
     f = setup_teardown_file[3]
     grp = f.create_group("test")

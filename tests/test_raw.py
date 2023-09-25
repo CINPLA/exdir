@@ -34,7 +34,7 @@ def test_create_raw(setup_teardown_file):
 
 
 def test_require_raw(setup_teardown_file):
-    """Raw is created if it doesn"t exist."""
+    """Raw is created if it doesn't exist."""
 
     f = setup_teardown_file[3]
     grp = f.create_group("test")

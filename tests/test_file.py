@@ -303,7 +303,7 @@ def test_open_two_attrs(setup_teardown_file):
     f = setup_teardown_file[3]
 
     f.attrs['can_overwrite'] = 42
-    f.attrs['another_atribute'] = 14
+    f.attrs['another_attribute'] = 14
 
 
 def test_exc(setup_teardown_file):
@@ -329,12 +329,12 @@ def test_close_group(setup_teardown_file):
     assert 'dataset' not in f
 
     # unable to create new stuff
-    match = "Unable to operate on closed File instance."
-    with pytest.raises(IOError, match=match):
+    mtch = "Unable to operate on closed File instance."
+    with pytest.raises(IOError, match=mtch):
         f.create_group("group")
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         grp.create_group("group")
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         grp.attrs = {'group': 'attrs'}
 
 
@@ -349,16 +349,16 @@ def test_close_attrs(setup_teardown_file):
     file_attrs = f.attrs
     f.close()
 
-    match = "Unable to operate on closed File instance."
-    with pytest.raises(IOError, match=match):
+    mtch = "Unable to operate on closed File instance."
+    with pytest.raises(IOError, match=mtch):
         f.attrs = {'file': 'attrs'}
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         file_attrs['new'] = 'yo'
 
     # unable to retrieve stuff
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         file_attrs['file']
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         f.attrs
     assert 'file' not in file_attrs
 
@@ -373,12 +373,12 @@ def test_close_raw(setup_teardown_file):
     assert "raw" not in f
 
     # unable to create new stuff
-    match = "Unable to operate on closed File instance."
-    with pytest.raises(IOError, match=match):
+    mtch = "Unable to operate on closed File instance."
+    with pytest.raises(IOError, match=mtch):
         f.create_raw('raw')
 
     # unable to retrieve
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         f['raw']
 
 
@@ -396,25 +396,25 @@ def test_close_dataset(setup_teardown_file):
     assert 'dataset' not in f
 
     # unable to create new stuff
-    match = "Unable to operate on closed File instance."
+    mtch = "Unable to operate on closed File instance."
 
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         f.create_dataset('dataset', data=np.array([1,2,3]))
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         grp.create_dataset('dataset', data=np.array([1,2,3]))
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         dset.attrs = {'dataset': 'attrs'}
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         dset_attrs['new'] = 'yo'
 
     # unable to retrieve stuff
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         dset.data
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         dset.shape
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         dset.dtype
-    with pytest.raises(IOError, match=match):
+    with pytest.raises(IOError, match=mtch):
         dset.attrs
 
     assert 'dataset' not in dset_attrs

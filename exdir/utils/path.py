@@ -1,10 +1,4 @@
-try:
-    import pathlib
-except ImportError as e:
-    try:
-        import pathlib2 as pathlib
-    except ImportError:
-        raise e
+import pathlib
 
 
 def name_to_asserted_group_path(name):
