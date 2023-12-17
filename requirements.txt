@@ -8,7 +8,7 @@ h5py==3.10.0
     # via -r requirements.in
 iniconfig==1.1.1
     # via pytest
-numpy==1.26.1
+numpy==1.26.2
     # via
     #   -r requirements.in
     #   h5py
