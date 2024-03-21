@@ -15,11 +15,11 @@ numpy==1.26.4
     #   quantities
 packaging==20.9
     # via pytest
-pluggy==0.13.1
+pluggy==1.4.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest==7.4.4
+pytest==8.0.0
     # via -r requirements.in
 quantities==0.15.0
     # via -r requirements.in
