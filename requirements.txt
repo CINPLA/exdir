@@ -19,7 +19,7 @@ pluggy==1.4.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest==8.0.0
+pytest==8.1.1
     # via -r requirements.in
 quantities==0.15.0
     # via -r requirements.in
