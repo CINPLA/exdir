@@ -4,11 +4,13 @@
 #
 #    pip-compile requirements.in
 #
+exceptiongroup==1.2.2
+    # via pytest
 h5py==3.13.0
     # via -r requirements.in
 iniconfig==1.1.1
     # via pytest
-numpy==2.2.3
+numpy==2.0.2
     # via
     #   -r requirements.in
     #   h5py
@@ -21,5 +23,7 @@ pyparsing==2.4.7
     # via packaging
 pytest==8.3.5
     # via -r requirements.in
-quantities==0.16.1
+quantities==0.16.2
     # via -r requirements.in
+tomli==2.2.1
+    # via pytest
