@@ -281,7 +281,7 @@ class Manager:
 
         # make iterable if not already so
         try:
-            _ = (e for e in plugins)
+            iter(plugins)
         except TypeError:
             plugins = [plugins]
 
