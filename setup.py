@@ -32,7 +32,7 @@ setup(
     ],
     install_requires=[
         "numpy>=1.20",
-        "ruamel.yaml==0.18.13",
+        "ruamel.yaml==0.18.15",
     ],
     python_requires=">=3.7",
     zip_safe=False,
