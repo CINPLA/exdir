@@ -23,7 +23,7 @@ pygments==2.19.1
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest==8.4.0
+pytest==8.4.2
     # via -r requirements.in
 quantities==0.16.2
     # via -r requirements.in
