@@ -65,7 +65,7 @@ class File(Group):
     def __init__(self, directory, mode=None, allow_remove=False,
                  name_validation=None, plugins=None):
         self._open_datasets = weakref.WeakValueDictionary({})
-        directory = pathlib.Path(directory) #.resolve()
+        directory = pathlib.Path(directory).absolute() #.resolve()
         if directory.suffix != ".exdir":
             directory = directory.with_suffix(directory.suffix + ".exdir")
         self.user_mode = mode = mode or 'a'
@@ -213,6 +213,12 @@ class File(Group):
         if len(path.parts) < 1:
             return self
         return super().__getitem__(path)
+
+    def __setitem__(self, name, value):
+        path = utils.path.remove_root(name)
+        if len(path.parts) < 1:
+            return self
+        return super(File, self).__setitem__(path, value)
 
     def __contains__(self, name):
         path = utils.path.remove_root(name)

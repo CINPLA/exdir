@@ -2,6 +2,15 @@
 EXDIR_METANAME = "exdir"
 TYPE_METANAME = "type"
 VERSION_METANAME = "version"
+LINK_METANAME = "link"
+TARGET_METANAME = "target"
+
+#links
+LINK_TYPENAME = "link"
+LINK_TARGETNAME = "target"
+LINK_EXTERNALNAME = "external"
+LINK_SOFTNAME = "soft"
+LINK_FILENAME = "file"
 
 # filenames
 META_FILENAME = "exdir.yaml"
