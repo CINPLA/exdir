@@ -19,7 +19,7 @@ packaging==20.9
     # via pytest
 pluggy==1.5.0
     # via pytest
-pygments==2.19.1
+pygments==2.20.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
